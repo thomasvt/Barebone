@@ -1,6 +1,6 @@
 namespace Barebone.Architecture.Ecs;
 
-public interface ISystem
+public interface IEcsSystem
 {
     void Execute();
 }

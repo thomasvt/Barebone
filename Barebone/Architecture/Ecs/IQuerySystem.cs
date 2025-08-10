@@ -1,6 +1,6 @@
 ﻿namespace Barebone.Architecture.Ecs
 {
-    public interface IQuerySystem : ISystem
+    public interface IQuerySystem : IEcsSystem
     {
         /// <summary>
         /// Adds a component type to the list of components that the entities must have to match the filter of this QuerySystem.

@@ -113,5 +113,15 @@ namespace Barebone.Architecture.Ecs
         }
 
         public int ComponentCount => ArchetypeRegistry.ComponentCount;
+
+        public string GetEntityListing()
+        {
+            var sb = new StringBuilder();
+            foreach (var entry in _entityRegistry._entitiesById.Values)
+            {
+                sb.AppendLine($"{entry.EntityId.Value} [{string.Join(", ", ArchetypeRegistry.GetComponentDefs(entry.Archetype).Select(cd => cd.Name))}]");
+            }
+            return sb.ToString();
+        }
     }
 }

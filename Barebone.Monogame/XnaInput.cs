@@ -67,16 +67,19 @@ namespace Barebone.Monogame
         {
             var keyState = state == ButtonState.Pressed ? KeyState.Down : KeyState.Up;
 
+            if ((int)button < (int)Button.KeyboardEnd)
+            {
+                // Barebone uses the same standardised Key values as XNA, so we can map by casting.
+                var xnaKey = (Keys)(int)button;
+                return _keyboardPrevious[xnaKey] != keyState && _keyboard[xnaKey] == keyState;
+            }
+
+            // ... and for mouse and gamepad we use a switch:
             return button switch
             {
                 Button.MouseLeft => _mousePrevious.LeftButton != state && _mouse.LeftButton == state,
                 Button.MouseRight => _mousePrevious.RightButton != state && _mouse.RightButton == state,
                 Button.MouseMiddle => _mousePrevious.MiddleButton != state && _mouse.MiddleButton == state,
-
-                Button.W => _keyboardPrevious[Keys.W] != keyState && _keyboard[Keys.W] == keyState,
-                Button.A => _keyboardPrevious[Keys.A] != keyState && _keyboard[Keys.A] == keyState,
-                Button.S => _keyboardPrevious[Keys.S] != keyState && _keyboard[Keys.S] == keyState,
-                Button.D => _keyboardPrevious[Keys.D] != keyState && _keyboard[Keys.D] == keyState,
 
                 Button.PadA => _gamePadPrevious.Buttons.A != state && _gamePad.Buttons.A == state,
                 Button.PadB => _gamePadPrevious.Buttons.B != state && _gamePad.Buttons.B == state,
@@ -86,7 +89,7 @@ namespace Barebone.Monogame
                 Button.PadShoulderR => _gamePadPrevious.Buttons.RightShoulder != state && _gamePad.Buttons.RightShoulder == state,
                 Button.PadTriggerL => state == ButtonState.Pressed ? _gamePadPrevious.Triggers.Left == 0 && _gamePad.Triggers.Left > 0 : _gamePadPrevious.Triggers.Left > 0 && _gamePad.Triggers.Left == 0,
                 Button.PadTriggerR => state == ButtonState.Pressed ? _gamePadPrevious.Triggers.Right == 0 && _gamePad.Triggers.Right > 0 : _gamePadPrevious.Triggers.Right > 0 && _gamePad.Triggers.Right == 0,
-
+               
                 _ => throw new ArgumentOutOfRangeException(nameof(button))
             };
         }
@@ -95,17 +98,20 @@ namespace Barebone.Monogame
         {
             var keyState = state == ButtonState.Pressed ? KeyState.Down : KeyState.Up;
 
+
+            // Barebone uses the same standardised Key values as XNA, so we can map by casting.
+            if ((int)button < (int)Button.KeyboardEnd)
+            {
+                var xnaKey = (Keys)(int)button;
+                return _keyboard[xnaKey] == keyState;
+            }
+
+            // ... and for mouse and gamepad we use a switch:
             return button switch
             {
                 Button.MouseLeft => _mouse.LeftButton == state,
                 Button.MouseRight => _mouse.RightButton == state,
                 Button.MouseMiddle => _mouse.MiddleButton == state,
-
-                Button.W => _keyboard[Keys.W] == keyState,
-                Button.A => _keyboard[Keys.A] == keyState,
-                Button.S => _keyboard[Keys.S] == keyState,
-                Button.D => _keyboard[Keys.D] == keyState,
-                Button.Space => _keyboard[Keys.Space] == keyState,
 
                 Button.PadA => _gamePad.Buttons.A == state,
                 Button.PadB => _gamePad.Buttons.B == state,
@@ -115,7 +121,6 @@ namespace Barebone.Monogame
                 Button.PadShoulderR => _gamePad.Buttons.RightShoulder == state,
                 Button.PadTriggerL => state == ButtonState.Pressed ? _gamePad.Triggers.Left > 0 : _gamePad.Triggers.Left == 0,
                 Button.PadTriggerR => state == ButtonState.Pressed ? _gamePad.Triggers.Right > 0 : _gamePad.Triggers.Right == 0,
-
 
                 _ => throw new ArgumentOutOfRangeException(nameof(button))
             };

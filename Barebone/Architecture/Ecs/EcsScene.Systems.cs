@@ -2,12 +2,12 @@
 {
     public partial class EcsScene
     {
-        private ISystem[] _systems = [];
+        private IEcsSystem[] _systems = [];
 
         /// <summary>
         /// Sets all ECS systems in the order they should be executed each frame.
         /// </summary>
-        public void SetSystems(params ISystem[] systems)
+        public void SetSystems(params IEcsSystem[] systems)
         {
             _systems = systems;
         }

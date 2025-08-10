@@ -5,16 +5,16 @@ namespace Barebone.Architecture.Ecs;
 internal class EntityRegistry : IEnumerable<EntityRegistry.Entry>
 {
     private long _nextEntityId = 0;
-    private readonly Dictionary<EntityId, Entry> _entityRegistry = new();
+    internal readonly Dictionary<EntityId, Entry> _entitiesById = new();
 
     public Entry Get(in EntityId entityId)
     {
-        return _entityRegistry[entityId];
+        return _entitiesById[entityId];
     }
 
     public bool Contains(in EntityId entityId)
     {
-        return _entityRegistry.ContainsKey(entityId);
+        return _entitiesById.ContainsKey(entityId);
     }
 
     public EntityId Alloc(in Archetype archetype)
@@ -22,25 +22,25 @@ internal class EntityRegistry : IEnumerable<EntityRegistry.Entry>
         if (_nextEntityId == long.MaxValue) 
             throw new Exception("Oops. You ran out of entity ids. Didn't think that would happen."); // If this ever happens, we must change what we use for passing UserData to Box2D, because now we cheat by not passing in a handle but the raw id as if it is a pointer.
         var entityId = new EntityId(++_nextEntityId);
-        _entityRegistry[entityId] = new Entry(entityId, archetype);
+        _entitiesById[entityId] = new Entry(entityId, archetype);
         return entityId;
     }
 
     public void ChangeArchetype(in EntityId entityId, Archetype archetype)
     {
-        var entry = _entityRegistry[entityId];
+        var entry = _entitiesById[entityId];
         entry.Archetype = archetype;
-        _entityRegistry[entityId] = entry;
+        _entitiesById[entityId] = entry;
     }
 
     public void Free(EntityId entityId)
     {
-        _entityRegistry.Remove(entityId);
+        _entitiesById.Remove(entityId);
     }
 
     public void Clear()
     {
-        _entityRegistry.Clear();
+        _entitiesById.Clear();
         _nextEntityId = 0;
     }
 
@@ -48,7 +48,7 @@ internal class EntityRegistry : IEnumerable<EntityRegistry.Entry>
 
     public IEnumerator<Entry> GetEnumerator()
     {
-        return _entityRegistry.Values.GetEnumerator();
+        return _entitiesById.Values.GetEnumerator();
     }
 
     IEnumerator IEnumerable.GetEnumerator()

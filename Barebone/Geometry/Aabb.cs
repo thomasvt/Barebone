@@ -166,6 +166,9 @@ namespace Barebone.Geometry
         [JsonIgnore] public float Left => MinCorner.X;
         [JsonIgnore] public float Top => MaxCorner.Y;
         [JsonIgnore] public float Bottom => MinCorner.Y;
+        public float Width => MaxCorner.X - MinCorner.X;
+        public float Height => MaxCorner.Y - MinCorner.Y;
+
         public static Aabb One = new(Vector2.Zero, Vector2.One);
 
         public static Aabb Zero = new(Vector2.Zero, Vector2.Zero);

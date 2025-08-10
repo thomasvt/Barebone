@@ -70,6 +70,13 @@ public readonly record struct Archetype
         return string.Join(", ", componentIds);
     }
 
+    public IEnumerable<int> GetComponentIds()
+    {
+        var t = this;
+        return Enumerable.Range(0, Archetype.MaxComponentCount)
+            .Where(id => t.Includes(id));
+    }
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public Archetype Union(Archetype extraArchetype)
     {
