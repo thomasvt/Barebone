@@ -1,8 +1,8 @@
 ﻿using System.Numerics;
 
-namespace Barebone.Box2d.Ecs
+namespace Barebone.Architecture.Ecs.Components
 {
-    public struct PositionCompo
+    public struct Position2Compo
     {
         public Vector2 Position { get; set; }
     }

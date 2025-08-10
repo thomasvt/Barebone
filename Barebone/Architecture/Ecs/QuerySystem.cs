@@ -1,4 +1,6 @@
-﻿namespace Barebone.Architecture.Ecs
+﻿using Barebone.Architecture.Ecs.Components;
+
+namespace Barebone.Architecture.Ecs
 {
     internal abstract class QuerySystemBase : IQuerySystem
     {

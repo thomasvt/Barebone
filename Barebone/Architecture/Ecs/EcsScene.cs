@@ -1,5 +1,6 @@
 ﻿using System.Runtime.CompilerServices;
 using System.Text;
+using Barebone.Architecture.Ecs.Components;
 
 namespace Barebone.Architecture.Ecs
 {

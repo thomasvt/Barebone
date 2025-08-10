@@ -1,6 +1,5 @@
 ﻿using System.Numerics;
 using System.Runtime.InteropServices;
-using System.Transactions;
 
 namespace Barebone.Geometry
 {
@@ -202,6 +201,11 @@ namespace Barebone.Geometry
             var maxX = maxCorner.X;
             var maxY = maxCorner.Y;
             return new Polygon8(new(minX, minY), new(minX, maxY), new(maxX, maxY), new(maxX, minY));
+        }
+
+        public static Polygon8 Aabb(Aabb aabb)
+        {
+            return Quad(aabb.MinCorner, aabb.MaxCorner);
         }
     }
 }

@@ -134,7 +134,7 @@ namespace Barebone.Graphics
             return this;
         }
 
-        public Mesh Polygon(in Polygon8 polygon, in float z, in Color color)
+        public Mesh PolygonInZ(in Polygon8 polygon, in float z, in Color color)
         {
             if (polygon.Count < 3) throw new Exception("Polygons must have at least 3 corners.");
 

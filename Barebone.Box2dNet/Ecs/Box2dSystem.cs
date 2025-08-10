@@ -1,32 +1,50 @@
-﻿using System.Numerics;
+﻿using System.ComponentModel;
 using Barebone.Architecture.Ecs;
+using Barebone.Architecture.Ecs.Components;
 using Box2dNet.Interop;
 
 namespace Barebone.Box2d.Ecs
 {
-    public class Box2dSystem : IEcsSystem
+    /// <summary>
+    /// Drives physical ECS components with a single Box2D world behind the scenes. Uses Position2Compo for position, so your game must register it.
+    /// </summary>
+    public class Box2dSystem : IDisposable
     {
+        private readonly EcsScene _scene;
         private readonly b2WorldId _b2WorldId;
+        private readonly IQuerySystem _readBodyStates;
 
-        public Box2dSystem(EcsScene scene)
+        /// <param name="registerPosition2Compo">Pass in false if you register Position2Compo in the EcsScene yourself, else let Box2dSystem do it.</param>
+        public Box2dSystem(EcsScene scene, bool registerPosition2Compo, b2WorldDef? worldDef = null)
         {
-            var worldDef = B2Api.b2DefaultWorldDef(); 
-            _b2WorldId = B2Api.b2CreateWorld(worldDef);
+            _scene = scene;
+            _b2WorldId = B2Api.b2CreateWorld(worldDef ?? B2Api.b2DefaultWorldDef());
+            
+            if (registerPosition2Compo)
+                scene.RegisterComponent<Position2Compo>();
 
-            scene.RegisterComponent<PositionCompo>();
-
-            scene.RegisterComponent<RigidBodyCompo>();
-            scene.SubscribeOnAdd((in EntityId id, ref RigidBodyCompo b) => RigidBodyCompo.OnAdd(scene, _b2WorldId, id, ref b));
-            scene.SubscribeOnRemove((in EntityId id, ref RigidBodyCompo b) => RigidBodyCompo.OnRemove(ref b));
-
-            scene.RegisterComponent<ShapeCompo>();
-            scene.SubscribeOnAdd((in EntityId id, ref ShapeCompo s) => ShapeCompo.OnAdd(scene, id, ref s));
-            scene.SubscribeOnRemove((in EntityId id, ref ShapeCompo s) => ShapeCompo.OnRemove(ref s));
+            RigidBodyCompo.Register(scene, _b2WorldId);
+            PolygonShapeCompo.Register(scene);
         }
 
-        public void Execute()
+        public void Execute(float deltaT, int subStepCount)
         {
-            
+            B2Api.b2World_Step(_b2WorldId, deltaT, subStepCount);
+            ReadBodyStates();
+        }
+
+        private void ReadBodyStates()
+        {
+            foreach (var moveEvent in B2Api.b2World_GetBodyEvents(_b2WorldId).moveEventsAsSpan)
+            {
+                var entityId = new EntityId(moveEvent.userData);
+                _scene.GetComponentRef<Position2Compo>(entityId).Position = moveEvent.transform.p;
+            }
+        }
+
+        public void Dispose()
+        {
+            B2Api.b2DestroyWorld(_b2WorldId);
         }
     }
 }

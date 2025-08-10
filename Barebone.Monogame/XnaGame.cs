@@ -1,10 +1,14 @@
-﻿using Barebone.Graphics;
+﻿using Barebone.Geometry;
+using Barebone.Graphics;
 using Barebone.Inputs;
 using Microsoft.Xna.Framework;
 
 namespace Barebone.Monogame
 {
-    public class XnaPlatform : Game, IPlatform
+    /// <summary>
+    /// Startup for running an <see cref="IGame"/> on Monogame.
+    /// </summary>
+    public class XnaGame : Game, IPlatform
     {
         private readonly Func<IPlatform, IGame> _gameFactory;
         private IGame? _game;
@@ -12,7 +16,7 @@ namespace Barebone.Monogame
         private readonly XnaInput _input;
         private XnaImmediateRenderer? _renderer;
 
-        public XnaPlatform(Func<IPlatform, IGame> gameFactory)
+        public XnaGame(Func<IPlatform, IGame> gameFactory)
         {
             _gameFactory = gameFactory;
             _gdm = new GraphicsDeviceManager(this)

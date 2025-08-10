@@ -12,6 +12,17 @@ namespace Barebone.Graphics
         private Vector3 _lookAtUp;
 
         /// <summary>
+        /// Creates a default camera with Y+ up, Z- away from camera, X+ to the right, looking at (0,0,0) at a given `distance`.
+        /// </summary>
+        public PerspectiveCamera(float distance, float nearPlane, float farPlane)
+        {
+            Position = new(0, 0, distance);
+            NearPlane = nearPlane;
+            FarPlane = farPlane;
+            LookAt(new(0, 0, 0), Vector3.UnitY);
+        }
+
+        /// <summary>
         /// Returns the pixel coords where a world location is projected onto the screen.
         /// </summary>
         public Vector2 WorldToScreen(Vector3 worldLocation, in Viewport viewport)
