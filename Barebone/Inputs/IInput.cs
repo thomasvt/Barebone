@@ -9,8 +9,10 @@ public interface IInput
     void Update();
     bool IsJustPressed(Button button);
     bool IsJustReleased(Button button);
-    bool IsPressed(Button button);
-    bool IsReleased(Button button);
+    bool IsDown(Button button);
+    bool IsUp(Button button);
+    bool WasUp(Button button);
+    bool WasDown(Button button);
     bool DidMouseScrollUp();
     bool DidMouseScrollDown();
 
@@ -43,4 +45,6 @@ public interface IInput
     /// Gets the keyboard arrows input as a normalized vector.
     /// </summary>
     Vector2 GetKeyboardArrows();
+
+    float GetKeyAxis(Button decrease, Button increase);
 }

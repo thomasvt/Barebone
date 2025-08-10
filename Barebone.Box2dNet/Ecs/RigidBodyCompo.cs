@@ -1,4 +1,5 @@
-﻿using Barebone.Architecture.Ecs;
+﻿using System.Numerics;
+using Barebone.Architecture.Ecs;
 using Barebone.Architecture.Ecs.Components;
 using Box2dNet.Interop;
 
@@ -19,6 +20,7 @@ namespace Barebone.Box2d.Ecs
         public b2BodyId B2BodyId { get; set; }
         public BodyType BodyType { get; set; }
         public bool LockRotation { get; set; }
+        public float? MaxSpeed { get; set; }
 
         public static void OnAdd(in EcsScene scene, in b2WorldId worldId, EntityId id, ref RigidBodyCompo b)
         {

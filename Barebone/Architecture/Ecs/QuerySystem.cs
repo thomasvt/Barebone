@@ -12,7 +12,7 @@ namespace Barebone.Architecture.Ecs
         {
             Scene = scene;
             if (excludeDisabled)
-                MustExclude<DisabledCompo>();
+                MustNotHave<DisabledCompo>();
         }
 
         public abstract void Execute();
@@ -20,7 +20,7 @@ namespace Barebone.Architecture.Ecs
         /// <summary>
         /// Adds a component type to the list of components that the entities must have to match with this query. If the component was put in the Exclude list earlier, that is undone.
         /// </summary>
-        public IQuerySystem MustInclude<T>() where T : struct
+        public IQuerySystem MustHave<T>() where T : struct
         {
             var componentDef = Scene.ArchetypeRegistry.GetComponentDef<T>();
             Exclude.Remove(componentDef);
@@ -32,7 +32,7 @@ namespace Barebone.Architecture.Ecs
         /// Adds a component type to the list of components that the entities must NOT have to match with this query. Note that excluding a component that is in the generic type listing will break this QuerySystem.
         /// If the component was put in the Include list earlier, that is undone.
         /// </summary>
-        public IQuerySystem MustExclude<T>() where T : struct
+        public IQuerySystem MustNotHave<T>() where T : struct
         {
             var componentDef = Scene.ArchetypeRegistry.GetComponentDef<T>();
             AlsoInclude.Remove(componentDef);

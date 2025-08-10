@@ -51,7 +51,7 @@ namespace Barebone.Architecture.Ecs
         /// <summary>
         /// Removes all entities but not registered components.
         /// </summary>
-        public void Clear()
+        public void ClearEntities()
         {
             foreach (var entry in _entityRegistry.ToList()) // Clear calls are low frequency, so this alloc is fine.
             {

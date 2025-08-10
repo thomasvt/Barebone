@@ -58,10 +58,36 @@ namespace Barebone.Monogame
             InputMode = mode;
         }
 
+        /// <summary>
+        /// Did the button just go from not pressed to pressed?
+        /// </summary>
         public bool IsJustPressed(Button button) => IsJust(ButtonState.Pressed, button);
+
+        /// <summary>
+        /// Did the button just go from pressed to not pressed?
+        /// </summary>
         public bool IsJustReleased(Button button) => IsJust(ButtonState.Released, button);
-        public bool IsPressed(Button button) => Is(button, ButtonState.Pressed);
-        public bool IsReleased(Button button) => Is(button, ButtonState.Released);
+
+        /// <summary>
+        /// Is the button being pressed in the current frame.
+        /// </summary>
+        public bool IsDown(Button button) => Is(button, ButtonState.Pressed);
+
+        /// <summary>
+        /// Is the button not being pressed in the current frame.
+        /// </summary>
+        public bool IsUp(Button button) => Is(button, ButtonState.Released);
+
+        /// <summary>
+        /// Was the button pressed in the previous frame?
+        /// </summary>
+        public bool WasUp(Button button) => Was(button, ButtonState.Pressed);
+
+        /// <summary>
+        /// Was the button released in the previous frame?
+        /// </summary>
+        public bool WasDown(Button button) => Was(button, ButtonState.Released);
+
 
         private bool IsJust(ButtonState state, Button button)
         {
@@ -126,6 +152,37 @@ namespace Barebone.Monogame
             };
         }
 
+        private bool Was(Button button, ButtonState state)
+        {
+            var keyState = state == ButtonState.Pressed ? KeyState.Down : KeyState.Up;
+
+            // Barebone uses the same standardised Key values as XNA, so we can map by casting.
+            if ((int)button < (int)Button.KeyboardEnd)
+            {
+                var xnaKey = (Keys)(int)button;
+                return _keyboardPrevious[xnaKey] == keyState;
+            }
+
+            // ... and for mouse and gamepad we use a switch:
+            return button switch
+            {
+                Button.MouseLeft => _mousePrevious.LeftButton == state,
+                Button.MouseRight => _mousePrevious.RightButton == state,
+                Button.MouseMiddle => _mousePrevious.MiddleButton == state,
+
+                Button.PadA => _gamePadPrevious.Buttons.A == state,
+                Button.PadB => _gamePadPrevious.Buttons.B == state,
+                Button.PadX => _gamePadPrevious.Buttons.X == state,
+                Button.PadY => _gamePadPrevious.Buttons.Y == state,
+                Button.PadShoulderL => _gamePadPrevious.Buttons.LeftShoulder == state,
+                Button.PadShoulderR => _gamePadPrevious.Buttons.RightShoulder == state,
+                Button.PadTriggerL => state == ButtonState.Pressed ? _gamePadPrevious.Triggers.Left > 0 : _gamePadPrevious.Triggers.Left == 0,
+                Button.PadTriggerR => state == ButtonState.Pressed ? _gamePadPrevious.Triggers.Right > 0 : _gamePadPrevious.Triggers.Right == 0,
+
+                _ => throw new ArgumentOutOfRangeException(nameof(button))
+            };
+        }
+
         public bool DidMouseScrollUp()
         {
             return _mousePrevious.ScrollWheelValue < _mouse.ScrollWheelValue;
@@ -173,7 +230,7 @@ namespace Barebone.Monogame
         /// </summary>
         public Vector2 GetKeyboardWasd()
         {
-            var keyboardInput = new Vector2(GetKeyAxis(Keys.A, Keys.D), GetKeyAxis(Keys.S, Keys.W));
+            var keyboardInput = new Vector2(GetKeyAxis(Button.A, Button.D), GetKeyAxis(Button.S, Button.W));
             if (keyboardInput.X != 0 && keyboardInput.Y != 0)
                 return Vector2.Normalize(keyboardInput);
             return keyboardInput;
@@ -184,16 +241,16 @@ namespace Barebone.Monogame
         /// </summary>
         public Vector2 GetKeyboardArrows()
         {
-            var keyboardInput = new Vector2(GetKeyAxis(Keys.Left, Keys.Right), GetKeyAxis(Keys.Down, Keys.Up));
+            var keyboardInput = new Vector2(GetKeyAxis(Button.Left, Button.Right), GetKeyAxis(Button.Down, Button.Up));
             if (keyboardInput.X != 0 && keyboardInput.Y != 0)
                 return Vector2.Normalize(keyboardInput);
             return keyboardInput;
         }
 
-        private float GetKeyAxis(Keys decrease, Keys increase)
+        public float GetKeyAxis(Button decrease, Button increase)
         {
-            if (_keyboard.IsKeyDown(decrease)) return -1;
-            if (_keyboard.IsKeyDown(increase)) return 1;
+            if (Is(decrease, ButtonState.Pressed)) return -1;
+            if (Is(increase, ButtonState.Pressed)) return 1;
             return 0;
         }
     }

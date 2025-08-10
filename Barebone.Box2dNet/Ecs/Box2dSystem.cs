@@ -1,6 +1,7 @@
 ﻿using System.ComponentModel;
 using Barebone.Architecture.Ecs;
 using Barebone.Architecture.Ecs.Components;
+using Barebone.Geometry;
 using Box2dNet.Interop;
 
 namespace Barebone.Box2d.Ecs
@@ -12,7 +13,6 @@ namespace Barebone.Box2d.Ecs
     {
         private readonly EcsScene _scene;
         private readonly b2WorldId _b2WorldId;
-        private readonly IQuerySystem _readBodyStates;
 
         /// <param name="registerPosition2Compo">Pass in false if you register Position2Compo in the EcsScene yourself, else let Box2dSystem do it.</param>
         public Box2dSystem(EcsScene scene, bool registerPosition2Compo, b2WorldDef? worldDef = null)
@@ -25,6 +25,7 @@ namespace Barebone.Box2d.Ecs
 
             RigidBodyCompo.Register(scene, _b2WorldId);
             PolygonShapeCompo.Register(scene);
+            CircleShapeCompo.Register(scene);
         }
 
         public void Execute(float deltaT, int subStepCount)
@@ -39,6 +40,14 @@ namespace Barebone.Box2d.Ecs
             {
                 var entityId = new EntityId(moveEvent.userData);
                 _scene.GetComponentRef<Position2Compo>(entityId).Position = moveEvent.transform.p;
+                var maxSpeed = _scene.GetComponentRef<RigidBodyCompo>(entityId).MaxSpeed;
+                if (maxSpeed.HasValue)
+                {
+                    var velocity = B2Api.b2Body_GetLinearVelocity(moveEvent.bodyId);
+                    velocity = velocity.CapVectorLength(maxSpeed.Value);
+                    B2Api.b2Body_SetLinearVelocity(moveEvent.bodyId, velocity);
+                }
+
             }
         }
 
