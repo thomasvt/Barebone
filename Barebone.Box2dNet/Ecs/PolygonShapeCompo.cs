@@ -11,7 +11,7 @@ namespace Barebone.Box2d.Ecs
         public Polygon8 Polygon;
         public float CornerRadius;
 
-        public EntityId? RigidBodyId;
+        public EntityId RigidBodyId;
         public b2ShapeId B2ShapeId;
 
         public ulong CategoryMask;
@@ -22,7 +22,7 @@ namespace Barebone.Box2d.Ecs
 
         public static void OnAdd(in EcsScene ecsScene, in EntityId id, ref PolygonShapeCompo s)
         {
-            var b2Body = ecsScene.GetComponentRef<RigidBodyCompo>(s.RigidBodyId ?? id);
+            var b2Body = ecsScene.GetComponentRef<RigidBodyCompo>(s.RigidBodyId);
             var def = B2Api.b2DefaultShapeDef();
             def.filter.categoryBits = s.CategoryMask;
             def.filter.maskBits = s.InteractionMask;
@@ -30,6 +30,7 @@ namespace Barebone.Box2d.Ecs
             def.enableSensorEvents = true;
             def.material.friction = s.Friction;
             def.material.restitution = s.Restitution;
+            def.userData = (nint)id.Value;
 
             var arr = ArrayPool<Vector2>.Shared.Rent(s.Polygon.Count);
             s.Polygon.FillArray(arr);

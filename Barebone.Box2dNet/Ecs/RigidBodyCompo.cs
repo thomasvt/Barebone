@@ -25,7 +25,9 @@ namespace Barebone.Box2d.Ecs
         public static void OnAdd(in EcsScene scene, in b2WorldId worldId, EntityId id, ref RigidBodyCompo b)
         {
             var bodyDef = B2Api.b2DefaultBodyDef();
-            bodyDef.position = scene.GetComponentRef<Position2Compo>(id).Position;
+            ref var t = ref scene.GetComponentRef<TransformCompo>(id);
+            bodyDef.position = t.Position;
+            bodyDef.rotation = b2Rot.FromAngle(t.Angle);
             bodyDef.motionLocks.angularZ = b.LockRotation;
 
             bodyDef.type = b.BodyType switch { BodyType.Static => b2BodyType.b2_staticBody, BodyType.Kinematic => b2BodyType.b2_kinematicBody, BodyType.Dynamic => b2BodyType.b2_dynamicBody,
@@ -40,10 +42,10 @@ namespace Barebone.Box2d.Ecs
             B2Api.b2DestroyBody(b.B2BodyId);
         }
 
-        public static void Register(EcsScene scene, b2WorldId worldId)
+        public static void Register(EcsScene scene, Func<b2WorldId> worldIdGetter)
         {
             scene.RegisterComponent<RigidBodyCompo>();
-            scene.SubscribeOnAdd((in EntityId id, ref RigidBodyCompo b) => OnAdd(scene, worldId, id, ref b));
+            scene.SubscribeOnAdd((in EntityId id, ref RigidBodyCompo b) => OnAdd(scene, worldIdGetter.Invoke(), id, ref b));
             scene.SubscribeOnRemove((in EntityId id, ref RigidBodyCompo b) => OnRemove(ref b));
         }
     }

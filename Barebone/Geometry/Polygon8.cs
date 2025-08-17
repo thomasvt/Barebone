@@ -1,4 +1,5 @@
-﻿using System.Numerics;
+﻿using System.Diagnostics.Contracts;
+using System.Numerics;
 using System.Runtime.InteropServices;
 
 namespace Barebone.Geometry
@@ -99,6 +100,7 @@ namespace Barebone.Geometry
         /// <summary>
         /// Returns a new tranformed polygon.
         /// </summary>
+        [Pure]
         public readonly Polygon8 Transform(in Matrix3x2 transform)
         {
             // this assumes polygons are always at least 3 corners, but it doesn't break when it's less.
@@ -110,18 +112,24 @@ namespace Barebone.Geometry
                 P2 = Vector2.Transform(P2, transform)
             };
 
-            if (Count <= 3) return result; result.P3 = Vector2.Transform(P3, transform);
-            if (Count == 4) return result; result.P4 = Vector2.Transform(P4, transform);
-            if (Count == 5) return result; result.P5 = Vector2.Transform(P5, transform);
-            if (Count == 6) return result; result.P6 = Vector2.Transform(P6, transform);
-            if (Count == 7) return result; result.P7 = Vector2.Transform(P7, transform);
+            if (Count <= 3) return result; 
+            result.P3 = Vector2.Transform(P3, transform);
+            if (Count == 4) return result; 
+            result.P4 = Vector2.Transform(P4, transform);
+            if (Count == 5) return result; 
+            result.P5 = Vector2.Transform(P5, transform);
+            if (Count == 6) return result; 
+            result.P6 = Vector2.Transform(P6, transform);
+            if (Count == 7) return result; 
+            result.P7 = Vector2.Transform(P7, transform);
             return result;
         }
 
         /// <summary>
         /// Returns a new translated polygon.
         /// </summary>
-        public Polygon8 Tranlate(in Vector2 translation)
+        [Pure]
+        public Polygon8 Translate(in Vector2 translation)
         {
             // this assumes polygons are always at least 3 corners, but it doesn't break when it's less.
             var result = new Polygon8
@@ -132,11 +140,16 @@ namespace Barebone.Geometry
                 P2 = P2 + translation
             };
 
-            if (Count <= 3) return result; result.P3 = P3 + translation;
-            if (Count == 4) return result; result.P4 = P4 + translation;
-            if (Count == 5) return result; result.P5 = P5 + translation;
-            if (Count == 6) return result; result.P6 = P6 + translation;
-            if (Count == 7) return result; result.P7 = P7 + translation;
+            if (Count <= 3) return result; 
+            result.P3 = P3 + translation;
+            if (Count == 4) return result; 
+            result.P4 = P4 + translation;
+            if (Count == 5) return result; 
+            result.P5 = P5 + translation;
+            if (Count == 6) return result; 
+            result.P6 = P6 + translation;
+            if (Count == 7) return result; 
+            result.P7 = P7 + translation;
             return result;
         }
 
@@ -164,11 +177,13 @@ namespace Barebone.Geometry
             return string.Join(" ", Enumerable.Range(0, Count).Select(i => a[i]));
         }
 
+        [Pure]
         public readonly Polygon8 Rotate(float radians)
         {
             return Transform(Matrix3x2.CreateRotation(radians));
         }
 
+        [Pure]
         public readonly Polygon8 Scale(in float factor)
         {
             // this assumes polygons are always at least 3 corners, but it doesn't break when it's less.
@@ -180,11 +195,16 @@ namespace Barebone.Geometry
                 P2 = P2 * factor
             };
 
-            if (Count <= 3) return result; result.P3 = P3 * factor;
-            if (Count == 4) return result; result.P4 = P4 * factor;
-            if (Count == 5) return result; result.P5 = P5 * factor;
-            if (Count == 6) return result; result.P6 = P6 * factor;
-            if (Count == 7) return result; result.P7 = P7 * factor;
+            if (Count <= 3) return result; 
+            result.P3 = P3 * factor;
+            if (Count == 4) return result; 
+            result.P4 = P4 * factor;
+            if (Count == 5) return result; 
+            result.P5 = P5 * factor;
+            if (Count == 6) return result; 
+            result.P6 = P6 * factor;
+            if (Count == 7) return result; 
+            result.P7 = P7 * factor;
             return result;
         }
 

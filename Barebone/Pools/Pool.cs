@@ -1,4 +1,5 @@
-﻿using System.Text;
+﻿using System.Buffers;
+using System.Text;
 
 namespace Barebone.Pools
 {
@@ -90,6 +91,16 @@ namespace Barebone.Pools
         public static MemorySnapshot GetMemorySnapshot()
         {
             return new MemorySnapshot(UsedPools.ToDictionary(p => p, p => p.RentedCount));
+        }
+
+        public static T[] RentArray<T>(int minCapacity)
+        {
+            return ArrayPool<T>.Shared.Rent(minCapacity);
+        }
+
+        public static void ReturnArray<T>(T[] array)
+        {
+            ArrayPool<T>.Shared.Return(array);
         }
     }
 

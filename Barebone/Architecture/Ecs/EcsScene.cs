@@ -105,7 +105,7 @@ namespace Barebone.Architecture.Ecs
         public void RegisterComponent<TCompo>() where TCompo : struct
         {
             var id = ArchetypeRegistry.RegisterComponent<TCompo>();
-            _componentAdditionQueues[id] = new SetComponentQueue<TCompo>(this);
+            _addComponentQueues[id] = new AddAddComponentQueue<TCompo>(this);
         }
 
         public Archetype GetArchetype(EntityId entityId)

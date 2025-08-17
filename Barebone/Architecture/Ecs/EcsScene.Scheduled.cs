@@ -1,11 +1,11 @@
 ﻿namespace Barebone.Architecture.Ecs
 {
-    internal interface IComponentAdditionQueue
+    internal interface IAddComponentQueue
     {
         void Process();
     }
 
-    internal class SetComponentQueue<T>(EcsScene scene) : IComponentAdditionQueue where T : struct
+    internal class AddAddComponentQueue<T>(EcsScene scene) : IAddComponentQueue where T : struct
     {
         private readonly List<(EntityId, T)> _queue = new();
 
@@ -21,7 +21,7 @@
         {
             foreach (var (id, value) in _queue)
             {
-                scene.SetComponent(id, value);
+                scene.AddComponent(id, value);
             }
             _queue.Clear();
         }
@@ -34,12 +34,12 @@
         private readonly HashSet<EntityId> _removeQueue = new();
         private readonly List<ComponentRemove> _componentRemoves = new();
         /// <summary>
-        /// sparse array by ComponentId with strongly typed <see cref="SetComponentQueue{T}"/>. Pre-populated by EcsScene.RegisterComponent()
+        /// sparse array by ComponentId with strongly typed <see cref="AddAddComponentQueue{T}"/>. Pre-populated by EcsScene.RegisterComponent()
         /// </summary>
-        private readonly IComponentAdditionQueue?[] _componentAdditionQueues = new IComponentAdditionQueue[Archetype.MaxComponentCount];
+        private readonly IAddComponentQueue?[] _addComponentQueues = new IAddComponentQueue[Archetype.MaxComponentCount];
 
         /// <summary>
-        /// Removes the given entity at the end of the current frame.
+        /// Schedules to remove the given entity at the end of the current frame.
         /// </summary>
         /// <param name="entityId"></param>
         public void RemoveEntityAfterFrame(in EntityId entityId)
@@ -48,7 +48,7 @@
         }
 
         /// <summary>
-        /// Removes a component from the given entity if it exists, at the end of the current frame.
+        /// Schedules to remove a component from the given entity (if it exists) at the end of the current frame.
         /// </summary>
         public void RemoveComponentAfterFrame<TCompo>(in EntityId entityId) where TCompo : struct
         {
@@ -57,12 +57,12 @@
         }
 
         /// <summary>
-        /// Adds or overwrites the value of a component of an entity, at the end of the current frame.
+        /// Schedules to add the new component to an entity at the end of the current frame.
         /// </summary>
-        public void SetComponentAfterFrame<TC>(in EntityId entityId, TC value = default) where TC : struct
+        public void AddComponentAfterFrame<TC>(in EntityId entityId, TC value = default) where TC : struct
         {
             var compoDef = ArchetypeRegistry.GetComponentDef<TC>();
-            ((SetComponentQueue<TC>)_componentAdditionQueues[compoDef.Id]!).Add(entityId, value);
+            ((AddAddComponentQueue<TC>)_addComponentQueues[compoDef.Id]!).Add(entityId, value);
         }
 
         private void ProcessPostFrame()
@@ -76,7 +76,7 @@
 
             for (var i = 0; i < Archetype.MaxComponentCount; i++)
             {
-                _componentAdditionQueues[i]?.Process();
+                _addComponentQueues[i]?.Process();
             }
 
             

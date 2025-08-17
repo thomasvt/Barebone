@@ -10,7 +10,7 @@ namespace Barebone.Box2d.Ecs
 
         public ulong CategoryMask;
         public ulong InteractionMask;
-        public EntityId? RigidBodyId;
+        public EntityId RigidBodyId;
 
         public Vector2 CircleCenter;
         public float CircleRadius;
@@ -20,7 +20,7 @@ namespace Barebone.Box2d.Ecs
 
         public static void OnAdd(in EcsScene ecsScene, in EntityId id, ref CircleShapeCompo s)
         {
-            var b2Body = ecsScene.GetComponentRef<RigidBodyCompo>(s.RigidBodyId ?? id);
+            var b2Body = ecsScene.GetComponentRef<RigidBodyCompo>(s.RigidBodyId);
             var def = B2Api.b2DefaultShapeDef();
             def.filter.categoryBits = s.CategoryMask;
             def.filter.maskBits = s.InteractionMask;
@@ -28,6 +28,7 @@ namespace Barebone.Box2d.Ecs
             def.enableSensorEvents = true;
             def.material.friction = s.Friction;
             def.material.restitution = s.Restitution;
+            def.userData = (nint)id.Value;
 
             s.B2ShapeId = B2Api.b2CreateCircleShape(b2Body.B2BodyId, def, new b2Circle(s.CircleCenter, s.CircleRadius));
         }

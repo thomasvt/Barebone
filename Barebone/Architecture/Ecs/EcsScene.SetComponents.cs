@@ -3,25 +3,31 @@ namespace Barebone.Architecture.Ecs;
 public partial class EcsScene
 {
     /// <summary>
-    /// Sets the value of a single component of a single entity.
-    /// If the entity did not have the component yet, it is added (and therefore changes Archetype, which is quite costly)
+    /// Adds a new component to an entity.
     /// </summary>
-    public void SetComponent<TCompo>(in EntityId entityId, in TCompo compo) where TCompo : struct
+    public void AddComponent<TCompo>(in EntityId entityId, in TCompo compo) where TCompo : struct
+    {
+        var archetype = _entityRegistry.Get(entityId).Archetype;
+        var compoDef = ArchetypeRegistry.GetComponentDef<TCompo>();
+        if (archetype.Includes(compoDef))
+            throw new Exception($"Entity '{entityId}' already has a component '{typeof(TCompo).Name}'.");
+
+        var destinationEntitySet = ChangeArchetype(in entityId, in archetype, archetype.Add(compoDef));
+        destinationEntitySet.SetUnsafe(in entityId, in compo, true);
+    }
+
+    /// <summary>
+    /// Overwrites the value of an existing component of an entity.
+    /// </summary>
+    public void UpdateComponent<TCompo>(in EntityId entityId, in TCompo compo) where TCompo : struct
     {
         var archetype = _entityRegistry.Get(entityId).Archetype;
         var compoDef = ArchetypeRegistry.GetComponentDef<TCompo>();
         if (!archetype.Includes(compoDef))
-        {
-            // compo is not part of entity's archetype. We must change archetype.
-            var destinationEntitySet = ChangeArchetype(in entityId, in archetype, archetype.Add(compoDef));
-            destinationEntitySet.SetUnsafe(in entityId, in compo, true);
-        }
-        else
-        {
-            // overwrite the already existing component
-            var entitySet = GetEntitySet(archetype);
-            entitySet.SetUnsafe(in entityId, in compo, false);
-        }
+            throw new Exception($"Cannot update because entity '{entityId}' has no component '{typeof(TCompo).Name}'.");
+
+        var entitySet = GetEntitySet(archetype);
+        entitySet.SetUnsafe(in entityId, in compo, false);
     }
 
     /// <summary>
