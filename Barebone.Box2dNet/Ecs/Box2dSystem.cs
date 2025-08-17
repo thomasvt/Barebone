@@ -1,5 +1,4 @@
-﻿using System.ComponentModel;
-using Barebone.Architecture.Ecs;
+﻿using Barebone.Architecture.Ecs;
 using Barebone.Architecture.Ecs.Components;
 using Barebone.Geometry;
 using Box2dNet.Interop;
@@ -12,12 +11,14 @@ namespace Barebone.Box2d.Ecs
     public class Box2dSystem : IDisposable
     {
         private readonly EcsScene _scene;
+        private readonly int _subStepCount;
         private readonly b2WorldId _b2WorldId;
 
         /// <param name="registerPosition2Compo">Pass in false if you register Position2Compo in the EcsScene yourself, else let Box2dSystem do it.</param>
-        public Box2dSystem(EcsScene scene, bool registerPosition2Compo, b2WorldDef? worldDef = null)
+        public Box2dSystem(EcsScene scene, bool registerPosition2Compo, int subStepCount, b2WorldDef? worldDef = null)
         {
             _scene = scene;
+            _subStepCount = subStepCount;
             _b2WorldId = B2Api.b2CreateWorld(worldDef ?? B2Api.b2DefaultWorldDef());
             
             if (registerPosition2Compo)
@@ -28,9 +29,9 @@ namespace Barebone.Box2d.Ecs
             CircleShapeCompo.Register(scene);
         }
 
-        public void Execute(float deltaT, int subStepCount)
+        public void Execute(float deltaT)
         {
-            B2Api.b2World_Step(_b2WorldId, deltaT, subStepCount);
+            B2Api.b2World_Step(_b2WorldId, deltaT, _subStepCount);
             ReadBodyStates();
         }
 

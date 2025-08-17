@@ -151,7 +151,7 @@ namespace Barebone.Graphics
             return CircleInZ(position, halfSize, 4, z, color);
         }
 
-        private Mesh CircleInZ(in Vector2 center, in float radius, in int segmentCount, in float z, in Color color)
+        public Mesh CircleInZ(in Vector2 center, in float radius, in int segmentCount, in float z, in Color color)
         {
             var angleStep = Angles._360 / segmentCount;
             var p0 = new Vector2(MathF.Cos(0f), MathF.Sin(0f)) * radius;
