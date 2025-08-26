@@ -1,5 +1,4 @@
 ﻿using System.Buffers;
-using System.Collections;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using Barebone.Pools;
@@ -23,9 +22,9 @@ namespace Barebone
         protected internal override void Destruct()
         {
             if (_items.Length > 0)
-            {
                 ArrayPool<T>.Shared.Return(_items);
-            }
+            _items = [];
+            Count = 0;
         }
 
         public int Add(T item)

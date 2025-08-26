@@ -5,7 +5,7 @@ using System.Runtime.InteropServices;
 namespace Barebone.Geometry
 {
     /// <summary>
-    /// Polygon with up to 8 corners as a value-type (inlined in this struct, no array on the heap)
+    /// DrawPolygon with up to 8 corners as a value-type (inlined in this struct, no array on the heap)
     /// </summary>
     [StructLayout(LayoutKind.Sequential)]
     public unsafe struct Polygon8
@@ -204,6 +204,30 @@ namespace Barebone.Geometry
             if (Count == 6) return result; 
             result.P6 = P6 * factor;
             if (Count == 7) return result; 
+            result.P7 = P7 * factor;
+            return result;
+        }
+
+        [Pure]
+        public readonly Polygon8 Scale(in Vector2 factor)
+        {
+            var result = new Polygon8
+            {
+                Count = Count,
+                P0 = P0 * factor,
+                P1 = P1 * factor,
+                P2 = P2 * factor
+            };
+
+            if (Count <= 3) return result;
+            result.P3 = P3 * factor;
+            if (Count == 4) return result;
+            result.P4 = P4 * factor;
+            if (Count == 5) return result;
+            result.P5 = P5 * factor;
+            if (Count == 6) return result;
+            result.P6 = P6 * factor;
+            if (Count == 7) return result;
             result.P7 = P7 * factor;
             return result;
         }
