@@ -4,7 +4,7 @@
     /// Similar to the Disposable pattern but for pooled objects. Lets the class implement Construct() and Destruct()
     /// which are called upon an instance being rented from and returned to the pool.
     /// </summary>
-    public abstract class Poolable
+    public abstract class Poolable : IPoolable
     {
         internal IPool OriginPool { get; set; }
 
@@ -24,7 +24,7 @@
         protected internal abstract void Destruct();
 
         /// <summary>
-        /// Return this object to the pool. Don't use the instance after calling this.
+        /// Return this object to the pool it came from. Don't use the instance after calling this.
         /// </summary>
         public void Return()
         {

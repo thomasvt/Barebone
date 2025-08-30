@@ -238,7 +238,7 @@ namespace Barebone.Geometry
             return new Polygon8(new(-hs, -hs), new(-hs, hs), new(hs, hs), new(hs, -hs));
         }
 
-        public static Polygon8 Quad(in Vector2 minCorner, in Vector2 maxCorner)
+        public static Polygon8 Aabb(in Vector2 minCorner, in Vector2 maxCorner)
         {
             var minX = minCorner.X;
             var minY = minCorner.Y;
@@ -247,9 +247,17 @@ namespace Barebone.Geometry
             return new Polygon8(new(minX, minY), new(minX, maxY), new(maxX, maxY), new(maxX, minY));
         }
 
-        public static Polygon8 Aabb(Aabb aabb)
+        public float GetCircumpherence()
         {
-            return Quad(aabb.MinCorner, aabb.MaxCorner);
+            if (Count < 2) return 0f;
+            var circumpherence = 0f;
+            for (var i = 0; i < Count; i++)
+            {
+                var a = this[i];
+                var b = this[(i + 1) % Count];
+                circumpherence += Vector2.Distance(a, b);
+            }
+            return circumpherence;
         }
     }
 }

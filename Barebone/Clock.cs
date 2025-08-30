@@ -5,14 +5,14 @@ namespace Barebone;
 /// </summary>
 public class Clock
 {
-    public float Time { get; private set; }
+    public float Now { get; private set; }
     public float DeltaT { get; private set; }
 
     public long FrameNumber { get; private set; }
 
     public void Update(float time, float deltaT)
     {
-        Time = time;
+        Now = time;
         DeltaT = deltaT;
         FrameNumber++;
     }
