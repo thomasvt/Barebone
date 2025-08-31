@@ -38,7 +38,7 @@ namespace Barebone.Monogame
         protected override void LoadContent()
         {
             base.LoadContent();
-            _renderer = new XnaImmediateRenderer(GraphicsDevice);
+            _renderer = new XnaImmediateRenderer(GraphicsDevice, _gdm);
 
             _game = _gameFactory.Invoke(this);
         }

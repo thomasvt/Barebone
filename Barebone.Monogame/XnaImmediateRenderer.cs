@@ -1,14 +1,16 @@
-﻿using System.Drawing;
-using System.Numerics;
+﻿using System.Numerics;
 using Barebone.Geometry;
 using Barebone.Graphics;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using Color = System.Drawing.Color;
+using Vector2 = System.Numerics.Vector2;
 using Vector4 = Microsoft.Xna.Framework.Vector4;
 using Viewport = Barebone.Graphics.Viewport;
 
 namespace Barebone.Monogame
 {
-    public class XnaImmediateRenderer(GraphicsDevice graphicsDevice) : IDisposable, IImmediateRenderer
+    public class XnaImmediateRenderer(GraphicsDevice graphicsDevice, GraphicsDeviceManager gdm) : IDisposable, IImmediateRenderer
     {
         private readonly BasicEffect _effect = new(graphicsDevice)
         {
@@ -37,8 +39,6 @@ namespace Barebone.Monogame
         {
             _camera = camera;
 
-            graphicsDevice.SetRenderTarget(null);
-
             graphicsDevice.BlendState = additiveBlend ? BlendState.Additive : BlendState.NonPremultiplied;
             graphicsDevice.DepthStencilState = enableDepthBuffer ? DepthStencilState.Default : DepthStencilState.None;
             graphicsDevice.RasterizerState = cullCounterClockwise ? RasterizerState.CullCounterClockwise : RasterizerState.CullNone;
@@ -50,22 +50,25 @@ namespace Barebone.Monogame
         }
 
         /// <summary>
-        /// Creates a special <see cref="ISprite"/> that you can render to from this <see cref="IImmediateRenderer"/>. Call `SetRenderTargetSprite()` to render to it. You must Dispose() this ISprite yourself.
+        /// Creates a special <see cref="ISprite"/> that you can render to from this <see cref="IImmediateRenderer"/>. Call `SwitchRenderTargetTo()` to render to it. You must Dispose() this ISprite yourself.
         /// </summary>
-        public ISprite CreateRenderTargetSprite(Vector2I size, bool supportDepthBuffer)
+        public ISprite CreateRenderTargetSprite(Vector2I size, bool supportDepthBuffer, int preferredMultiSampleCount = 0)
         {
             var renderTarget = new RenderTarget2D(
                 graphicsDevice,
                 width: size.X,
                 height: size.Y,
                 mipMap: false,
-                preferredFormat: SurfaceFormat.Color,
-                preferredDepthFormat: supportDepthBuffer ? DepthFormat.Depth24 : DepthFormat.None);
+                SurfaceFormat.Color,
+                supportDepthBuffer ? DepthFormat.Depth24 : DepthFormat.None,
+                preferredMultiSampleCount,
+                RenderTargetUsage.DiscardContents
+                );
 
             return new XnaSprite(renderTarget, new Aabb(new(0, 0), new(1, 1)), new Aabb(Vector2.Zero, size), true);
         }
 
-        public void SetRenderTargetSprite(ISprite sprite)
+        public void SwitchRenderTargetTo(ISprite sprite)
         {
             var xnaSprite = sprite as XnaSprite ?? throw new ArgumentException($"`sprite` should be created by calling `{nameof(CreateRenderTargetSprite)}()`.");
             var renderTarget = xnaSprite.Texture as RenderTarget2D ?? throw new ArgumentException($"`sprite` should be created by calling `{nameof(CreateRenderTargetSprite)}()`.");
@@ -73,9 +76,15 @@ namespace Barebone.Monogame
             graphicsDevice.SetRenderTarget(renderTarget);
         }
 
-        public void SetRenderTargetScreen()
+        public void SwitchRenderTargetToScreen()
         {
             graphicsDevice.SetRenderTarget(null);
+        }
+
+        public void EnableMultiSampling()
+        {
+            gdm.PreferMultiSampling = true;
+            gdm.ApplyChanges();
         }
 
         public void Draw(in Matrix4x4 worldTransform, in Mesh mesh)

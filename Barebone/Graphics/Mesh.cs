@@ -14,18 +14,13 @@ namespace Barebone.Graphics
     {
         public BBList<Triangle> Triangles = null!;
 
-        private BBList<Triangle2> _triangleBuffer = null!;
-
         protected internal override void Construct()
         {
             Triangles = Pool.Rent<BBList<Triangle>>();
-            _triangleBuffer = Pool.Rent<BBList<Triangle2>>();
         }
 
         protected internal override void Destruct()
         {
-            Pool.Return(_triangleBuffer);
-            _triangleBuffer = null!;
             Pool.Return(Triangles!);
             Triangles = null!;
         }
@@ -67,7 +62,7 @@ namespace Barebone.Graphics
             return this;
         }
 
-        public Mesh FillQuadInZ(in Aabb aabb, in float z, Color color)
+        public Mesh FillAabbInZ(in Aabb aabb, in float z, Color color)
         {
             return FillQuadInZ(aabb.MinCorner, aabb.TopLeft, aabb.TopRight, aabb.BottomRight, z, color);
         }
@@ -86,12 +81,13 @@ namespace Barebone.Graphics
             return DrawQuadInZ(aabb.MinCorner, aabb.TopLeft, aabb.TopRight, aabb.BottomRight, halfWidth, z, color);
         }
 
-        public Mesh FillPolygonInZ(in Polygon8 polygon, in float z, in Color color)
+        public unsafe Mesh FillPolygonInZ(in Polygon8 polygon, in float z, in Color color)
         {
             if (polygon.Count < 3) throw new Exception("Polygons must have at least 3 corners.");
 
-            TriangulatorConvex.Shared.Triangulate(polygon.AsReadOnlySpan(), _triangleBuffer);
-            foreach (var triangle in _triangleBuffer.AsReadOnlySpan())
+            Span<Triangle2> buffer = stackalloc Triangle2[TriangulatorConvex.Shared.GetTriangleCount(polygon.Count)];
+            TriangulatorConvex.Shared.Triangulate(polygon.AsReadOnlySpan(), buffer);
+            foreach (var triangle in buffer)
             {
                 FillTriangle(triangle.ToTriangle3(z), color);
             }
@@ -114,10 +110,10 @@ namespace Barebone.Graphics
 
         public Mesh PointInZ(in Vector2 position, in float halfSize, in float z, in Color color)
         {
-            return FillCircleInZ(position, halfSize, 4, z, color);
+            return FillRegularPolyInZ(position, halfSize, 4, z, color);
         }
 
-        public Mesh FillCircleInZ(in Vector2 center, in float radius, in int segmentCount, in float z, in Color color, in float angleOffset = 0f)
+        public Mesh FillRegularPolyInZ(in Vector2 center, in float radius, in int segmentCount, in float z, in Color color, in float angleOffset = 0f)
         {
             var angleStep = Angles._360 / segmentCount;
             
@@ -134,7 +130,7 @@ namespace Barebone.Graphics
             return this;
         }
 
-        public Mesh DrawCircleInZ(in Vector2 center, in float radius, in float strokeWidth, in int segmentCount, in float z, in Color color, in float angleOffset = 0f)
+        public Mesh DrawRegularPolyInZ(in Vector2 center, in float radius, in float strokeWidth, in int segmentCount, in float z, in Color color, in float angleOffset = 0f)
         {
             var angleStep = Angles._360 / segmentCount;
             var p0 = new Vector2(MathF.Cos(angleOffset), MathF.Sin(angleOffset)) * radius;
@@ -143,7 +139,7 @@ namespace Barebone.Graphics
                 var a1 = angleOffset + i * angleStep;
                 var p1 = new Vector2(MathF.Cos(a1), MathF.Sin(a1)) * radius;
 
-                LineInZ(p0, p1, strokeWidth, z, color);
+                LineInZ(center + p0, center + p1, strokeWidth, z, color);
 
                 p0 = p1;
             }

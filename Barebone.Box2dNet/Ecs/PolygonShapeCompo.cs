@@ -33,7 +33,7 @@ namespace Barebone.Box2d.Ecs
             def.userData = (nint)id.Value;
 
             var arr = ArrayPool<Vector2>.Shared.Rent(s.Polygon.Count);
-            s.Polygon.FillArray(arr);
+            s.Polygon.CopyTo(arr);
             var hull = B2Api.b2ComputeHull(arr, s.Polygon.Count);
             var polygon = B2Api.b2MakePolygon(hull, s.CornerRadius);
             ArrayPool<Vector2>.Shared.Return(arr);

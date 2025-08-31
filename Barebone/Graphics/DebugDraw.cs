@@ -24,6 +24,16 @@ namespace Barebone.Graphics
             _items.Add(new(polygon, fillColor, strokeColor, framesToLive, strokeWidth));
         }
 
+        public void DrawPoint(Vector2 point, float size = 1, int framesToLive = 30)
+        {
+            DrawPoint(point, DefaultColor, size, framesToLive);
+        }
+
+        public void DrawPoint(Vector2 point, Color? color, float size = 1f, int framesToLive = 30)
+        {
+            _items.Add(new(Polygon8.Square(strokeWidthBase * size).Translate(point), color, null, framesToLive, 1f));
+        }
+
         public void RenderAll(IImmediateRenderer renderer)
         {
             var span = _items.AsSpan();

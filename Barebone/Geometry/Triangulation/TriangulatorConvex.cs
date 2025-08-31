@@ -9,18 +9,26 @@ namespace Barebone.Geometry.Triangulation
         /// </summary>
         public readonly static TriangulatorConvex Shared = new();
         
-        public void Triangulate(ReadOnlySpan<Vector2> corners, BBList<Triangle2> triangleBuffer)
+        /// <summary>
+        /// Use GetTriangleCount() first to know the size of the span. 
+        /// </summary>
+        public void Triangulate(ReadOnlySpan<Vector2> corners, Span<Triangle2> triangleBuffer)
         {
             triangleBuffer.Clear();
-            
+
             var a = corners[0];
             var b = corners[1];
             for (var i = 0; i < corners.Length - 2; i++)
             {
                 var c = corners[i + 2];
-                triangleBuffer.Add(new Triangle2(a, b, c));
+                triangleBuffer[i] = new Triangle2(a, b, c);
                 b = c;
             }
+        }
+
+        public int GetTriangleCount(int cornerCount)
+        {
+            return cornerCount - 2;
         }
     }
 }

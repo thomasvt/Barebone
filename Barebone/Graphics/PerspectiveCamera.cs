@@ -12,14 +12,19 @@ namespace Barebone.Graphics
         private Vector3 _lookAtUp;
 
         /// <summary>
-        /// Creates a default camera with Y+ up, Z- away from camera, X+ to the right, looking at (0,0,0) at a given `distance`.
+        /// Creates a default camera with Y+ up, Z- away from camera, X+ to the right, looking at (0,0,0) at a given `distanceOnZ`.
         /// </summary>
-        public PerspectiveCamera(float distance, float nearPlane, float farPlane)
+        public static PerspectiveCamera LookAtXYPlane(float distanceOnZ, float nearPlane, float farPlane)
         {
-            Position = new(0, 0, distance);
-            NearPlane = nearPlane;
-            FarPlane = farPlane;
-            LookAt(new(0, 0, 0), Vector3.UnitY);
+            var cam = new PerspectiveCamera
+            {
+                Position = new(0, 0, distanceOnZ),
+                NearPlane = nearPlane,
+                FarPlane = farPlane,
+                
+            };
+            cam.LookAt(new(0, 0, 0), Vector3.UnitY);
+            return cam;
         }
 
         /// <summary>
@@ -29,7 +34,7 @@ namespace Barebone.Graphics
         {
             var postProjectiveLocation = Vector4.Transform(new Vector4(worldLocation.X, worldLocation.Y, worldLocation.Z, 1f), GetViewTransform() * GetProjectionTransform(in viewport));
             var clipSpace = new Vector2(postProjectiveLocation.X / postProjectiveLocation.W, -postProjectiveLocation.Y / postProjectiveLocation.W); // <- inverted Y axis for screen coords already in here
-            return (clipSpace + Vector2.One) * 0.5f * viewport.SizeF; // -> pixel space
+            return (clipSpace + Vector2.One) * 0.5f * viewport.Size.ToVector2(); // -> pixel space
         }
 
         /// <summary>
@@ -62,7 +67,7 @@ namespace Barebone.Graphics
         {
             // https://sibaku.github.io/computer-graphics/2017/01/10/Camera-Ray-Generation.html
 
-            var locationScreenSpace = pixelLocation * 2 / viewport.SizeF - Vector2.One; // -> screenspace [-1, +1]
+            var locationScreenSpace = pixelLocation * 2 / viewport.Size.ToVector2() - Vector2.One; // -> screenspace [-1, +1]
             locationScreenSpace.Y = -locationScreenSpace.Y;
 
             Matrix4x4.Invert(GetViewTransform(), out var viewInverse);

@@ -1,39 +1,43 @@
 ﻿using System.Numerics;
+using System.Runtime.CompilerServices;
 using Barebone.Geometry;
-using BareBone.Geometry;
 
 namespace BareBone.Random
 {
     /// <summary>
     /// Random impl based on .NET's random that is stable on all platforms (same results everywhere).
     /// </summary>
-    public class StableRandom
+    public class StableRandom(int seed)
     {
-        private CompatPrng _prng; // mutable struct; do not make this readonly
+        private CompatPrng _prng = new(seed); // mutable struct; do not make this readonly
 
-        public StableRandom(int seed) =>
-            _prng = new CompatPrng(seed);
-
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public int NextInt() => _prng.InternalSample();
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public int NextInt(int maxValue) => (int)(_prng.Sample() * maxValue);
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public int NextInt(int minValue, int maxValue)
         {
             var range = maxValue - minValue;
             return (int)(_prng.Sample() * range) + minValue;
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public byte NextByte() => (byte)_prng.InternalSample();
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public byte NextByte(byte maxValue) => (byte)(_prng.Sample() * maxValue);
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public byte NextByte(byte minValue, byte maxValue)
         {
             var range = maxValue - minValue;
             return (byte)(_prng.Sample() * range + minValue);
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public long NextInt64()
         {
             while (true)
@@ -55,22 +59,31 @@ namespace BareBone.Random
             (((ulong)(uint)NextInt(1 << 22)) << 22) |
             (((ulong)(uint)NextInt(1 << 20)) << 44);
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public double NextDouble() => _prng.Sample();
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public float NextFloat(float max) => (float)_prng.Sample() * max;
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public float NextFloat(float min, float max) => (float)_prng.Sample() * (max - min) + min;
 
         /// <summary>
         /// A random float between 0 and 1
         /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public float NextFloat() => (float)_prng.Sample();
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void NextBytes(byte[] buffer) => _prng.NextBytes(buffer);
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void NextBytes(Span<byte> buffer) => _prng.NextBytes(buffer);
 
         /// <summary>
         /// Picks a random item from the array.
         /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public T Pick<T>(IReadOnlyList<T> items)
         {
             return items[NextInt(0, items.Count)];
@@ -79,6 +92,7 @@ namespace BareBone.Random
         /// <summary>
         /// Picks a random item from the array.
         /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public T Pick<T>(ChanceSet<T> set)
         {
             return set.Pick(NextFloat());
@@ -87,6 +101,7 @@ namespace BareBone.Random
         /// <summary>
         /// Returns a vector with random length, in a random direction.
         /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Vector2 NextVector(float minLength, float maxLength)
         {
             return NextFloat(0, Angles._360).AngleToVector2(NextFloat(minLength, maxLength));
@@ -95,6 +110,7 @@ namespace BareBone.Random
         /// <summary>
         /// Returns a vector with random length, in a random direction.
         /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Vector2 NextVector(Aabb range)
         {
             return new(NextFloat(range.Left, range.Right), NextFloat(range.Bottom, range.Top));

@@ -1,4 +1,4 @@
-﻿using System.Numerics;
+﻿using Barebone.Geometry;
 
 namespace Barebone.Graphics
 {
@@ -11,6 +11,6 @@ namespace Barebone.Graphics
             ? (float)Width / Height 
             : 0f;
 
-        public Vector2 SizeF => new (Width, Height);
+        public Vector2I Size => new (Width, Height);
     }
 }

@@ -27,9 +27,10 @@ namespace Barebone.Graphics
         /// Creates a special <see cref="ISprite"/> that you can set as RenderTarget on this Renderer. You must Dispose() this yourself.
         /// </summary>
         /// <param name="supportDepthBuffer">Also allow to render with Z-buffer to this sprite. This allocates more memory.</param>
-        ISprite CreateRenderTargetSprite(Vector2I size, bool supportDepthBuffer);
+        ISprite CreateRenderTargetSprite(Vector2I size, bool supportDepthBuffer, int preferredMultiSampleCount = 0);
 
-        void SetRenderTargetSprite(ISprite sprite);
-        void SetRenderTargetScreen();
+        void SwitchRenderTargetTo(ISprite sprite);
+        void SwitchRenderTargetToScreen();
+        void EnableMultiSampling();
     }
 }

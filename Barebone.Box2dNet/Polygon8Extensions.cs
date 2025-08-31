@@ -7,9 +7,6 @@ namespace Barebone.Box2d
     {
         public static b2ShapeProxy ToB2ShapeProxy(this Polygon8 poly)
         {
-            var proxy = new b2ShapeProxy();
-            proxy.count = poly.Count;
-
             var result = new b2ShapeProxy
             {
                 count = poly.Count,

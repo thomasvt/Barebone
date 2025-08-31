@@ -6,7 +6,7 @@
     /// </summary>
     public abstract class Poolable : IPoolable
     {
-        internal IPool OriginPool { get; set; }
+        internal IPool OriginPool { get; set; } = null!;
 
         /// <summary>
         /// Is this instance in use by the application (true) or an unused instance sitting in the 'free' pool (false).
