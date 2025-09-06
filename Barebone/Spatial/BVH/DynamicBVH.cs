@@ -2,31 +2,26 @@
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using Barebone.Geometry;
-using Proxy = System.Int32;
 
-namespace Barebone.Physics.BVH
+namespace Barebone.Spatial.BVH
 {
     /// <summary>
-    /// BVH from https://github.com/codingben/box2d-netstandard/blob/v2.4.7-alpha/src/box2dx/Box2D.NetStandard/Collision/DynamicTree.cs
+    /// Fast dynamic BVH from https://github.com/codingben/box2d-netstandard/blob/v2.4.7-alpha/src/box2dx/Box2D.NetStandard/Collision/DynamicTree.cs
     /// </summary>
-    public sealed class DynamicTree
+    public sealed class DynamicBVH<TTag>
     {
-        public struct RayCastInput
-        {
-            public Vector2 p1, p2;
-            public float maxFraction;
-        }
+        public readonly record struct RayCastInput(Vector2 P1, Vector2 P2, float MaxFraction);
 
-        private const Proxy ProxyFree = -1;
+        private const int ProxyFree = -1;
 
         private struct Node
         {
             public Aabb Aabb;
-            public Proxy Parent;
-            public Proxy Child1;
-            public Proxy Child2;
+            public int Parent;
+            public int Child1;
+            public int Child2;
 
-            public object UserData;
+            public TTag UserData;
 
             public int Height;
             public bool Moved;
@@ -55,8 +50,8 @@ namespace Barebone.Physics.BVH
 
         public int Capacity => _nodes.Length;
         private Node[] _nodes;
-        private Proxy _root;
-        private Proxy _freeNodes;
+        private int _root;
+        private int _freeNodes;
         private int _nodeCount;
 
         public int Height
@@ -129,7 +124,7 @@ namespace Barebone.Physics.BVH
 
         private const float AABBMultiplier = 2f;
 
-        public DynamicTree()
+        public DynamicBVH()
         {
             _root = ProxyFree;
             _nodes = new Node[256];
@@ -140,7 +135,7 @@ namespace Barebone.Physics.BVH
 
             for (var i = 0; i < l; i++, node = ref _nodes[i])
             {
-                node.Parent = (Proxy)(i + 1);
+                node.Parent = i + 1;
                 node.Height = -1;
             }
 
@@ -155,7 +150,7 @@ namespace Barebone.Physics.BVH
         ///     If allocation occurs, references to <see cref="Node" />s will be invalid.
         /// </remarks>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private ref Node AllocateNode(out Proxy proxy)
+        private ref Node AllocateNode(out int proxy)
         {
             // Expand the node pool as needed.
             if (_freeNodes == ProxyFree)
@@ -203,14 +198,14 @@ namespace Barebone.Physics.BVH
                 ref Node node = ref _nodes[_nodeCount];
                 for (var i = _nodeCount; i < l; ++i, node = ref _nodes[i])
                 {
-                    node.Parent = (Proxy)(i + 1);
+                    node.Parent = i + 1;
                     node.Height = -1;
                 }
 
                 ref var lastNode = ref _nodes[l];
                 lastNode.Parent = ProxyFree;
                 lastNode.Height = -1;
-                _freeNodes = (Proxy)_nodeCount;
+                _freeNodes = _nodeCount;
             }
         }
 
@@ -218,7 +213,7 @@ namespace Barebone.Physics.BVH
         ///     Return a node to the pool.
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private void FreeNode(Proxy proxy)
+        private void FreeNode(int proxy)
         {
             ref var node = ref _nodes[proxy];
             node.Parent = _freeNodes;
@@ -233,37 +228,43 @@ namespace Barebone.Physics.BVH
         }
 
         /// <summary>
-        ///     Create a proxy in the tree as a leaf node.
+        /// Create a proxy in the tree as a leaf node.
         /// </summary>
-        public Proxy CreateProxy(in Aabb aabb, object userData)
+        public int Add(in Aabb aabb, TTag userData)
         {
-            ref var proxy = ref AllocateNode(out var proxyId);
+            ref var node = ref AllocateNode(out var nodeId);
 
             // Fatten the aabb.
-            proxy.Aabb = aabb.Grow(AABBExtendSize);
-            proxy.Height = 0;
-            proxy.Moved = true;
-            proxy.UserData = userData;
+            node.Aabb = aabb.Grow(AABBExtendSize);
+            node.Height = 0;
+            node.Moved = true;
+            node.UserData = userData;
 
-            InsertLeaf(proxyId);
-            return proxyId;
+            InsertLeaf(nodeId);
+            return nodeId;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        internal void DestroyProxy(Proxy proxy)
+        public void Remove(int id)
         {
-            Assert(0 <= proxy && proxy < Capacity);
-            Assert(_nodes[proxy].IsLeaf);
+            Assert(0 <= id && id < Capacity);
+            Assert(_nodes[id].IsLeaf);
 
-            RemoveLeaf(proxy);
-            FreeNode(proxy);
+            RemoveLeaf(id);
+            FreeNode(id);
         }
 
-        public bool MoveProxy(Proxy proxy, in Aabb aabb, Vector2 displacement)
+        /// <summary>
+        /// Move an item
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="aabb">The current aabb of the object (the tree doesn't store this, so you need to provide it again)</param>
+        /// <param name="displacement">The wanted movement</param>
+        public bool Move(int id, in Aabb aabb, Vector2 displacement)
         {
-            Assert(0 <= proxy && proxy < Capacity);
+            Assert(0 <= id && id < Capacity);
 
-            ref var leafNode = ref _nodes[proxy];
+            ref var leafNode = ref _nodes[id];
 
             Assert(leafNode.IsLeaf);
 
@@ -322,11 +323,11 @@ namespace Barebone.Physics.BVH
                 // Otherwise the tree AABB is huge and needs to be shrunk
             }
 
-            RemoveLeaf(proxy);
+            RemoveLeaf(id);
 
             leafNode.Aabb = fatAabb;
 
-            InsertLeaf(proxy);
+            InsertLeaf(id);
 
             leafNode.Moved = true;
 
@@ -334,31 +335,31 @@ namespace Barebone.Physics.BVH
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public object GetUserData(Proxy proxy)
+        public object GetUserData(int proxy)
         {
             return _nodes[proxy].UserData;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public bool WasMoved(Proxy proxy)
+        public bool WasMoved(int proxy)
         {
             return _nodes[proxy].Moved;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void ClearMoved(Proxy proxy)
+        public void ClearMoved(int proxy)
         {
             _nodes[proxy].Moved = false;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public Aabb GetFatAABB(Proxy proxy)
+        public Aabb GetFatAABB(int proxy)
         {
             return _nodes[proxy].Aabb;
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
-        private void RemoveLeaf(Proxy leaf)
+        private void RemoveLeaf(int leaf)
         {
             if (leaf == _root)
             {
@@ -406,7 +407,7 @@ namespace Barebone.Physics.BVH
             Validate();
         }
 
-        private void InsertLeaf(Proxy leaf)
+        private void InsertLeaf(int leaf)
         {
             if (_root == ProxyFree)
             {
@@ -532,7 +533,7 @@ namespace Barebone.Physics.BVH
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
-        private void Balance(Proxy index)
+        private void Balance(int index)
         {
             while (index != ProxyFree)
             {
@@ -563,7 +564,7 @@ namespace Barebone.Physics.BVH
         /// </summary>
         /// <returns>The new root index.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private Proxy BalanceStep(Proxy iA)
+        private int BalanceStep(int iA)
         {
             ref var a = ref _nodes[iA];
 
@@ -722,7 +723,7 @@ namespace Barebone.Physics.BVH
         ///     Compute the height of a sub-tree.
         /// </summary>
         [MethodImpl(MethodImplOptions.NoInlining)]
-        private int ComputeHeight(Proxy proxy)
+        private int ComputeHeight(int proxy)
         {
             ref var node = ref _nodes[proxy];
             if (node.IsLeaf)
@@ -739,7 +740,7 @@ namespace Barebone.Physics.BVH
         [MethodImpl(MethodImplOptions.NoInlining)]
         public void RebuildBottomUp(int free = 0)
         {
-            var proxies = new Proxy[NodeCount + free];
+            var proxies = new int[NodeCount + free];
             var count = 0;
 
             // Build array of leaves. Free the rest.
@@ -752,7 +753,7 @@ namespace Barebone.Physics.BVH
                     continue;
                 }
 
-                var proxy = (Proxy)i;
+                var proxy = i;
                 if (node.IsLeaf)
                 {
                     node.Parent = ProxyFree;
@@ -832,7 +833,7 @@ namespace Barebone.Physics.BVH
 
         public void Query(Func<int, bool> queryCallback, in Aabb aabb)
         {
-            using var stack = new GrowableStack<Proxy>(stackalloc Proxy[256]);
+            using var stack = new GrowableStack<int>(stackalloc int[256]);
             stack.Push(_root);
 
             while (stack._count != 0)
@@ -866,8 +867,8 @@ namespace Barebone.Physics.BVH
 
         public void RayCast(Func<RayCastInput, int, float> RayCastCallback, in RayCastInput input)
         {
-            Vector2 p1 = input.p1;
-            Vector2 p2 = input.p2;
+            Vector2 p1 = input.P1;
+            Vector2 p2 = input.P2;
             Vector2 r = p2 - p1;
             //Debug.Assert(r.LengthSquared() > 0.0f);
             r = Vector2.Normalize(r);
@@ -880,7 +881,7 @@ namespace Barebone.Physics.BVH
             // Separating axis for segment (Gino, p80).
             // |dot(v, p1 - c)| > dot(|v|, h)
 
-            float maxFraction = input.maxFraction;
+            float maxFraction = input.MaxFraction;
 
             // Build a bounding box for the segment.
             Aabb segmentAABB;
@@ -889,7 +890,7 @@ namespace Barebone.Physics.BVH
                 segmentAABB = new(Vector2.Min(p1, t), Vector2.Max(p1, t));
             }
 
-            using var stack = new GrowableStack<Proxy>(stackalloc Proxy[256]);
+            using var stack = new GrowableStack<int>(stackalloc int[256]);
             stack.Push(_root);
 
             while (stack._count != 0)
@@ -969,7 +970,7 @@ namespace Barebone.Physics.BVH
         }
 
         [Conditional("DEBUG")]
-        private void Validate(Proxy proxy)
+        private void Validate(int proxy)
         {
             if (proxy == ProxyFree) return;
 
@@ -1018,7 +1019,7 @@ namespace Barebone.Physics.BVH
         }
 
         [Conditional("DEBUG_DYNAMIC_TREE")]
-        private void ValidateHeight(Proxy proxy)
+        private void ValidateHeight(int proxy)
         {
             if (proxy == ProxyFree)
             {
@@ -1066,7 +1067,7 @@ namespace Barebone.Physics.BVH
         }
 
 
-        private IEnumerable<(Proxy, Node)> DebugAllocatedNodesEnumerable
+        private IEnumerable<(int, Node)> DebugAllocatedNodesEnumerable
         {
             get
             {
@@ -1075,18 +1076,18 @@ namespace Barebone.Physics.BVH
                     var node = _nodes[i];
                     if (!node.IsFree)
                     {
-                        yield return ((Proxy)i, node);
+                        yield return (i, node);
                     }
                 }
             }
         }
 
         [DebuggerBrowsable(DebuggerBrowsableState.RootHidden)]
-        private (Proxy, Node)[] DebugAllocatedNodes
+        private (int, Node)[] DebugAllocatedNodes
         {
             get
             {
-                var data = new (Proxy, Node)[NodeCount];
+                var data = new (int, Node)[NodeCount];
                 var i = 0;
                 foreach (var x in DebugAllocatedNodesEnumerable)
                 {

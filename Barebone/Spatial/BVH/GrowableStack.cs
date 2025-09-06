@@ -1,7 +1,7 @@
 ﻿using System.Diagnostics;
 using System.Runtime.InteropServices;
 
-namespace Barebone.Physics.BVH
+namespace Barebone.Spatial.BVH
 {
     /// <summary>
     /// This is a growable LIFO stack with an initial capacity of N.
@@ -44,7 +44,7 @@ namespace Barebone.Physics.BVH
         {
             if (_wasReallocated)
             {
-                Marshal.FreeHGlobal((IntPtr)_stack);
+                Marshal.FreeHGlobal((nint)_stack);
                 _stack = null;
             }
         }
@@ -60,7 +60,7 @@ namespace Barebone.Physics.BVH
                 Buffer.MemoryCopy(old, _stack, dstSize, _count * sizeof(T));
                 if (_wasReallocated)
                 {
-                    Marshal.FreeHGlobal((IntPtr)old);
+                    Marshal.FreeHGlobal((nint)old);
                 }
 
                 _wasReallocated = true;

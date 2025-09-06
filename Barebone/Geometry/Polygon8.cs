@@ -249,5 +249,22 @@ namespace Barebone.Geometry
         {
             return Aabb(aabb.MinCorner, aabb.MaxCorner);
         }
+
+        public Aabb GetAabb()
+        {
+            var l = _vertices[0].X;
+            var r = l;
+            var t = _vertices[0].Y;
+            var b = t;
+            for (var i = 1; i < Count; i++)
+            {
+                ref var v = ref _vertices[i];
+                l = MathF.Min(v.X, l);
+                b = MathF.Min(v.Y, b);
+                r = MathF.Max(v.X, r);
+                t = MathF.Max(v.Y, t);
+            }
+            return new(new(l, b), new(r, t));
+        }
     }
 }

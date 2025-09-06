@@ -7,7 +7,7 @@ namespace Barebone.Spatial
     /// <summary>
     /// Bounding Volume Hierarchy. Spatial tree for items that are allowed to overlap.
     /// </summary>
-    public class BVH<TItem> : IDisposable
+    public class StaticBVH<TItem> : IDisposable
     {
         public record struct ItemPair(TItem A, TItem B);
         public record struct RayCastHit(TItem Item, float Distance);
@@ -55,7 +55,7 @@ namespace Barebone.Spatial
             if (parent.IsLeaf)
             {
                 var newParent = Pool.RentWithoutConstruct<Node>();
-                newParent.Aabb = parent.Aabb.Union(node.Aabb);
+                newParent.Aabb = Aabb.Union(parent.Aabb, node.Aabb);
                 newParent.Item = default;
                 newParent.ItemCategoryMask = parent.ItemCategoryMask | node.ItemCategoryMask;
                 newParent.Left = parent;
@@ -63,8 +63,8 @@ namespace Barebone.Spatial
                 return newParent;
             }
 
-            var leftSize = parent.Left!.Aabb.Union(node.Aabb).GetArea();
-            var rightSize = parent.Right!.Aabb.Union(node.Aabb).GetArea();
+            var leftSize = Aabb.Union(parent.Left!.Aabb, node.Aabb).GetArea();
+            var rightSize = Aabb.Union(parent.Right!.Aabb, node.Aabb).GetArea();
             if (leftSize <= rightSize)
             {
                 parent.Left = Add(parent.Left, node);
@@ -74,7 +74,7 @@ namespace Barebone.Spatial
             {
                 parent.Right = Add(parent.Right, node);
             }
-            parent.Aabb = parent.Left.Aabb.Union(parent.Right.Aabb);
+            parent.Aabb = Aabb.Union(parent.Left.Aabb, parent.Right.Aabb);
             parent.ItemCategoryMask = parent.Left.ItemCategoryMask | parent.Right.ItemCategoryMask;
 
             return parent;
