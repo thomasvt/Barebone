@@ -193,6 +193,16 @@ namespace Barebone.Geometry
             return result;
         }
 
+        public Polygon8 Bevel(float distance)
+        {
+            var poly = this;
+            for (var i = Count-1; i >= 0; i--)
+            {
+                poly = poly.BevelVertex(i, distance);
+            }
+            return poly;
+        }
+
         [Pure]
         public readonly Polygon8 InsertAt(int index, Vector2 vertex)
         {

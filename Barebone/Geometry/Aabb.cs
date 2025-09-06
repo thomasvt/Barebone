@@ -1,4 +1,5 @@
-﻿using System.Numerics;
+﻿using System.Diagnostics.Contracts;
+using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Text.Json.Serialization;
 
@@ -12,6 +13,16 @@ namespace Barebone.Geometry
         public bool Contains(Vector2 v)
         {
             return v.X >= MinCorner.X && v.X < MaxCorner.X && v.Y >= MinCorner.Y && v.Y < MaxCorner.Y;
+        }
+
+        internal bool Contains(in Aabb aabb)
+        {
+            var result = true;
+            result = result && MinCorner.X <= aabb.MinCorner.X;
+            result = result && MinCorner.Y <= aabb.MinCorner.Y;
+            result = result && aabb.MaxCorner.X <= MaxCorner.X;
+            result = result && aabb.MaxCorner.Y <= MaxCorner.Y;
+            return result;
         }
 
         public float? RayCast(in Ray2 ray, float tMax)
@@ -80,6 +91,7 @@ namespace Barebone.Geometry
         /// Pushes the bounds of the aabb in all 4 directions to the outside for the given distance.
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        [Pure]
         public Aabb Grow(float distance)
         {
             return new(new(MinCorner.X - distance, MinCorner.Y - distance), new(MaxCorner.X + distance, MaxCorner.Y + distance));
@@ -134,6 +146,9 @@ namespace Barebone.Geometry
         public Vector2 Size => MaxCorner - MinCorner;
 
         [JsonIgnore]
+        public Vector2 HalfSize => (MaxCorner - MinCorner) * 0.5f;
+
+        [JsonIgnore]
         public Vector2 Center => (MinCorner + MaxCorner) * 0.5f;
 
         /// <summary>
@@ -168,6 +183,7 @@ namespace Barebone.Geometry
         [JsonIgnore] public float Bottom => MinCorner.Y;
         public float Width => MaxCorner.X - MinCorner.X;
         public float Height => MaxCorner.Y - MinCorner.Y;
+        public float Perimeter => 2 * (MaxCorner.X - MinCorner.X + MaxCorner.Y - MinCorner.Y);
 
         public static Aabb One = new(Vector2.Zero, Vector2.One);
 
@@ -241,10 +257,10 @@ namespace Barebone.Geometry
             yield return BottomLeft;
         }
 
-        public Aabb Union(Aabb b)
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static Aabb Union(in Aabb a, in Aabb b)
         {
-            return new(new Vector2(MathF.Min(Left, b.Left), MathF.Min(Bottom, b.Bottom)),
-                new Vector2(MathF.Max(Right, b.Right), MathF.Max(Top, b.Top)));
+            return new(Vector2.Min(a.MinCorner, b.MinCorner), Vector2.Max(a.MaxCorner, b.MaxCorner));
         }
 
         public float GetArea()

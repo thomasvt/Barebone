@@ -46,5 +46,14 @@ namespace BareBone.Graphics
         {
             return Color.FromArgb(alpha, c);
         }
+
+        public static Color Lerp(Color c0, Color c1, float t)
+        {
+            var a = (int)(c0.A * (1 - t) + c1.A * t);
+            var r = (int)(c0.R * (1 - t) + c1.R * t);
+            var g = (int)(c0.G * (1 - t) + c1.G * t);
+            var b = (int)(c0.B * (1 - t) + c1.B * t);
+            return Color.FromArgb(a, r, g, b);
+        }
     }
 }

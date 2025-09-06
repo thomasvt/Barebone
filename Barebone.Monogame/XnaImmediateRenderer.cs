@@ -1,6 +1,7 @@
 ﻿using System.Numerics;
 using Barebone.Geometry;
 using Barebone.Graphics;
+using BareBone.Graphics;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Color = System.Drawing.Color;
@@ -87,9 +88,14 @@ namespace Barebone.Monogame
             gdm.ApplyChanges();
         }
 
-        public void Draw(in Matrix4x4 worldTransform, in Mesh mesh)
+        public void Draw(in Matrix4x4 worldTransform, in Mesh mesh, in Color? replacementColor = null)
         {
-            if (mesh.Triangles!.Count == 0 || _camera == null) return;
+            Draw(worldTransform, mesh.Triangles.AsReadOnlySpan(), replacementColor);
+        }
+
+        public void Draw(in Matrix4x4 worldTransform, in ReadOnlySpan<Triangle> triangles, in Color? replacementColor = null)
+        {
+            if (triangles.Length == 0 || _camera == null) return;
 
             _effect.World = worldTransform.ToXna();
             _effect.Texture = null;
@@ -97,12 +103,12 @@ namespace Barebone.Monogame
             _effect.CurrentTechnique.Passes[0].Apply(); // don't use First() to prevent iterator allocation
 
             _xnaVerticesBuffer.Clear();
-            foreach (var triangle in mesh.Triangles!.AsSpan())
+            foreach (var triangle in triangles)
             {
-                var color = triangle.Color.ToXna();
-                _xnaVerticesBuffer.Add(new VertexPositionColor(triangle.A.ToXna(), color));
-                _xnaVerticesBuffer.Add(new VertexPositionColor(triangle.B.ToXna(), color));
-                _xnaVerticesBuffer.Add(new VertexPositionColor(triangle.C.ToXna(), color));
+                var colorXna = (replacementColor ?? triangle.Color).ToXna();
+                _xnaVerticesBuffer.Add(new VertexPositionColor(triangle.A.ToXna(), colorXna));
+                _xnaVerticesBuffer.Add(new VertexPositionColor(triangle.B.ToXna(), colorXna));
+                _xnaVerticesBuffer.Add(new VertexPositionColor(triangle.C.ToXna(), colorXna));
             }
             _effect.GraphicsDevice.DrawUserPrimitives(PrimitiveType.TriangleList, _xnaVerticesBuffer.InternalArray, 0, _xnaVerticesBuffer.Count / 3);
         }
