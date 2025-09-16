@@ -366,5 +366,35 @@ namespace Barebone.Geometry
             return new(new(MinCorner.X - other.MaxCorner.X, MinCorner.Y - other.MaxCorner.Y),
                 new(MaxCorner.X - other.MinCorner.X, MaxCorner.Y - other.MinCorner.Y));
         }
+
+        /// <summary>
+        /// Splits the aabb at X. Returns true and the split aabb's, or false if x lies outside.
+        /// </summary>
+        public bool SplitAtX(float x, out Aabb left, out Aabb right)
+        {
+            left = default;
+            right = default;
+
+            if (x <= Left || x >= Right) return false;
+
+            left = new(new(Left, Bottom), new(x, Top));
+            right = new(new(x, Bottom), new(Right, Top));
+            return true;
+        }
+        
+        /// <summary>
+        /// Splits the aabb at Y. Returns true and the split aabb's, or false if y lies outside.
+        /// </summary>
+        public bool SplitAtY(float y, out Aabb bottom, out Aabb top)
+        {
+            bottom = default;
+            top = default;
+
+            if (y <= Bottom || y >= Top) return false;
+
+            bottom = new(new(Left, Bottom), new(Right, y));
+            top = new(new(Left, y), new(Right, Top));
+            return true;
+        }
     }
 }
