@@ -1,8 +1,6 @@
 ﻿using System.Diagnostics.Contracts;
 using System.Numerics;
-using System.Reflection.Metadata.Ecma335;
 using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
 
 namespace Barebone.Geometry
 {
@@ -12,10 +10,11 @@ namespace Barebone.Geometry
         private Vector2 P0;
     }
 
+
     /// <summary>
     /// DrawPolygon with up to 8 corners as a value-type (inlined in this struct, no array on the heap)
     /// </summary>
-    public unsafe struct Polygon8
+    public unsafe partial struct Polygon8
     {
         public const int MaxVertexCount = 8;
         public int Count;
@@ -250,6 +249,7 @@ namespace Barebone.Geometry
             return Aabb(aabb.MinCorner, aabb.MaxCorner);
         }
 
+        [Pure]
         public Aabb GetAabb()
         {
             var l = _vertices[0].X;
@@ -266,5 +266,14 @@ namespace Barebone.Geometry
             }
             return new(new(l, b), new(r, t));
         }
+    }
+
+    public struct PolygonIntersection
+    {
+        public bool IsOverlap;
+        /// <summary>
+        /// Minimum Translation Vector
+        /// </summary>
+        public Vector2 MTV;
     }
 }

@@ -56,7 +56,6 @@ namespace Barebone.Geometry
                 if (tMin > tMax) return null;
             }
 
-
             // check Y dimension slab:
 
             if (Math.Abs(ray.DirectionNorm.Y) < float.Epsilon)
@@ -82,6 +81,92 @@ namespace Barebone.Geometry
 
                 // Exit with no collision as soon as slab intersection becomes empty
                 if (tMin > tMax) return null;
+            }
+
+            return tMin;
+        }
+
+        public float? RayCast(in Ray2 ray, float tMax, out Vector2 surfaceNormal)
+        {
+            var tMin = 0f;
+            surfaceNormal = Vector2.Zero;
+
+            // check X dimension slab:
+
+            if (Math.Abs(ray.DirectionNorm.X) < float.Epsilon)
+            {
+                // Ray is parallel to slab in this dimension. No hit if origin not within slab
+                if (ray.Origin.X < MinCorner.X || ray.Origin.X > MaxCorner.X)
+                {
+                    surfaceNormal = Vector2.Zero;
+                    return null;
+                }
+            }
+            else
+            {
+                // Compute intersection t value of ray with near and far plane of slab
+                var directionInv = 1.0f / ray.DirectionNorm.X;
+                var t1 = (MinCorner.X - ray.Origin.X) * directionInv;
+                var t2 = (MaxCorner.X - ray.Origin.X) * directionInv;
+                var n1 = new Vector2(-1, 0);
+                var n2 = -n1;
+
+                // Make t1 be intersection with near plane, t2 with far plane
+                if (t1 > t2)
+                {
+                    (t1, t2) = (t2, t1);
+                    n1 = n2;
+                }
+
+                // Compute the intersection of slab intersection intervals
+                if (t1 > tMin) { tMin = t1; surfaceNormal = n1; }
+                tMax = MathF.Min(tMax, t2);
+
+                // Exit with no collision as soon as slab intersection becomes empty
+                if (tMin > tMax)
+                {
+                    surfaceNormal = Vector2.Zero;
+                    return null;
+                }
+            }
+
+            // check Y dimension slab:
+
+            if (Math.Abs(ray.DirectionNorm.Y) < float.Epsilon)
+            {
+                // Ray is parallel to slab in this dimension. No hit if origin not within slab
+                if (ray.Origin.Y < MinCorner.Y || ray.Origin.Y > MaxCorner.Y)
+                {
+                    surfaceNormal = Vector2.Zero;
+                    return null;
+                }
+            }
+            else
+            {
+                // Compute intersection t value of ray with near and far plane of slab
+                var directionInv = 1.0f / ray.DirectionNorm.Y;
+                var t1 = (MinCorner.Y - ray.Origin.Y) * directionInv;
+                var t2 = (MaxCorner.Y - ray.Origin.Y) * directionInv;
+                var n1 = new Vector2(0, -1);
+                var n2 = -n1;
+
+                // Make t1 be intersection with near plane, t2 with far plane
+                if (t1 > t2)
+                {
+                    (t1, t2) = (t2, t1);
+                    n1 = n2;
+                }
+
+                // Compute the intersection of slab intersection intervals
+                if (t1 > tMin) { tMin = t1; surfaceNormal = n1; }
+                tMax = MathF.Min(tMax, t2);
+
+                // Exit with no collision as soon as slab intersection becomes empty
+                if (tMin > tMax)
+                {
+                    surfaceNormal = Vector2.Zero;
+                    return null;
+                }
             }
 
             return tMin;
@@ -270,7 +355,16 @@ namespace Barebone.Geometry
 
         public override string ToString()
         {
-            return $"<{MinCorner.X}.{MinCorner.Y}:{MaxCorner.X}.{MaxCorner.Y}>";
+            return $"<{MinCorner.X}.{MinCorner.Y} : {MaxCorner.X}.{MaxCorner.Y}>";
+        }
+
+        /// <summary>
+        /// Grows this AABB by extending its sides with the opposite-side extents of 'other'. Typically used for Continuous Collision Detection.
+        /// </summary>
+        public Aabb MinkowskiSum(Aabb other)
+        {
+            return new(new(MinCorner.X - other.MaxCorner.X, MinCorner.Y - other.MaxCorner.Y),
+                new(MaxCorner.X - other.MinCorner.X, MaxCorner.Y - other.MinCorner.Y));
         }
     }
 }

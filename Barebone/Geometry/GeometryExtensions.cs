@@ -5,6 +5,37 @@ namespace Barebone.Geometry;
 
 public static class GeometryExtensions
 {
+
+    /// <summary>
+    /// Normalises the vector but also outputs its Length., or returns Vector2.Zero if the vector has no length. And also outputs its Length.
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static Vector2 NormalizeOrZero(this Vector2 v, out float length)
+    {
+        if (v == Vector2.Zero)
+        {
+            length = 0f;
+            return Vector2.Zero;
+        }
+
+        length = v.Length();
+        return v / length;
+    }
+
+    /// <summary>
+    /// Normalises the vector but also outputs its Length., or returns Vector2.Zero if the vector has no length. And also outputs its Length.
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static Vector2 Normalize(this Vector2 v, out float length)
+    {
+        length = v.Length();
+        var norm = v / length;
+#if DEBUG
+        if (float.IsNaN(norm.X) || float.IsNaN(norm.Y)) throw new Exception("Normalized vector contains NaN");
+#endif
+        return norm;
+    }
+
     /// <summary>
     /// Normalises the vector, or returns Vector2.Zero if the vector has no length.
     /// </summary>

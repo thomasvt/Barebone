@@ -21,7 +21,7 @@ namespace Barebone.Spatial.BVH
             public int Child1;
             public int Child2;
 
-            public TTag UserData;
+            public TTag Tag;
 
             public int Height;
             public bool Moved;
@@ -41,8 +41,8 @@ namespace Barebone.Spatial.BVH
             public override string ToString()
                 => $@"Parent: {(Parent == ProxyFree ? "None" : Parent.ToString())}, {(IsLeaf
                          ? Height == 0
-                               ? $"Leaf: {UserData}"
-                               : $"Leaf (invalid height of {Height}): {UserData}"
+                               ? $"Leaf: {Tag}"
+                               : $"Leaf (invalid height of {Height}): {Tag}"
                          : IsFree
                              ? "Free"
                              : $"Branch at height {Height}, children: {Child1} and {Child2}")}";
@@ -150,7 +150,7 @@ namespace Barebone.Spatial.BVH
         ///     If allocation occurs, references to <see cref="Node" />s will be invalid.
         /// </remarks>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private ref Node AllocateNode(out int proxy)
+        private ref Node AllocateNode(out int nodeId)
         {
             // Expand the node pool as needed.
             if (_freeNodes == ProxyFree)
@@ -170,7 +170,7 @@ namespace Barebone.Spatial.BVH
             allocNode.Child2 = ProxyFree;
             allocNode.Height = 0;
             ++_nodeCount;
-            proxy = alloc;
+            nodeId = alloc;
             return ref allocNode;
 
             void Expand()
@@ -213,17 +213,17 @@ namespace Barebone.Spatial.BVH
         ///     Return a node to the pool.
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private void FreeNode(int proxy)
+        private void FreeNode(int nodeId)
         {
-            ref var node = ref _nodes[proxy];
+            ref var node = ref _nodes[nodeId];
             node.Parent = _freeNodes;
             node.Height = -1;
 #if DEBUG_DYNAMIC_TREE
             node.Child1 = ProxyFree;
             node.Child2 = ProxyFree;
 #endif
-            node.UserData = default;
-            _freeNodes = proxy;
+            node.Tag = default;
+            _freeNodes = nodeId;
             --_nodeCount;
         }
 
@@ -238,7 +238,7 @@ namespace Barebone.Spatial.BVH
             node.Aabb = aabb.Grow(AABBExtendSize);
             node.Height = 0;
             node.Moved = true;
-            node.UserData = userData;
+            node.Tag = userData;
 
             InsertLeaf(nodeId);
             return nodeId;
@@ -262,6 +262,9 @@ namespace Barebone.Spatial.BVH
         /// <param name="displacement">The wanted movement</param>
         public bool Move(int id, in Aabb aabb, Vector2 displacement)
         {
+#if DEBUG
+            if (float.IsNaN(displacement.X) || float.IsNaN(displacement.Y)) throw new Exception("Displacement is NaN");
+#endif
             Assert(0 <= id && id < Capacity);
 
             ref var leafNode = ref _nodes[id];
@@ -335,9 +338,9 @@ namespace Barebone.Spatial.BVH
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public object GetUserData(int proxy)
+        public TTag GetTag(int proxy)
         {
-            return _nodes[proxy].UserData;
+            return _nodes[proxy].Tag;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

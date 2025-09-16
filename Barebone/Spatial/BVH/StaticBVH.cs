@@ -2,7 +2,7 @@
 using Barebone.Geometry;
 using Barebone.Pools;
 
-namespace Barebone.Spatial
+namespace Barebone.Spatial.BVH
 {
     /// <summary>
     /// Bounding Volume Hierarchy. Spatial tree for items that are allowed to overlap.
