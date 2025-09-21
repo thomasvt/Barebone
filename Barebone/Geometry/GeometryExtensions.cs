@@ -131,13 +131,13 @@ public static class GeometryExtensions
         return v;
     }
 
-    public static Matrix4x4 To4x4(this Matrix3x2 m)
+    public static Matrix4x4 To4x4(this Matrix3x2 m, float z = 0f)
     {
         return new Matrix4x4(
             m.M11, m.M12, 0, 0, 
             m.M21, m.M22, 0, 0, 
             0, 0, 1, 0, 
-            m.M31, m.M32, 0, 1);
+            m.M31, m.M32, z, 1);
     }
 
     /// <summary>
@@ -254,8 +254,20 @@ public static class GeometryExtensions
         return value + MathF.Sign(toTarget) * absoluteStep;
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static float ManhattanLength(this Vector2 v)
     {
         return MathF.Abs(v.X) + MathF.Abs(v.Y);
+    }
+
+    /// <summary>
+    /// Returns the velocity vector bounced off of a flat surface.
+    /// </summary>
+    public static Vector2 Bounce(this Vector2 v, Vector2 surfaceNormal)
+    {
+        var tangent = surfaceNormal.CrossRight();
+        var x = Vector2.Dot(v, tangent);
+        var y = Vector2.Dot(v, surfaceNormal);
+        return x * tangent - y * surfaceNormal;
     }
 }

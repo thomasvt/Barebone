@@ -99,7 +99,7 @@ namespace BareBone.Random
         }
 
         /// <summary>
-        /// Returns a vector in a random direction with random length.
+        /// Returns a vector in a random direction with random length within the given min and max.
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Vector2 NextVector(float minLength, float maxLength)

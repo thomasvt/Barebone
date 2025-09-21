@@ -74,6 +74,40 @@ namespace Barebone.Geometry
         }
 
         /// <summary>
+        /// Untested, supposedly very fast...
+        /// </summary>
+        public static float? RayAabb2(in Ray2 r, in Aabb aabb)
+        {
+            var rDirInv = new Vector2(1f / r.DirectionNorm.X, 1f / r.DirectionNorm.Y);
+
+            // unrolled version of: https://tavianator.com/2015/ray_box_nan.html
+
+            var tmin = float.MinValue;
+            var tmax = float.MaxValue;
+
+            // X
+            {
+                var t1 = (aabb.MinCorner.X - r.Origin.X) * rDirInv.X;
+                var t2 = (aabb.MaxCorner.X - r.Origin.X) * rDirInv.X;
+
+                tmin = MathF.Max(tmin, MathF.Min(t1, t2));
+                tmax = MathF.Min(tmax, MathF.Max(t1, t2));
+            }
+            // Y
+            {
+                var t1 = (aabb.MinCorner.Y - r.Origin.Y) * rDirInv.Y;
+                var t2 = (aabb.MaxCorner.Y - r.Origin.Y) * rDirInv.Y;
+
+                tmin = MathF.Max(tmin, MathF.Min(t1, t2));
+                tmax = MathF.Min(tmax, MathF.Max(t1, t2));
+            }
+
+            if (tmax > tmin && tmin >= 0f)
+                return tmin;
+            return null;
+        }
+
+        /// <summary>
         /// Returns the distance (in raylength units) from the ray's origin to the first intersection with the given aabb.
         /// Returns null if there is no intersection. Origin INSIDE the aabb is considered NO intersection.
         /// </summary>

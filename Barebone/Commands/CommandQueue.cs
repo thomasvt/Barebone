@@ -27,5 +27,10 @@ namespace Barebone.Commands
                 command.Return();
             }
         }
+
+        public void Clear()
+        {
+            _commands.Clear();
+        }
     }
 }

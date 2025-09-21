@@ -86,91 +86,203 @@ namespace Barebone.Geometry
             return tMin;
         }
 
-        public float? RayCast(in Ray2 ray, float tMax, out Vector2 surfaceNormal)
+        public float? RayCastWithSurfaceNormal(in Ray2 ray, in float maxFraction, out Vector2 surfaceNormal)
         {
-            var tMin = 0f;
-            surfaceNormal = Vector2.Zero;
+            // from Box2d-net-standard in AABB.RayCast().
 
-            // check X dimension slab:
+            surfaceNormal = default;
+            var tmin = float.MinValue;
+            var tmax = float.MaxValue;
 
-            if (Math.Abs(ray.DirectionNorm.X) < float.Epsilon)
+            var p = ray.Origin;
+            var d = ray.DirectionNorm;
+            var absD = Vector2.Abs(d);
+
+            var normal = Vector2.Zero;
+
+            // X
+
+            if (absD.X < float.Epsilon)
             {
-                // Ray is parallel to slab in this dimension. No hit if origin not within slab
-                if (ray.Origin.X < MinCorner.X || ray.Origin.X > MaxCorner.X)
-                {
-                    surfaceNormal = Vector2.Zero;
+                // Parallel.
+                if (p.X < MinCorner.X || MaxCorner.X < p.X)
                     return null;
-                }
             }
             else
             {
-                // Compute intersection t value of ray with near and far plane of slab
-                var directionInv = 1.0f / ray.DirectionNorm.X;
-                var t1 = (MinCorner.X - ray.Origin.X) * directionInv;
-                var t2 = (MaxCorner.X - ray.Origin.X) * directionInv;
-                var n1 = new Vector2(-1, 0);
-                var n2 = -n1;
+                var inv_d = 1.0f / d.X;
+                var t1 = (MinCorner.X - p.X) * inv_d;
+                var t2 = (MaxCorner.X - p.X) * inv_d;
 
-                // Make t1 be intersection with near plane, t2 with far plane
+                // Sign of the normal vector.
+                var s = -1.0f;
+
                 if (t1 > t2)
                 {
-                    (t1, t2) = (t2, t1);
-                    n1 = n2;
+                    var temp = t1;
+                    t1 = t2;
+                    t2 = temp;
+                    s = 1.0f;
                 }
 
-                // Compute the intersection of slab intersection intervals
-                if (t1 > tMin) { tMin = t1; surfaceNormal = n1; }
-                tMax = MathF.Min(tMax, t2);
-
-                // Exit with no collision as soon as slab intersection becomes empty
-                if (tMin > tMax)
+                // Push the min up
+                if (t1 > tmin)
                 {
-                    surfaceNormal = Vector2.Zero;
-                    return null;
+                    normal = new Vector2(s, 0);
+                    tmin = t1;
                 }
+
+                // Pull the max down
+                tmax = MathF.Min(tmax, t2);
+
+                if (tmin > tmax)
+                    return null;
             }
 
-            // check Y dimension slab:
+            // Y
 
-            if (Math.Abs(ray.DirectionNorm.Y) < float.Epsilon)
+            if (absD.Y < float.Epsilon)
             {
-                // Ray is parallel to slab in this dimension. No hit if origin not within slab
-                if (ray.Origin.Y < MinCorner.Y || ray.Origin.Y > MaxCorner.Y)
-                {
-                    surfaceNormal = Vector2.Zero;
+                // Parallel.
+                if (p.Y < MinCorner.Y || MaxCorner.Y < p.Y)
                     return null;
-                }
             }
             else
             {
-                // Compute intersection t value of ray with near and far plane of slab
-                var directionInv = 1.0f / ray.DirectionNorm.Y;
-                var t1 = (MinCorner.Y - ray.Origin.Y) * directionInv;
-                var t2 = (MaxCorner.Y - ray.Origin.Y) * directionInv;
-                var n1 = new Vector2(0, -1);
-                var n2 = -n1;
+                var inv_d = 1.0f / d.Y;
+                var t1 = (MinCorner.Y - p.Y) * inv_d;
+                var t2 = (MaxCorner.Y - p.Y) * inv_d;
 
-                // Make t1 be intersection with near plane, t2 with far plane
+                // Sign of the normal vector.
+                var s = -1.0f;
+
                 if (t1 > t2)
                 {
-                    (t1, t2) = (t2, t1);
-                    n1 = n2;
+                    var temp = t1;
+                    t1 = t2;
+                    t2 = temp;
+                    s = 1.0f;
                 }
 
-                // Compute the intersection of slab intersection intervals
-                if (t1 > tMin) { tMin = t1; surfaceNormal = n1; }
-                tMax = MathF.Min(tMax, t2);
-
-                // Exit with no collision as soon as slab intersection becomes empty
-                if (tMin > tMax)
+                // Push the min up
+                if (t1 > tmin)
                 {
-                    surfaceNormal = Vector2.Zero;
-                    return null;
+                    normal = new Vector2(0, s);
+                    tmin = t1;
                 }
+
+                // Pull the max down
+                tmax = MathF.Min(tmax, t2);
+
+                if (tmin > tmax)
+                    return null;
             }
 
-            return tMin;
+
+            // Does the ray start inside the box?
+            // Does the ray intersect beyond the max fraction?
+            if (tmin < 0.0f || maxFraction < tmin)
+            {
+                return null;
+            }
+
+            // Intersection.
+            surfaceNormal = normal;
+            return tmin;
         }
+
+        //public float? RayCast(in Ray2 ray, float tMax, out Vector2 surfaceNormal)
+        //{
+        //    if (Contains(ray.Origin))
+        //    {
+        //        // don't hit when starting inside (we follow the common convention)
+        //        surfaceNormal = Vector2.Zero;
+        //        return null;
+        //    }
+
+        //    var tMin = 0f;
+        //    surfaceNormal = Vector2.Zero;
+
+        //    // check X dimension slab:
+
+        //    if (Math.Abs(ray.DirectionNorm.X) < float.Epsilon)
+        //    {
+        //        // Ray is parallel to slab in this dimension. No hit if origin not within slab
+        //        if (ray.Origin.X < MinCorner.X || ray.Origin.X > MaxCorner.X)
+        //        {
+        //            surfaceNormal = Vector2.Zero;
+        //            return null;
+        //        }
+        //    }
+        //    else
+        //    {
+        //        // Compute intersection t value of ray with near and far plane of slab
+        //        var directionInv = 1.0f / ray.DirectionNorm.X;
+        //        var t1 = (MinCorner.X - ray.Origin.X) * directionInv;
+        //        var t2 = (MaxCorner.X - ray.Origin.X) * directionInv;
+        //        var n1 = new Vector2(-1, 0);
+        //        var n2 = -n1;
+
+        //        // Make t1 be intersection with near plane, t2 with far plane
+        //        if (t1 > t2)
+        //        {
+        //            (t1, t2) = (t2, t1);
+        //            n1 = n2;
+        //        }
+
+        //        // Compute the intersection of slab intersection intervals
+        //        if (t1 > tMin) { tMin = t1; surfaceNormal = n1; }
+        //        tMax = MathF.Min(tMax, t2);
+
+        //        // Exit with no collision as soon as slab intersection becomes empty
+        //        if (tMin > tMax)
+        //        {
+        //            surfaceNormal = Vector2.Zero;
+        //            return null;
+        //        }
+        //    }
+
+        //    // check Y dimension slab:
+
+        //    if (Math.Abs(ray.DirectionNorm.Y) < float.Epsilon)
+        //    {
+        //        // Ray is parallel to slab in this dimension. No hit if origin not within slab
+        //        if (ray.Origin.Y < MinCorner.Y || ray.Origin.Y > MaxCorner.Y)
+        //        {
+        //            surfaceNormal = Vector2.Zero;
+        //            return null;
+        //        }
+        //    }
+        //    else
+        //    {
+        //        // Compute intersection t value of ray with near and far plane of slab
+        //        var directionInv = 1.0f / ray.DirectionNorm.Y;
+        //        var t1 = (MinCorner.Y - ray.Origin.Y) * directionInv;
+        //        var t2 = (MaxCorner.Y - ray.Origin.Y) * directionInv;
+        //        var n1 = new Vector2(0, -1);
+        //        var n2 = -n1;
+
+        //        // Make t1 be intersection with near plane, t2 with far plane
+        //        if (t1 > t2)
+        //        {
+        //            (t1, t2) = (t2, t1);
+        //            n1 = n2;
+        //        }
+
+        //        // Compute the intersection of slab intersection intervals
+        //        if (t1 > tMin) { tMin = t1; surfaceNormal = n1; }
+        //        tMax = MathF.Min(tMax, t2);
+
+        //        // Exit with no collision as soon as slab intersection becomes empty
+        //        if (tMin > tMax)
+        //        {
+        //            surfaceNormal = Vector2.Zero;
+        //            return null;
+        //        }
+        //    }
+
+        //    return tMin;
+        //}
 
         /// <summary>
         /// Pushes the bounds of the aabb in all 4 directions to the outside for the given distance.
@@ -292,6 +404,14 @@ namespace Barebone.Geometry
         public static Aabb FromPoints(params Vector2[] points)
         {
             return FromPoints((IEnumerable<Vector2>)points);
+        }
+
+        /// <summary>
+        /// Finds the axis aligned bounding box of a set of points.
+        /// </summary>
+        public static Aabb FromPoints(Vector2 a, Vector2 b)
+        {
+            return new Aabb(new(MathF.Min(a.X, b.X), MathF.Min(a.Y, b.Y)), new(MathF.Max(a.X, b.X), MathF.Max(a.Y, b.Y)));
         }
 
         /// <summary>

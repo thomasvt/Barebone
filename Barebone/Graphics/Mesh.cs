@@ -3,7 +3,6 @@ using System.Numerics;
 using Barebone.Geometry;
 using Barebone.Geometry.Triangulation;
 using Barebone.Pools;
-using Triangle2 = Barebone.Geometry.Triangle2;
 
 namespace Barebone.Graphics
 {
@@ -27,38 +26,38 @@ namespace Barebone.Graphics
 
         public void Clear()
         {
-            Triangles!.Clear();
+            Triangles.Clear();
         }
 
         public Mesh FillTriangle(in Vector3 a, in Vector3 b, in Vector3 c, Color color)
         {
-            Triangles!.Add(new Triangle(a, b, c, color));
+            Triangles.Add(new Triangle(a, b, c, color));
             return this;
         }
 
         public Mesh FillTriangle(in Triangle3 t, in Color color)
         {
-            Triangles!.Add(new Triangle(t.A, t.B, t.C, color));
+            Triangles.Add(new Triangle(t.A, t.B, t.C, color));
             return this;
         }
 
         public Mesh FillTriangleInZ(in Triangle2 t, in float z, in Color color)
         {
-            Triangles!.Add(new Triangle(t.A.ToVector3(z), t.B.ToVector3(z), t.C.ToVector3(z), color));
+            Triangles.Add(new Triangle(t.A.ToVector3(z), t.B.ToVector3(z), t.C.ToVector3(z), color));
             return this;
         }
 
         public Mesh FillQuad(in Vector3 a, in Vector3 b, in Vector3 c, in Vector3 d, Color color)
         {
-            Triangles!.Add(new Triangle(a, b, c, color));
-            Triangles!.Add(new Triangle(a, c, d, color));
+            Triangles.Add(new Triangle(a, b, c, color));
+            Triangles.Add(new Triangle(a, c, d, color));
             return this;
         }
 
         public Mesh FillQuadInZ(in Vector2 a, in Vector2 b, in Vector2 c, in Vector2 d, in float z, Color color)
         {
-            Triangles!.Add(new Triangle(a.ToVector3(z), b.ToVector3(z), c.ToVector3(z), color));
-            Triangles!.Add(new Triangle(a.ToVector3(z), c.ToVector3(z), d.ToVector3(z), color));
+            Triangles.Add(new Triangle(a.ToVector3(z), b.ToVector3(z), c.ToVector3(z), color));
+            Triangles.Add(new Triangle(a.ToVector3(z), c.ToVector3(z), d.ToVector3(z), color));
             return this;
         }
 

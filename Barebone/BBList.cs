@@ -6,7 +6,11 @@ using Barebone.Pools;
 namespace Barebone
 {
     /// <summary>
-    /// List-like struct with zero GC pressure and direct item access. Can also be used as an unordered but fast queue using Add() and Pop() for cases where the pop order is irrelevant.
+    /// List-like struct with zero GC pressure and several much faster alternatives than List by sacrificing the steade item-order and exposing the internal array.
+    /// Fast alternatives are:
+    /// * use as unordered but fast queue using Add() and Pop() for cases where the pop order is irrelevant.
+    /// * SwapRemove: removes a range of items without copying data to close the gap.
+    /// * AddRangeFast: performs ranged memory-copy instead of items 1 by 1.
     /// </summary>
     public class BBList<T> : Poolable
     {
@@ -36,18 +40,17 @@ namespace Barebone
                 _items[idx] = item;
                 return idx;
             }
-            else
-            {
-                return AddWithResize(item);
-            }
+            return AddWithResize(item);
         }
 
         /// <summary>
         /// Copies the items to the end of this BBList in a single copy operation.
         /// </summary>
-        public void AddRange(T[] items)
+        public void AddRangeFast(T[] items)
         {
-            AddRange(items.AsSpan());
+            EnsureCapacity(Count + items.Length);
+            items.CopyTo(_items.AsSpan()[Count..]);
+            Count += items.Length;
         }
 
         /// <summary>
@@ -67,7 +70,7 @@ namespace Barebone
         /// <summary>
         /// Copies the items to the end of this BBList in a single copy operation.
         /// </summary>
-        public void AddRange(ReadOnlySpan<T> items)
+        public void AddRangeFast(ReadOnlySpan<T> items)
         {
             EnsureCapacity(Count + items.Length);
             items.CopyTo(_items.AsSpan()[Count..]);
@@ -77,9 +80,12 @@ namespace Barebone
         /// <summary>
         /// Copies the items to the end of this BBList in a single copy operation.
         /// </summary>
-        public void AddRange(BBList<T> items)
+        public void AddRangeFast(BBList<T> bbList)
         {
-            AddRange(items.AsReadOnlySpan());
+            var items = bbList.AsReadOnlySpan();
+            EnsureCapacity(Count + items.Length);
+            items.CopyTo(_items.AsSpan()[Count..]);
+            Count += items.Length;
         }
 
         /// <summary>

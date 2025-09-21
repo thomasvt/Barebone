@@ -834,7 +834,7 @@ namespace Barebone.Spatial.BVH
             }
         }
 
-        public void Query(Func<int, bool> queryCallback, in Aabb aabb)
+        public void Query(Func<TTag, bool> queryCallback, in Aabb aabb)
         {
             using var stack = new GrowableStack<int>(stackalloc int[256]);
             stack.Push(_root);
@@ -853,7 +853,7 @@ namespace Barebone.Spatial.BVH
                 {
                     if (node.IsLeaf)
                     {
-                        var proceed = queryCallback(nodeId);
+                        var proceed = queryCallback(node.Tag);
                         if (proceed == false)
                         {
                             return;
@@ -870,14 +870,14 @@ namespace Barebone.Spatial.BVH
 
         public void RayCast(Func<RayCastInput, int, float> RayCastCallback, in RayCastInput input)
         {
-            Vector2 p1 = input.P1;
-            Vector2 p2 = input.P2;
-            Vector2 r = p2 - p1;
+            var p1 = input.P1;
+            var p2 = input.P2;
+            var r = p2 - p1;
             //Debug.Assert(r.LengthSquared() > 0.0f);
             r = Vector2.Normalize(r);
 
             // v is perpendicular to the segment.
-            Vector2 v = new Vector2(-r.Y, r.X);
+            var v = new Vector2(-r.Y, r.X);
 
             var absV = Vector2.Abs(v);
 

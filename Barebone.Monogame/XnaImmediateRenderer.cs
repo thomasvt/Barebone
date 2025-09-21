@@ -1,7 +1,6 @@
 ﻿using System.Numerics;
 using Barebone.Geometry;
 using Barebone.Graphics;
-using BareBone.Graphics;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Color = System.Drawing.Color;
