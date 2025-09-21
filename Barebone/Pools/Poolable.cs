@@ -30,5 +30,13 @@
         {
             OriginPool.Return(this);
         }
+
+        /// <summary>
+        /// Return this object to the pool it came from. Don't use the instance after calling this.
+        /// </summary>
+        public void ReturnNoDestruct()
+        {
+            OriginPool.ReturnNoDestruct(this);
+        }
     }
 }

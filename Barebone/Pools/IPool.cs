@@ -6,4 +6,5 @@ public interface IPool
     int RentedCount { get; }
     string Name { get; }
     void Return(object o);
+    void ReturnNoDestruct(object o);
 }

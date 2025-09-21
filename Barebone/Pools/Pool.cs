@@ -71,11 +71,11 @@ namespace Barebone.Pools
         /// <summary>
         /// Like Rent, but Construct() is not called on the rented instance. Used for simple situations that don't need the extra call.
         /// </summary>
-        public static T RentWithoutConstruct<T>() where T : Poolable, new() => Pool<T>.Shared.Rent();
+        public static T RentNoConstruct<T>() where T : Poolable, new() => Pool<T>.Shared.Rent();
         /// <summary>
         /// Like Return, but Destruct() is not called on the returned instance. Used for simple situations that don't need the extra call.
         /// </summary>
-        public static void ReturnWithoutDestruct<T>(T t) where T : Poolable, new() => Pool<T>.Shared.Return(t);
+        public static void ReturnNoDestruct<T>(T t) where T : Poolable, new() => Pool<T>.Shared.Return(t);
 
         public static HashSet<IPool> UsedPools = new();
         public static string GetReport()
@@ -152,7 +152,7 @@ namespace Barebone.Pools
             return t;
         }
 
-        public T RentWithoutConstruct()
+        public T RentNoConstruct()
         {
 #if DEBUG
             Pool.UsedPools.Add(this); // add if not yet
@@ -168,7 +168,7 @@ namespace Barebone.Pools
             return t;
         }
 
-        public void ReturnWithoutDestruct(T t)
+        public void ReturnNoDestruct(T t)
         {
 #if DEBUG
             if (!t.IsRented) throw new Exception($"Instance ('{this}') was already Returned.");
@@ -191,7 +191,25 @@ namespace Barebone.Pools
 
         public void Return(object o)
         {
-            Return((T)o);
+            var t = (T)o;
+#if DEBUG
+            if (!t.IsRented) throw new Exception($"Instance ('{this}') was already Returned.");
+#endif
+            t.Destruct();
+            t.IsRented = false;
+            _freeList.Add(t);
+            RentedCount--;
+        }
+
+        public void ReturnNoDestruct(object o)
+        {
+            var t = (T)o;
+#if DEBUG
+            if (!t.IsRented) throw new Exception($"Instance ('{this}') was already Returned.");
+#endif
+            t.IsRented = false;
+            _freeList.Add(t);
+            RentedCount--;
         }
 
         ~Pool()

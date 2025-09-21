@@ -149,29 +149,6 @@ namespace Barebone.Graphics
             return this;
         }
 
-        public Mesh FillBlobInZ(in Vector2 center, in float baseRadius, in int segmentCount, in int seed, in float maxRadiusDeviation, in float z, in Color colorIn, in Color colorOut, in float angleOffset = 0f)
-        {
-            var angleStep = Angles._360 / segmentCount;
-             
-            var r = baseRadius * (1f + maxRadiusDeviation * MathF.Sin(seed * 2.63f) * MathF.Cos(seed * 1.37f));
-            var p0 = new Vector2(MathF.Cos(angleOffset), MathF.Sin(angleOffset)) * r;
-
-            var c = new GpuVertex(center.ToVector3(z), colorIn.ToGpuColor());
-            var colorOutGpu = colorOut.ToGpuColor();
-            for (var i = 1; i <= segmentCount; i++)
-            {
-                r = baseRadius * (1f + maxRadiusDeviation * MathF.Sin((seed+i) * 2.63f) * MathF.Cos((seed + i) * 1.37f));
-
-                var a1 = angleOffset + i * angleStep;
-                var p1 = new Vector2(MathF.Cos(a1), MathF.Sin(a1)) * r;
-
-                FillTriangle(c, new GpuVertex((center + p1).ToVector3(z), colorOutGpu), new GpuVertex((center + p0).ToVector3(z), colorOutGpu));
-
-                p0 = p1;
-            }
-            return this;
-        }
-
         public Mesh DrawRegularPolyInZ(in Vector2 center, in float radius, in float strokeWidth, in int segmentCount, in float z, in Color color, in float angleOffset = 0f)
         {
             var angleStep = Angles._360 / segmentCount;

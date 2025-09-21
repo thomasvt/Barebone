@@ -38,7 +38,7 @@ namespace Barebone.Spatial.BVH
 
         public void Add(in TItem item, in Aabb aabb, in ulong categoryMask = ulong.MaxValue)
         {
-            var node = Pool.RentWithoutConstruct<Node>();
+            var node = Pool.RentNoConstruct<Node>();
             node.Item = item;
             node.ItemCategoryMask = categoryMask;
             node.Aabb = aabb;
@@ -54,7 +54,7 @@ namespace Barebone.Spatial.BVH
 
             if (parent.IsLeaf)
             {
-                var newParent = Pool.RentWithoutConstruct<Node>();
+                var newParent = Pool.RentNoConstruct<Node>();
                 newParent.Aabb = Aabb.Union(parent.Aabb, node.Aabb);
                 newParent.Item = default;
                 newParent.ItemCategoryMask = parent.ItemCategoryMask | node.ItemCategoryMask;
