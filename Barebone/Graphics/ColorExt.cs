@@ -5,6 +5,12 @@ namespace BareBone.Graphics
 {
     public static class ColorExt
     {
+        public static GpuColor ToGpuColor(this Color c)
+        {
+            // XNA uses byte constructor: R, G, B, A
+            return new GpuColor((uint)(c.R | (c.G << 8) | (c.B << 16) | (c.A << 24)));
+        }
+
         /// <summary>
         /// Convert this color to a HSL representation.
         /// </summary>

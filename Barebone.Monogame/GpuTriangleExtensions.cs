@@ -6,7 +6,7 @@ namespace Barebone.Monogame
 {
     public static class GpuTriangleExtensions
     {
-        public static void CopyTo(this ReadOnlySpan<GpuTriangle> triangles, Span<VertexPositionColor> destination)
+        public static void MapToXna(this ReadOnlySpan<GpuTriangle> triangles, Span<VertexPositionColor> destination)
         {
             var destSpan = MemoryMarshal.Cast<VertexPositionColor, byte>(destination);
             var srcSpan = MemoryMarshal.Cast<GpuTriangle, byte>(triangles);

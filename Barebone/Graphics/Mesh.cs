@@ -2,7 +2,9 @@
 using System.Numerics;
 using Barebone.Geometry;
 using Barebone.Geometry.Triangulation;
+using BareBone.Graphics;
 using Barebone.Pools;
+using BareBone.Random;
 
 namespace Barebone.Graphics
 {
@@ -11,11 +13,11 @@ namespace Barebone.Graphics
     /// </summary>
     public class Mesh : Poolable
     {
-        public BBList<Triangle> Triangles = null!;
+        public BBList<GpuTriangle> Triangles = null!;
 
         protected internal override void Construct()
         {
-            Triangles = Pool.Rent<BBList<Triangle>>();
+            Triangles = Pool.Rent<BBList<GpuTriangle>>();
         }
 
         protected internal override void Destruct()
@@ -29,35 +31,50 @@ namespace Barebone.Graphics
             Triangles.Clear();
         }
 
+        public Mesh FillTriangle(in GpuVertex a, in GpuVertex b, in GpuVertex c)
+        {
+            Triangles.Add(new GpuTriangle(a, b, c));
+            return this;
+        }
+
         public Mesh FillTriangle(in Vector3 a, in Vector3 b, in Vector3 c, Color color)
         {
-            Triangles.Add(new Triangle(a, b, c, color));
+            var gpuColor = color.ToGpuColor();
+            Triangles.Add(new GpuTriangle(new(a, gpuColor), new(b, gpuColor), new(c, gpuColor)));
             return this;
         }
 
         public Mesh FillTriangle(in Triangle3 t, in Color color)
         {
-            Triangles.Add(new Triangle(t.A, t.B, t.C, color));
-            return this;
+           return FillTriangle(t.A, t.B, t.C, color);
         }
 
         public Mesh FillTriangleInZ(in Triangle2 t, in float z, in Color color)
         {
-            Triangles.Add(new Triangle(t.A.ToVector3(z), t.B.ToVector3(z), t.C.ToVector3(z), color));
-            return this;
+            return FillTriangle(t.A.ToVector3(z), t.B.ToVector3(z), t.C.ToVector3(z), color);
         }
 
         public Mesh FillQuad(in Vector3 a, in Vector3 b, in Vector3 c, in Vector3 d, Color color)
         {
-            Triangles.Add(new Triangle(a, b, c, color));
-            Triangles.Add(new Triangle(a, c, d, color));
+            var gpuColor = color.ToGpuColor();
+            var aGpu = new GpuVertex(a, gpuColor);
+            var bGpu = new GpuVertex(b, gpuColor);
+            var cGpu = new GpuVertex(c, gpuColor);
+            var dGpu = new GpuVertex(d, gpuColor);
+            Triangles.Add(new GpuTriangle(aGpu, bGpu, cGpu));
+            Triangles.Add(new GpuTriangle(aGpu, cGpu, dGpu));
             return this;
         }
 
         public Mesh FillQuadInZ(in Vector2 a, in Vector2 b, in Vector2 c, in Vector2 d, in float z, Color color)
         {
-            Triangles.Add(new Triangle(a.ToVector3(z), b.ToVector3(z), c.ToVector3(z), color));
-            Triangles.Add(new Triangle(a.ToVector3(z), c.ToVector3(z), d.ToVector3(z), color));
+            var gpuColor = color.ToGpuColor();
+            var aGpu = new GpuVertex(a.ToVector3(z), gpuColor);
+            var bGpu = new GpuVertex(b.ToVector3(z), gpuColor);
+            var cGpu = new GpuVertex(c.ToVector3(z), gpuColor);
+            var dGpu = new GpuVertex(d.ToVector3(z), gpuColor);
+            Triangles.Add(new GpuTriangle(aGpu, bGpu, cGpu));
+            Triangles.Add(new GpuTriangle(aGpu, cGpu, dGpu));
             return this;
         }
 
@@ -109,20 +126,46 @@ namespace Barebone.Graphics
 
         public Mesh PointInZ(in Vector2 position, in float halfSize, in float z, in Color color)
         {
-            return FillRegularPolyInZ(position, halfSize, 4, z, color);
+            return FillRegularPolyInZ(position, halfSize, 4, z, color, color);
         }
 
-        public Mesh FillRegularPolyInZ(in Vector2 center, in float radius, in int segmentCount, in float z, in Color color, in float angleOffset = 0f)
+        public Mesh FillRegularPolyInZ(in Vector2 center, in float radius, in int segmentCount, in float z, in Color colorIn, in Color colorOut, in float angleOffset = 0f)
         {
             var angleStep = Angles._360 / segmentCount;
             
             var p0 = new Vector2(MathF.Cos(angleOffset), MathF.Sin(angleOffset)) * radius;
+
+            var c = new GpuVertex(center.ToVector3(z), colorIn.ToGpuColor());
+            var colorOutGpu = colorOut.ToGpuColor();
             for (var i = 1; i <= segmentCount; i++)
             {
                 var a1 = angleOffset + i * angleStep;
                 var p1 = new Vector2(MathF.Cos(a1), MathF.Sin(a1)) * radius;
 
-                FillTriangleInZ(new Triangle2(center, center + p1, center + p0), z, color);
+                FillTriangle(c, new GpuVertex((center + p1).ToVector3(z), colorOutGpu), new GpuVertex((center + p0).ToVector3(z), colorOutGpu));
+
+                p0 = p1;
+            }
+            return this;
+        }
+
+        public Mesh FillBlobInZ(in Vector2 center, in float baseRadius, in int segmentCount, in int seed, in float maxRadiusDeviation, in float z, in Color colorIn, in Color colorOut, in float angleOffset = 0f)
+        {
+            var angleStep = Angles._360 / segmentCount;
+             
+            var r = baseRadius * (1f + maxRadiusDeviation * MathF.Sin(seed * 2.63f) * MathF.Cos(seed * 1.37f));
+            var p0 = new Vector2(MathF.Cos(angleOffset), MathF.Sin(angleOffset)) * r;
+
+            var c = new GpuVertex(center.ToVector3(z), colorIn.ToGpuColor());
+            var colorOutGpu = colorOut.ToGpuColor();
+            for (var i = 1; i <= segmentCount; i++)
+            {
+                r = baseRadius * (1f + maxRadiusDeviation * MathF.Sin((seed+i) * 2.63f) * MathF.Cos((seed + i) * 1.37f));
+
+                var a1 = angleOffset + i * angleStep;
+                var p1 = new Vector2(MathF.Cos(a1), MathF.Sin(a1)) * r;
+
+                FillTriangle(c, new GpuVertex((center + p1).ToVector3(z), colorOutGpu), new GpuVertex((center + p0).ToVector3(z), colorOutGpu));
 
                 p0 = p1;
             }
@@ -152,39 +195,6 @@ namespace Barebone.Graphics
             var latWidth = longWidth.CrossLeft();
 
             return FillQuadInZ(a - longWidth + latWidth, b + longWidth + latWidth, b + longWidth - latWidth, a - longWidth - latWidth, z, color);
-        }
-
-        /// <summary>
-        /// Scales all triangles in this mesh.
-        /// </summary>
-        public Mesh Scale(float scale)
-        {
-            foreach (ref var triangle in Triangles!.AsSpan())
-            {
-                triangle *= scale;
-            }
-            return this;
-        }
-
-        /// <summary>
-        /// Translates all triangles in this mesh.
-        /// </summary>
-        public Mesh Translate(Vector3 translation)
-        {
-            foreach (ref var triangle in Triangles!.AsSpan())
-            {
-                triangle += translation;
-            }
-            return this;
-        }
-
-        public Mesh ChangeColor(Color color)
-        {
-            foreach (ref var triangle in Triangles!.AsSpan())
-            {
-                triangle.Color = color;
-            }
-            return this;
         }
     }
 }

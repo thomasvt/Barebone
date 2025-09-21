@@ -92,7 +92,7 @@ namespace Barebone.Monogame
             Draw(worldTransform, mesh.Triangles.AsReadOnlySpan(), replacementColor);
         }
 
-        public void Draw(in Matrix4x4 worldTransform, in ReadOnlySpan<Triangle> triangles, in Color? replacementColor = null)
+        public void Draw(in Matrix4x4 worldTransform, in ReadOnlySpan<GpuTriangle> triangles, in Color? replacementColor = null)
         {
             if (triangles.Length == 0 || _camera == null) return;
 
@@ -102,14 +102,16 @@ namespace Barebone.Monogame
             _effect.CurrentTechnique.Passes[0].Apply(); // don't use First() to prevent iterator allocation
 
             _xnaVerticesBuffer.Clear();
-            foreach (var triangle in triangles)
-            {
-                var colorXna = (replacementColor ?? triangle.Color).ToXna();
-                _xnaVerticesBuffer.Add(new VertexPositionColor(triangle.A.ToXna(), colorXna));
-                _xnaVerticesBuffer.Add(new VertexPositionColor(triangle.B.ToXna(), colorXna));
-                _xnaVerticesBuffer.Add(new VertexPositionColor(triangle.C.ToXna(), colorXna));
-            }
-            _effect.GraphicsDevice.DrawUserPrimitives(PrimitiveType.TriangleList, _xnaVerticesBuffer.InternalArray, 0, _xnaVerticesBuffer.Count / 3);
+            _xnaVerticesBuffer.EnsureCapacity(triangles.Length * 3);
+            triangles.MapToXna(_xnaVerticesBuffer.InternalArray);
+            //foreach (var triangle in triangles)
+            //{
+            //    var colorXna = (replacementColor ?? triangle.Color).ToXna();
+            //    _xnaVerticesBuffer.Add(new VertexPositionColor(triangle.A.ToXna(), colorXna));
+            //    _xnaVerticesBuffer.Add(new VertexPositionColor(triangle.B.ToXna(), colorXna));
+            //    _xnaVerticesBuffer.Add(new VertexPositionColor(triangle.C.ToXna(), colorXna));
+            //}
+            _effect.GraphicsDevice.DrawUserPrimitives(PrimitiveType.TriangleList, _xnaVerticesBuffer.InternalArray, 0, triangles.Length);
         }
 
         /// <summary>

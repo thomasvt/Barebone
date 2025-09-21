@@ -8,7 +8,7 @@ namespace Barebone.Graphics
     {
         void Begin(ICamera camera, bool enableDepthBuffer, bool additiveBlend, bool cullCounterClockwise, bool linearSampling = true);
 
-        void Draw(in Matrix4x4 worldTransform, in ReadOnlySpan<Triangle> triangles, in Color? replacementColor = null);
+        void Draw(in Matrix4x4 worldTransform, in ReadOnlySpan<GpuTriangle> triangles, in Color? replacementColor = null);
         void Draw(in Matrix4x4 worldTransform, in Mesh mesh, in Color? replacementColor = null);
 
         /// <summary>
