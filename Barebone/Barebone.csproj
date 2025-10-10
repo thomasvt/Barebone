@@ -9,7 +9,9 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Folder Include="AI\Goap\" />
+    <Compile Remove="AI\Goap\**" />
+    <EmbeddedResource Remove="AI\Goap\**" />
+    <None Remove="AI\Goap\**" />
   </ItemGroup>
 
 </Project>

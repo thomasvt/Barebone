@@ -68,6 +68,14 @@ namespace Barebone.Spatial
             return bucket.Count;
         }
 
+        public int AppendNoCheck(Vector2I cell, BBList<T> buffer)
+        {
+            var bucket = _buckets[cell.X + cell.Y * Size.X];
+            if (bucket.Count == 0) return 0;
+            buffer.AddRangeFast(bucket);
+            return bucket.Count;
+        }
+
         /// <summary>
         /// Returns true if the cell is empty or out of bounds.
         /// </summary>
@@ -92,6 +100,22 @@ namespace Barebone.Spatial
                     buffer.AddRangeFast(bucket);
                     count += bucket.Count;
                 }
+            return count;
+        }
+
+        /// <summary>
+        /// Appends the content of the range of buckets to your buffer. Cells that are out of bounds are considered empty, no error is thrown.
+        /// </summary>
+        public int AppendNoCheck(AabbI cellRange, BBList<T> buffer)
+        {
+            var count = 0;
+            for (var x = cellRange.MinCorner.X; x < cellRange.MaxCornerExcl.X; x++)
+            for (var y = cellRange.MinCorner.Y; y < cellRange.MaxCornerExcl.Y; y++)
+            {
+                var bucket = _buckets[x + y * Size.X];
+                buffer.AddRangeFast(bucket);
+                count += bucket.Count;
+            }
             return count;
         }
 

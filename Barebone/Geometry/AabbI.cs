@@ -9,6 +9,8 @@ namespace Barebone.Geometry
     public record struct AabbI(Vector2I MinCorner, Vector2I MaxCornerExcl)
     {
         [JsonIgnore] public Vector2I Size => MaxCornerExcl - MinCorner;
+        [JsonIgnore] public int Width => MaxCornerExcl.X - MinCorner.X;
+        [JsonIgnore] public int Height => MaxCornerExcl.Y - MinCorner.Y;
         [JsonIgnore] public Vector2 Center => (MaxCornerExcl + MinCorner) * 0.5f;
         [JsonIgnore] public Vector2I CenterI => MinCorner + Size / 2;
         /// <summary>
@@ -34,6 +36,7 @@ namespace Barebone.Geometry
         [JsonIgnore] public int Right => MaxCornerExcl.X - 1;
         [JsonIgnore] public int Left => MinCorner.X;
         [JsonIgnore] public int Bottom => MinCorner.Y;
+        [JsonIgnore] public Vector2I MaxCorner => MaxCornerExcl - Vector2I.One;
 
         public static AabbI Zero = new(Vector2I.Zero, Vector2I.Zero);
 
@@ -42,6 +45,18 @@ namespace Barebone.Geometry
             for (var y = MinCorner.Y; y < MaxCornerExcl.Y; y++)
                 for (var x = MinCorner.X; x < MaxCornerExcl.X; x++)
                     action(new Vector2I(x, y));
+        }
+
+        public AabbI GetIntersection(AabbI b)
+        {
+            var minX = Math.Max(MinCorner.X, b.MinCorner.X);
+            var minY = Math.Max(MinCorner.Y, b.MinCorner.Y);
+            var maxX = Math.Min(MaxCornerExcl.X, b.MaxCornerExcl.X);
+            var maxY = Math.Min(MaxCornerExcl.Y, b.MaxCornerExcl.Y);
+
+            if (minX >= maxX || minY >= maxY) 
+                return AabbI.Zero;
+            return new(new(minX, minY), new(maxX, maxY));
         }
 
         public readonly bool Contains(Vector2I position)
