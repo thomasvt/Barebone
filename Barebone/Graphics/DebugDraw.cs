@@ -53,17 +53,29 @@ namespace Barebone.Graphics
             RenderTexts(renderer);
         }
 
-        private void RenderPolygons(IImmediateRenderer renderer)
+        public void Update()
         {
             var span = _items.AsSpan();
-            for (var i = _items.Count-1; i >= 0; i--)
+            for (var i = _items.Count - 1; i >= 0; i--)
             {
                 ref var item = ref span[i];
+                item.FramesToLive--;
                 if (item.FramesToLive <= 0)
                     _items.SwapRemoveAt(i);
-                item.FramesToLive--;
             }
 
+            var textItemSpan = _textItems.AsSpan();
+            for (var i = _textItems.Count - 1; i >= 0; i--)
+            {
+                ref var item = ref textItemSpan[i];
+                item.FramesToLive--;
+                if (item.FramesToLive <= 0)
+                    _textItems.SwapRemoveAt(i);
+            }
+        }
+
+        private void RenderPolygons(IImmediateRenderer renderer)
+        {
             _mesh.Clear();
             foreach (var item in _items.AsReadOnlySpan())
             {
@@ -77,15 +89,6 @@ namespace Barebone.Graphics
 
         private void RenderTexts(IImmediateRenderer renderer)
         {
-            var textItemSpan = _textItems.AsSpan();
-            for (var i = _textItems.Count - 1; i >= 0; i--)
-            {
-                ref var item = ref textItemSpan[i];
-                if (item.FramesToLive <= 0)
-                    _textItems.SwapRemoveAt(i);
-                item.FramesToLive--;
-            }
-
             _texTriangles.Clear();
             foreach (var item in _textItems.AsReadOnlySpan())
             {
