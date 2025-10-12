@@ -1,6 +1,9 @@
 ﻿using System.Drawing;
 using System.Numerics;
 using Barebone.Geometry;
+using Barebone.Graphics.Cameras;
+using Barebone.Graphics.Gpu;
+using Barebone.Graphics.Sprites;
 
 namespace Barebone.Graphics
 {
@@ -9,12 +12,13 @@ namespace Barebone.Graphics
         void Begin(ICamera camera, bool enableDepthBuffer, bool additiveBlend, bool cullCounterClockwise, bool linearSampling = true);
 
         void Draw(in Matrix4x4 worldTransform, in ReadOnlySpan<GpuTriangle> triangles, in Color? replacementColor = null);
+        void Draw(in Matrix4x4 worldTransform, in ReadOnlySpan<GpuTexTriangle> triangles, in ITexture texture);
         void Draw(in Matrix4x4 worldTransform, in Mesh mesh, in Color? replacementColor = null);
 
         /// <summary>
         /// Draws a quad with the sprite on it. If Scale is 1, 1 world unit equals one pixel of the sprite.
         /// </summary>
-        void Draw(in Matrix4x4 worldTransform, in ISprite sprite, Color tint, bool flipX = false, float scale = 1f);
+        void Draw(in Matrix4x4 worldTransform, in Sprite sprite, Color tint, bool flipX = false, float scale = 1f);
 
         void End();
 
@@ -25,12 +29,12 @@ namespace Barebone.Graphics
         void ClearDepthBuffer();
 
         /// <summary>
-        /// Creates a special <see cref="ISprite"/> that you can set as RenderTarget on this Renderer. You must Dispose() this yourself.
+        /// Creates a special <see cref="ITexture"/> that you can set as RenderTarget on this Renderer. You must Dispose() this yourself.
         /// </summary>
         /// <param name="supportDepthBuffer">Also allow to render with Z-buffer to this sprite. This allocates more memory.</param>
-        ISprite CreateRenderTargetSprite(Vector2I size, bool supportDepthBuffer, int preferredMultiSampleCount = 0);
+        Sprite CreateRenderTargetSprite(Vector2I size, bool supportDepthBuffer, int preferredMultiSampleCount = 0);
 
-        void SwitchRenderTargetTo(ISprite sprite);
+        void SwitchRenderTargetTo(ITexture texture);
         void SwitchRenderTargetToScreen();
         void EnableMultiSampling();
     }

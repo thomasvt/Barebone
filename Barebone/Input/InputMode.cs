@@ -1,4 +1,4 @@
-namespace Barebone.Inputs;
+namespace Barebone.Platform.Inputs;
 
 public enum InputMode
 {

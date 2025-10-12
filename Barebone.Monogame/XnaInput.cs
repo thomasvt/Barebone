@@ -1,5 +1,6 @@
 ﻿using System.Numerics;
-using Barebone.Inputs;
+using Barebone.Input;
+using Barebone.Platform.Inputs;
 using Microsoft.Xna.Framework.Input;
 using ButtonState = Microsoft.Xna.Framework.Input.ButtonState;
 using Keys = Microsoft.Xna.Framework.Input.Keys;

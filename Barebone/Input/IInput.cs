@@ -1,6 +1,7 @@
 using System.Numerics;
+using Barebone.Platform.Inputs;
 
-namespace Barebone.Inputs;
+namespace Barebone.Input;
 
 public interface IInput
 {

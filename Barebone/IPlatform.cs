@@ -1,5 +1,6 @@
-﻿using Barebone.Graphics;
-using Barebone.Inputs;
+﻿using Barebone.Assets;
+using Barebone.Graphics;
+using Barebone.Input;
 
 namespace Barebone
 {
@@ -10,5 +11,6 @@ namespace Barebone
     {
         IImmediateRenderer ImmediateRenderer { get; }
         IInput Input { get; }
+        ITextureLoader TextureLoader { get; }
     }
 }

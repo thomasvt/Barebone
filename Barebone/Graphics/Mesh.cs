@@ -4,7 +4,7 @@ using Barebone.Geometry;
 using Barebone.Geometry.Triangulation;
 using BareBone.Graphics;
 using Barebone.Pools;
-using BareBone.Random;
+using Barebone.Graphics.Gpu;
 
 namespace Barebone.Graphics
 {

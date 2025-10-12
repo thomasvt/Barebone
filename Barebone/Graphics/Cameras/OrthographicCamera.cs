@@ -1,8 +1,7 @@
 ﻿using System.Numerics;
 using BareBone.Geometry.Triangulation;
-using Barebone.Graphics;
 
-namespace BareBone.Graphics
+namespace Barebone.Graphics.Cameras
 {
     public enum OriginPosition
     {

@@ -1,6 +1,10 @@
 ﻿using System.Numerics;
 using Barebone.Geometry;
 using Barebone.Graphics;
+using Barebone.Graphics.Cameras;
+using Barebone.Graphics.Gpu;
+using Barebone.Graphics.Sprites;
+using Barebone.Platform;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Color = System.Drawing.Color;
@@ -50,9 +54,9 @@ namespace Barebone.Monogame
         }
 
         /// <summary>
-        /// Creates a special <see cref="ISprite"/> that you can render to from this <see cref="IImmediateRenderer"/>. Call `SwitchRenderTargetTo()` to render to it. You must Dispose() this ISprite yourself.
+        /// Creates a special <see cref="ITexture"/> that you can render to from this <see cref="IImmediateRenderer"/>. Call `SwitchRenderTargetTo()` to render to it. You must Dispose() this ITexture yourself.
         /// </summary>
-        public ISprite CreateRenderTargetSprite(Vector2I size, bool supportDepthBuffer, int preferredMultiSampleCount = 0)
+        public Sprite CreateRenderTargetSprite(Vector2I size, bool supportDepthBuffer, int preferredMultiSampleCount = 0)
         {
             var renderTarget = new RenderTarget2D(
                 graphicsDevice,
@@ -65,13 +69,13 @@ namespace Barebone.Monogame
                 RenderTargetUsage.DiscardContents
                 );
 
-            return new XnaSprite(renderTarget, new Aabb(new(0, 0), new(1, 1)), new Aabb(Vector2.Zero, size), true);
+            return new Sprite(new XnaTexture(renderTarget), new Aabb(new(0, 0), new(1, 1)), new Aabb(Vector2.Zero, size), true);
         }
 
-        public void SwitchRenderTargetTo(ISprite sprite)
+        public void SwitchRenderTargetTo(ITexture texture)
         {
-            var xnaSprite = sprite as XnaSprite ?? throw new ArgumentException($"`sprite` should be created by calling `{nameof(CreateRenderTargetSprite)}()`.");
-            var renderTarget = xnaSprite.Texture as RenderTarget2D ?? throw new ArgumentException($"`sprite` should be created by calling `{nameof(CreateRenderTargetSprite)}()`.");
+            var xnaSprite = texture as XnaTexture ?? throw new ArgumentException($"`texture` should be created by calling `{nameof(CreateRenderTargetSprite)}()`.");
+            var renderTarget = xnaSprite.Texture as RenderTarget2D ?? throw new ArgumentException($"`texture` should be created by calling `{nameof(CreateRenderTargetSprite)}()`.");
 
             graphicsDevice.SetRenderTarget(renderTarget);
         }
@@ -104,41 +108,51 @@ namespace Barebone.Monogame
             _xnaVerticesBuffer.Clear();
             _xnaVerticesBuffer.EnsureCapacity(triangles.Length * 3);
             triangles.MapToXna(_xnaVerticesBuffer.InternalArray);
-            //foreach (var triangle in triangles)
-            //{
-            //    var colorXna = (replacementColor ?? triangle.Color).ToXna();
-            //    _xnaVerticesBuffer.Add(new VertexPositionColor(triangle.A.ToXna(), colorXna));
-            //    _xnaVerticesBuffer.Add(new VertexPositionColor(triangle.B.ToXna(), colorXna));
-            //    _xnaVerticesBuffer.Add(new VertexPositionColor(triangle.C.ToXna(), colorXna));
-            //}
             _effect.GraphicsDevice.DrawUserPrimitives(PrimitiveType.TriangleList, _xnaVerticesBuffer.InternalArray, 0, triangles.Length);
         }
 
+        public void Draw(in Matrix4x4 worldTransform, in ReadOnlySpan<GpuTexTriangle> triangles, in ITexture texture)
+        {
+            if (triangles.Length == 0 || _camera == null) return;
+
+            var xnaTexture = (XnaTexture)texture;
+
+            _effect.World = worldTransform.ToXna();
+            _effect.Texture = xnaTexture.Texture;
+            _effect.TextureEnabled = true;
+            _effect.CurrentTechnique.Passes[0].Apply(); // don't use First() to prevent iterator allocation
+
+            _xnaVerticesTexBuffer.Clear();
+            _xnaVerticesTexBuffer.EnsureCapacity(triangles.Length * 3);
+            triangles.MapToXna(_xnaVerticesTexBuffer.InternalArray);
+            _effect.GraphicsDevice.DrawUserPrimitives(PrimitiveType.TriangleList, _xnaVerticesTexBuffer.InternalArray, 0, triangles.Length);
+        }
+
         /// <summary>
-        /// Draws a quad with the sprite on it. If Scale is 1, 1 world unit equals one pixel of the sprite.
+        /// Draws a quad with the sprite (texture) on it. The quad takes the size of the sprite, scaled by `scale`.
         /// </summary>
-        public void Draw(in Matrix4x4 worldTransform, in ISprite sprite, Color tint, bool flipX = false, float scale = 1f)
+        public void Draw(in Matrix4x4 worldTransform, in Sprite sprite, Color tint, bool flipX = false, float scale = 1f)
         {
             if (_camera == null) return;
 
-            var xnaSprite = (XnaSprite)sprite;
+            var xnaTexture = (XnaTexture)sprite.Texture;
 
             _effect.World = worldTransform.ToXna();
-            _effect.Texture = xnaSprite.Texture;
+            _effect.Texture = xnaTexture.Texture;
             _effect.TextureEnabled = true;
             _effect.CurrentTechnique.Passes[0].Apply(); // don't use First() to prevent iterator allocation
 
             _xnaVerticesTexBuffer.Clear();
 
-            var a = xnaSprite.AabbPx.BottomLeft.ToVector3(0).ToXna();
-            var b = xnaSprite.AabbPx.TopLeft.ToVector3(0).ToXna();
-            var c = xnaSprite.AabbPx.TopRight.ToVector3(0).ToXna();
-            var d = xnaSprite.AabbPx.BottomRight.ToVector3(0).ToXna();
+            var a = sprite.AabbPx.BottomLeft.ToVector3(0).ToXna();
+            var b = sprite.AabbPx.TopLeft.ToVector3(0).ToXna();
+            var c = sprite.AabbPx.TopRight.ToVector3(0).ToXna();
+            var d = sprite.AabbPx.BottomRight.ToVector3(0).ToXna();
 
-            var aUV = xnaSprite.UvCoords.BottomLeft.ToXna();
-            var bUV = xnaSprite.UvCoords.TopLeft.ToXna();
-            var cUV = xnaSprite.UvCoords.TopRight.ToXna();
-            var dUV = xnaSprite.UvCoords.BottomRight.ToXna();
+            var aUV = sprite.UvCoords.BottomLeft.ToXna();
+            var bUV = sprite.UvCoords.TopLeft.ToXna();
+            var cUV = sprite.UvCoords.TopRight.ToXna();
+            var dUV = sprite.UvCoords.BottomRight.ToXna();
 
             var xnaTint = tint.ToXna();
 

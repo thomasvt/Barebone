@@ -1,7 +1,7 @@
 ﻿using System.Numerics;
 using Barebone.Geometry;
 
-namespace Barebone.Graphics
+namespace Barebone.Graphics.Cameras
 {
     /// <summary>
     /// A perspective camera

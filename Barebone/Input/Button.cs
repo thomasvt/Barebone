@@ -1,4 +1,4 @@
-﻿namespace Barebone.Inputs
+﻿namespace Barebone.Platform.Inputs
 {
     /// <summary>
     /// cross-device buttons (mouse, keyboard, gamepad)

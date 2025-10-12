@@ -1,28 +1,28 @@
-﻿using System.Numerics;
+﻿using System.Drawing;
+using System.Numerics;
 using Barebone.Geometry;
 using Barebone.Graphics;
-using Microsoft.Xna.Framework.Graphics;
 
-namespace Barebone.Monogame
+namespace Barebone.Graphics.Sprites
 {
     /// <summary>
     /// Horizontal-only sheet of sprites. With Spacing between each sprite.
     /// </summary>
     public class XnaSpriteSheet
-        : IDisposable, ISpriteSheet
+        : IDisposable
     {
-        private readonly Texture2D? _texture;
+        private readonly ITexture _texture;
 
-        public XnaSpriteSheet(GraphicsDevice graphicsDevice, string file, SpriteSheetMeta meta)
+        public XnaSpriteSheet(ITexture texture, SpriteSheetMeta meta)
         {
+            _texture = texture;
             MetaData = meta;
-            _texture = Texture2D.FromFile(graphicsDevice, file);
-            SpriteCount = (_texture.Width + meta.Spacing) / (meta.SpriteSize.X + meta.Spacing);
+            SpriteCount = (texture.Size.X + meta.Spacing) / (meta.SpriteSize.X + meta.Spacing);
 
-            var spriteSizeUv =new Vector2(meta.SpriteSize.X / (float)_texture.Width, 1f);
-            var spriteStrideUv = new Vector2((meta.SpriteSize.X + meta.Spacing) / (float)_texture.Width, 1f);
+            var spriteSizeUv =new Vector2(meta.SpriteSize.X / (float)texture.Size.X, 1f);
+            var spriteStrideUv = new Vector2((meta.SpriteSize.X + meta.Spacing) / (float)texture.Size.X, 1f);
 
-            var sprites = new List<ISprite>();
+            var sprites = new List<Sprite>();
             Sprites = sprites;
             for (var i = 0; i < SpriteCount; i++)
             {
@@ -34,18 +34,18 @@ namespace Barebone.Monogame
                 var topRightUV = new Vector2(bottomLeftUV.X + spriteSizeUv.X, 0);
                 var quadUV = new Aabb(bottomLeftUV, topRightUV);
 
-                sprites.Add(new XnaSprite(_texture, quadUV, quad, false));
+                sprites.Add(new Sprite(texture, quadUV, quad, false));
             }
         }
 
-        public IReadOnlyList<ISprite> Sprites { get; }
+        public IReadOnlyList<Sprite> Sprites { get; }
         public int SpriteCount { get; }
         public SpriteSheetMeta MetaData { get; }
-        public ISprite this[int idx] => Sprites[idx];
+        public Sprite this[int idx] => Sprites[idx];
 
         public void Dispose()
         {
-            _texture?.Dispose();
+            (_texture as IDisposable)?.Dispose();
         }
     }
 }

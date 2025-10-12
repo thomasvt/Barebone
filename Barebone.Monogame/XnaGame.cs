@@ -1,6 +1,6 @@
-﻿using Barebone.Geometry;
+﻿using Barebone.Assets;
 using Barebone.Graphics;
-using Barebone.Inputs;
+using Barebone.Input;
 using Microsoft.Xna.Framework;
 
 namespace Barebone.Monogame
@@ -15,6 +15,7 @@ namespace Barebone.Monogame
         private readonly GraphicsDeviceManager _gdm;
         private readonly XnaInput _input;
         private XnaImmediateRenderer? _renderer;
+        private XnaTextureLoader _textureLoader;
 
         public XnaGame(Func<IPlatform, IGame> gameFactory)
         {
@@ -30,15 +31,14 @@ namespace Barebone.Monogame
             IsFixedTimeStep = true; // Execute() is called 60 times per game-second, disregarding render framerate, also important for box2d physics.
 
             _input = new XnaInput();
+            
         }
-
-        public IInput Input => _input;
-        public IImmediateRenderer ImmediateRenderer => _renderer ?? throw new Exception("ImmediateRenderer not initialized yet.");
         
         protected override void LoadContent()
         {
             base.LoadContent();
             _renderer = new XnaImmediateRenderer(GraphicsDevice, _gdm);
+            _textureLoader = new XnaTextureLoader(GraphicsDevice);
 
             _game = _gameFactory.Invoke(this);
         }
@@ -59,5 +59,9 @@ namespace Barebone.Monogame
         {
             _game!.Draw((float)gameTime.TotalGameTime.TotalSeconds, (float)gameTime.ElapsedGameTime.TotalSeconds);
         }
+
+        public IInput Input => _input;
+        public ITextureLoader TextureLoader => _textureLoader ?? throw new Exception("TextureLoader not initialized yet.");
+        public IImmediateRenderer ImmediateRenderer => _renderer ?? throw new Exception("ImmediateRenderer not initialized yet.");
     }
 }

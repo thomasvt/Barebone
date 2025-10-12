@@ -14,4 +14,19 @@
     <None Remove="AI\Goap\**" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Compile Update="UI\BMFont.fnt.Designer.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>BMFont.fnt.xsd</DependentUpon>
+    </Compile>
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="UI\BMFont.fnt.xsd">
+      <Generator>MSDataSetGenerator</Generator>
+      <LastGenOutput>BMFont.fnt.Designer.cs</LastGenOutput>
+    </None>
+  </ItemGroup>
+
 </Project>

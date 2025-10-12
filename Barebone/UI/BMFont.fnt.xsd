@@ -1,0 +1,86 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<xs:schema id="font" xmlns="" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+  <xs:element name="font" msdata:IsDataSet="true" msdata:Locale="en-US">
+    <xs:complexType>
+      <xs:choice minOccurs="0" maxOccurs="unbounded">
+        <xs:element name="info">
+          <xs:complexType>
+            <xs:attribute name="face" type="xs:string" />
+            <xs:attribute name="size" type="xs:integer" />
+            <xs:attribute name="bold" type="xs:integer" />
+            <xs:attribute name="italic" type="xs:integer" />
+            <xs:attribute name="charset" type="xs:string" />
+            <xs:attribute name="unicode" type="xs:integer" />
+            <xs:attribute name="stretchH" type="xs:integer" />
+            <xs:attribute name="smooth" type="xs:integer" />
+            <xs:attribute name="aa" type="xs:integer" />
+            <xs:attribute name="padding" type="xs:string" />
+            <xs:attribute name="spacing" type="xs:string" />
+            <xs:attribute name="outline" type="xs:integer" />
+          </xs:complexType>
+        </xs:element>
+        <xs:element name="common">
+          <xs:complexType>
+            <xs:attribute name="lineHeight" type="xs:integer" />
+            <xs:attribute name="base" type="xs:integer" />
+            <xs:attribute name="scaleW" type="xs:integer" />
+            <xs:attribute name="scaleH" type="xs:integer" />
+            <xs:attribute name="pages" type="xs:integer" />
+            <xs:attribute name="packed" type="xs:integer" />
+            <xs:attribute name="alphaChnl" type="xs:integer" />
+            <xs:attribute name="redChnl" type="xs:integer" />
+            <xs:attribute name="greenChnl" type="xs:integer" />
+            <xs:attribute name="blueChnl" type="xs:integer" />
+          </xs:complexType>
+        </xs:element>
+        <xs:element name="pages">
+          <xs:complexType>
+            <xs:sequence>
+              <xs:element name="page" minOccurs="0" maxOccurs="unbounded">
+                <xs:complexType>
+                  <xs:attribute name="id" type="xs:string" />
+                  <xs:attribute name="file" type="xs:string" />
+                </xs:complexType>
+              </xs:element>
+            </xs:sequence>
+          </xs:complexType>
+        </xs:element>
+        <xs:element name="chars">
+          <xs:complexType>
+            <xs:sequence>
+              <xs:element name="char" minOccurs="0" maxOccurs="unbounded">
+                <xs:complexType>
+                  <xs:attribute name="id" type="xs:integer" />
+                  <xs:attribute name="x" type="xs:integer" />
+                  <xs:attribute name="y" type="xs:integer" />
+                  <xs:attribute name="width" type="xs:integer" />
+                  <xs:attribute name="height" type="xs:integer" />
+                  <xs:attribute name="xoffset" type="xs:integer" />
+                  <xs:attribute name="yoffset" type="xs:integer" />
+                  <xs:attribute name="xadvance" type="xs:integer" />
+                  <xs:attribute name="page" type="xs:integer" />
+                  <xs:attribute name="chnl" type="xs:integer" />
+                </xs:complexType>
+              </xs:element>
+            </xs:sequence>
+            <xs:attribute name="count" type="xs:integer" />
+          </xs:complexType>
+        </xs:element>
+        <xs:element name="kernings">
+          <xs:complexType>
+            <xs:sequence>
+              <xs:element name="kerning" minOccurs="0" maxOccurs="unbounded">
+                <xs:complexType>
+                  <xs:attribute name="first" type="xs:integer" />
+                  <xs:attribute name="second" type="xs:integer" />
+                  <xs:attribute name="amount" type="xs:integer" />
+                </xs:complexType>
+              </xs:element>
+            </xs:sequence>
+            <xs:attribute name="count" type="xs:integer" />
+          </xs:complexType>
+        </xs:element>
+      </xs:choice>
+    </xs:complexType>
+  </xs:element>
+</xs:schema>

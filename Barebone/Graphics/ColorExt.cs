@@ -1,5 +1,6 @@
 ﻿using System.Drawing;
 using Barebone.Graphics;
+using Barebone.Graphics.Gpu;
 
 namespace BareBone.Graphics
 {
@@ -9,6 +10,11 @@ namespace BareBone.Graphics
         {
             // XNA uses byte constructor: R, G, B, A
             return new GpuColor((uint)(c.R | (c.G << 8) | (c.B << 16) | (c.A << 24)));
+        }
+
+        public static Color ToColor(this GpuColor c)
+        {
+            return Color.FromArgb((int)c.Packed);
         }
 
         /// <summary>

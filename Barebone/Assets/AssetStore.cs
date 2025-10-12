@@ -1,9 +1,9 @@
-﻿namespace Barebone
+﻿namespace Barebone.Assets
 {
     /// <summary>
     /// Store of unmanaged resources like textures, sounds that must be loaded once and then reused. Disposes all loaded resources if they implement IDisposable.
     /// </summary>
-    public abstract class ResourceStore<T> : IDisposable
+    public abstract class AssetStore<T> : IDisposable
     {
         private readonly Dictionary<string, T> _cache = new();
 

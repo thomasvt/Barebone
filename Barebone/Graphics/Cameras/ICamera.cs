@@ -1,6 +1,6 @@
 ﻿using System.Numerics;
 
-namespace Barebone.Graphics;
+namespace Barebone.Graphics.Cameras;
 
 public interface ICamera
 {
