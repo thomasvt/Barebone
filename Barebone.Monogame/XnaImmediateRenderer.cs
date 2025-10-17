@@ -4,7 +4,6 @@ using Barebone.Graphics;
 using Barebone.Graphics.Cameras;
 using Barebone.Graphics.Gpu;
 using Barebone.Graphics.Sprites;
-using Barebone.Platform;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Color = System.Drawing.Color;
@@ -21,6 +20,9 @@ namespace Barebone.Monogame
             VertexColorEnabled = true,
             LightingEnabled = false
         };
+
+        private readonly RasterizerState _rasterizerStateScissorNoCull = new() { CullMode = CullMode.CullCounterClockwiseFace, ScissorTestEnable = true };
+        private readonly RasterizerState _rasterizerStateScissorCull = new() { CullMode = CullMode.None, ScissorTestEnable = true };
 
         private ICamera? _camera;
         private readonly BBList<VertexPositionColor> _xnaVerticesBuffer = new();
@@ -39,6 +41,9 @@ namespace Barebone.Monogame
             graphicsDevice.Clear(ClearOptions.DepthBuffer, Vector4.Zero, graphicsDevice.Viewport.MaxDepth, 0);
         }
 
+        /// <summary>
+        /// Configures how to render your next batch of Draw calls. This resets the Clip area.
+        /// </summary>
         public void Begin(ICamera camera, bool enableDepthBuffer, bool additiveBlend, bool cullCounterClockwise, bool linearSampling = true)
         {
             _camera = camera;
@@ -190,6 +195,25 @@ namespace Barebone.Monogame
         {
             _camera = null;
         }
+
+        public void SetClipArea(AabbI clipInScreenPx)
+        {
+            graphicsDevice.ScissorRectangle = new Rectangle(clipInScreenPx.MinCorner.X, clipInScreenPx.MinCorner.Y, clipInScreenPx.Width, clipInScreenPx.Height);
+
+            graphicsDevice.RasterizerState = graphicsDevice.RasterizerState.CullMode == CullMode.CullCounterClockwiseFace
+                ? _rasterizerStateScissorCull
+                : _rasterizerStateScissorNoCull;
+        }
+
+        public void DisableClipArea()
+        {
+            graphicsDevice.ScissorRectangle = graphicsDevice.Viewport.Bounds;
+
+            graphicsDevice.RasterizerState = graphicsDevice.RasterizerState.CullMode == CullMode.CullCounterClockwiseFace
+                ? RasterizerState.CullCounterClockwise
+                : RasterizerState.CullNone;
+        }
+
         public Viewport Viewport => new(graphicsDevice.Viewport.Width, graphicsDevice.Viewport.Height);
 
         public void Dispose()

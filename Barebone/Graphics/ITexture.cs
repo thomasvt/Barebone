@@ -3,7 +3,7 @@ using Barebone.Graphics.Gpu;
 
 namespace Barebone.Graphics
 {
-    public interface ITexture
+    public interface ITexture : IDisposable
     {
         Vector2I Size { get; }
         void ReadPixels(in GpuColor[] pixelBuffer);

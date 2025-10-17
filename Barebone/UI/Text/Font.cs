@@ -93,7 +93,10 @@ namespace Barebone.UI.Text
 
         private static List<Kerning> ParseKernings(global::font fontDefinition)
         {
-            var kerningsIn = fontDefinition.Items.OfType<fontKernings>().Single();
+            var kerningsIn = fontDefinition.Items.OfType<fontKernings>().SingleOrDefault();
+            if (kerningsIn == null)
+                return new List<Kerning>();
+
             var kerningCount = int.Parse(kerningsIn.count);
             var kernings = new List<Kerning>(kerningCount);
             foreach (var kerning in kerningsIn.kerning)
@@ -136,7 +139,7 @@ namespace Barebone.UI.Text
         }
 
         /// <summary>
-        /// Returns the size of the rendered text in pixels, but the height only measures from the top to the Base of the characters. Tails are not included. Use this to do better vertical alignment, and have letter-tails penetrate into eg. margin space of a control.
+        /// Returns the size of the rendered text in pixels, but the height only measures from the top to the Base of the characters. Tails are not included. Use this as line-height, and have letter-tails penetrate into eg. margin space of a control.
         /// </summary>
         public Vector2 MeasureBase(ReadOnlySpan<char> text, float scale = 1f)
         {
@@ -184,12 +187,7 @@ namespace Barebone.UI.Text
         /// <summary>
         /// Appends the triangles representing the text to be rendered to your buffer without clearing it.
         /// </summary>
-        /// <param name="buffer">Where the triangles representing the string will be appended</param>
-        /// <param name="text">Text to be rendered</param>
-        /// <param name="color">Color of the text</param>
-        /// <param name="position">Offset position to store in the vertices' position.</param>
-        /// <param name="scale">Scale to apply to the rendered text's size. (does not influence the position parameter)</param>
-        public void AppendTriangles(BBList<GpuTexTriangle> buffer, string text, Color color, Vector2 position, float scale = 1f)
+        public void AppendString(BBList<GpuTexTriangle> buffer, string text, Color color, Vector2 position, float scale = 1f)
         {
             if (buffer == null)
                 throw new ArgumentNullException(nameof(buffer));
@@ -203,7 +201,8 @@ namespace Barebone.UI.Text
             var previousCharCode = (ushort)0;
             for (var i = 0; i < text.Length; i++)
             {
-                var code = (ushort)char.ConvertToUtf32(text, i);
+                var g = System.Text.Rune.GetRuneAt(text, i);
+                var code = (ushort)g.Value;
                 if (!Glyphs.TryGetValue(code, out var glyph))
                 {
                     if (!Glyphs.TryGetValue('?', out glyph))
@@ -219,10 +218,36 @@ namespace Barebone.UI.Text
                 
                 DrawGlyphQuad(buffer, glyphQuad, scale, position, gpuColor);
 
-                x += glyph.XAdvance;
+                x += glyph.XAdvance * scale;
 
                 previousCharCode = code;
             }
+        }
+
+        /// <summary>
+        /// Appends a single character. Returns how much your cursor should advance in X to position for a subsequent character.
+        /// </summary>
+        /// <param name="unicodePrevious">The unicode of the previous character for kerning. Pass in 0 if there isn't a previous char or you don't want kerning.</param>
+        public float AppendUnicode(BBList<GpuTexTriangle> buffer, in ushort unicodePrevious, in ushort unicode, in GpuColor color, Vector2 position, in float scale = 1)
+        {
+            if (!Glyphs.TryGetValue(unicode, out var glyph))
+            {
+                if (!Glyphs.TryGetValue('?', out glyph))
+                    return 0;
+            }
+
+            var x = 0;
+            if (unicodePrevious > 0)
+                x = GetKerningOffset(unicodePrevious, unicode);
+
+            var min = new Vector2(x + glyph.XOffset, glyph.YOffset);
+            var max = min + new Vector2(glyph.Width, glyph.Heigth);
+
+            var glyphQuad = new GlyphQuad(min, max, glyph.UVMin, glyph.UVMax);
+
+            DrawGlyphQuad(buffer, glyphQuad, scale, position, color);
+
+            return glyph.XAdvance * scale;
         }
 
         private static void DrawGlyphQuad(in BBList<GpuTexTriangle> buffer, in GlyphQuad glyphQuad, in float scale, in Vector2 position, in GpuColor color)
@@ -244,6 +269,11 @@ namespace Barebone.UI.Text
 
             buffer.Add(new(a, b, c));
             buffer.Add(new(a, c, d));
+        }
+
+        public void Dispose()
+        {
+            
         }
     }
 }

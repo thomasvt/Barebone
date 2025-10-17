@@ -31,7 +31,7 @@ namespace Barebone
             Count = 0;
         }
 
-        public int Add(T item)
+        public int Add(in T item)
         {
             var idx = Count;
             if (idx < _items.Length)
@@ -106,7 +106,7 @@ namespace Barebone
 
         // Non-inline from List.Add to improve its code quality as uncommon path
         [MethodImpl(MethodImplOptions.NoInlining)]
-        private int AddWithResize(T item)
+        private int AddWithResize(in T item)
         {
             Debug.Assert(Count == _items.Length);
             var count = Count;
@@ -119,7 +119,7 @@ namespace Barebone
         /// <summary>
         /// Increase the capacity to at least the specified <paramref name="capacity"/>.
         /// </summary>
-        private void GrowCapacity(int capacity)
+        private void GrowCapacity(in int capacity)
         {
             Debug.Assert(_items.Length < capacity);
 

@@ -92,7 +92,7 @@ namespace Barebone.Graphics
             _texTriangles.Clear();
             foreach (var item in _textItems.AsReadOnlySpan())
             {
-                _font!.AppendTriangles(_texTriangles, item.Text, item.Color ?? DefaultColor, item.Position);
+                _font!.AppendString(_texTriangles, item.Text, item.Color ?? DefaultColor, item.Position);
             }
             renderer.Draw(Matrix4x4.Identity, _texTriangles.AsReadOnlySpan(), _font!.Texture);
         }

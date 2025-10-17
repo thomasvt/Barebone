@@ -22,6 +22,9 @@ namespace Barebone.Graphics
 
         void End();
 
+        void SetClipArea(AabbI clipInScreenPx);
+        void DisableClipArea();
+
         Viewport Viewport { get; }
 
         void ClearScreen(in System.Drawing.Color color);

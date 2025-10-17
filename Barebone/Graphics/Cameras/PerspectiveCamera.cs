@@ -12,19 +12,14 @@ namespace Barebone.Graphics.Cameras
         private Vector3 _lookAtUp;
 
         /// <summary>
-        /// Creates a default camera with Y+ up, Z- away from camera, X+ to the right, looking at (0,0,0) at a given `distanceOnZ`.
+        /// Configure the camera to have Y+ up, Z- away from camera, X+ to the right, looking at (0,0,0) at a given `distanceOnZ`.
         /// </summary>
-        public static PerspectiveCamera LookAtXYPlane(float distanceOnZ, float nearPlane, float farPlane)
+        public void LookAtXYPlane(float distanceOnZ, float nearPlane, float farPlane)
         {
-            var cam = new PerspectiveCamera
-            {
-                Position = new(0, 0, distanceOnZ),
-                NearPlane = nearPlane,
-                FarPlane = farPlane,
-                
-            };
-            cam.LookAt(new(0, 0, 0), Vector3.UnitY);
-            return cam;
+            Position = new(0, 0, distanceOnZ);
+            NearPlane = nearPlane;
+            FarPlane = farPlane;
+            LookAt(new(0, 0, 0), Vector3.UnitY);
         }
 
         /// <summary>
@@ -86,7 +81,7 @@ namespace Barebone.Graphics.Cameras
             _lookAtUp = up;
         }
 
-        public float FovY { get; set; } = Angles._045;
+        public float FovY { get; set; } = Angles._090;
 
         public Vector3 Position { get; set; }
 

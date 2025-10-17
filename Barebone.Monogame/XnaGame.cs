@@ -1,10 +1,19 @@
 ﻿using Barebone.Assets;
+using Barebone.Geometry;
 using Barebone.Graphics;
 using Barebone.Input;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
 
 namespace Barebone.Monogame
 {
+    public class Settings
+    {
+        public Vector2I WindowSize;
+        public bool AllowWindowResizing;
+        public bool IsMouseVisible;
+    }
+
     /// <summary>
     /// Startup for running an <see cref="IGame"/> on Monogame.
     /// </summary>
@@ -17,23 +26,32 @@ namespace Barebone.Monogame
         private XnaImmediateRenderer? _renderer;
         private XnaTextureLoader _textureLoader;
 
-        public XnaGame(Func<IPlatform, IGame> gameFactory)
+        public XnaGame(Func<IPlatform, IGame> gameFactory, Settings? settings = null)
         {
             _gameFactory = gameFactory;
             _gdm = new GraphicsDeviceManager(this)
             {
-                PreferredBackBufferWidth = 1280,
-                PreferredBackBufferHeight = 800
+                PreferredBackBufferWidth = settings?.WindowSize.X ?? 800,
+                PreferredBackBufferHeight = settings?.WindowSize.Y ?? 600
             };
 
-            IsMouseVisible = true;
+            IsMouseVisible = settings?.IsMouseVisible ?? true;
             TargetElapsedTime = TimeSpan.FromSeconds(1 / 60.0);
             IsFixedTimeStep = true; // Execute() is called 60 times per game-second, disregarding render framerate, also important for box2d physics.
+            Window.AllowUserResizing = settings?.AllowWindowResizing ?? false;
+            Window.ClientSizeChanged += WindowOnClientSizeChanged;
 
             _input = new XnaInput();
-            
         }
-        
+
+        private void WindowOnClientSizeChanged(object? sender, EventArgs e)
+        {
+            // Get the new window size
+            var newSize = new Vector2I(GraphicsDevice.PresentationParameters.BackBufferWidth, GraphicsDevice.PresentationParameters.BackBufferHeight);
+
+            _game?.OnWindowSizeChanged(newSize);
+        }
+
         protected override void LoadContent()
         {
             base.LoadContent();
