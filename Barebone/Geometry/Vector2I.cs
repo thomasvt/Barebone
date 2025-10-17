@@ -3,8 +3,10 @@ using System.Text.Json.Serialization;
 
 namespace Barebone.Geometry
 {
-    public readonly record struct Vector2I(int X, int Y)
+    public struct Vector2I(int x, int y)
     {
+        public int X = x, Y = y;
+
         [JsonIgnore] public int ManhattanLength => Math.Abs(X) + Math.Abs(Y);
 
         public Vector2I(int xy) : this(xy, xy)

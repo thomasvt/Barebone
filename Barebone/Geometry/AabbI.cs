@@ -6,8 +6,15 @@ namespace Barebone.Geometry
     /// <summary>
     /// Axis Aligned Bounding Box. The positional properties (eg. Top, Bottom) all are in context of X+ is Right, and Y+ is Up.
     /// </summary>
-    public record struct AabbI(Vector2I MinCorner, Vector2I MaxCornerExcl)
+    public struct AabbI(Vector2I minCorner, Vector2I maxCornerExcl) : IEquatable<AabbI>
     {
+        public AabbI(int minX, int minY, int maxX, int maxY) : this(new(minX, minY), new(maxX, maxY))
+        {
+        }
+
+        public Vector2I MinCorner = minCorner;
+        public Vector2I MaxCornerExcl = maxCornerExcl;
+
         [JsonIgnore] public Vector2I Size => MaxCornerExcl - MinCorner;
         [JsonIgnore] public int Width => MaxCornerExcl.X - MinCorner.X;
         [JsonIgnore] public int Height => MaxCornerExcl.Y - MinCorner.Y;
@@ -127,6 +134,31 @@ namespace Barebone.Geometry
         public static AabbI operator +(Vector2I b, AabbI a)
         {
             return new(a.MinCorner + b, a.MaxCornerExcl + b);
+        }
+
+        public static bool operator ==(AabbI a, AabbI b)
+        {
+            return a.Equals(b);
+        }
+
+        public static bool operator !=(AabbI a, AabbI b)
+        {
+            return !a.Equals(b);
+        }
+
+        public bool Equals(AabbI other)
+        {
+            return MinCorner.Equals(other.MinCorner) && MaxCornerExcl.Equals(other.MaxCornerExcl);
+        }
+
+        public override bool Equals(object? obj)
+        {
+            return obj is AabbI other && Equals(other);
+        }
+
+        public override int GetHashCode()
+        {
+            return HashCode.Combine(MinCorner, MaxCornerExcl);
         }
     }
 }

@@ -61,7 +61,7 @@ namespace Barebone.Graphics
                 ref var item = ref span[i];
                 item.FramesToLive--;
                 if (item.FramesToLive <= 0)
-                    _items.SwapRemoveAt(i);
+                    _items.SwapRemoveRange(i);
             }
 
             var textItemSpan = _textItems.AsSpan();
@@ -70,7 +70,7 @@ namespace Barebone.Graphics
                 ref var item = ref textItemSpan[i];
                 item.FramesToLive--;
                 if (item.FramesToLive <= 0)
-                    _textItems.SwapRemoveAt(i);
+                    _textItems.SwapRemoveRange(i);
             }
         }
 
@@ -82,7 +82,7 @@ namespace Barebone.Graphics
                 if (item.FillColor.HasValue)
                     _mesh.FillPolygonInZ(item.Polygon, 0f, item.FillColor.Value);
                 if (item is { StrokeColor: not null, StrokeWidth: > 0f })
-                    _mesh.DrawPolygonInZ(item.Polygon, item.StrokeWidth * strokeWidthBase, 0, item.StrokeColor.Value);
+                    _mesh.StrokePolygonInZ(item.Polygon, item.StrokeWidth * strokeWidthBase, 0, item.StrokeColor.Value);
             }
             renderer.Draw(Matrix4x4.Identity, _mesh);
         }

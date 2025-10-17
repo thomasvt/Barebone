@@ -2,16 +2,19 @@
 using Barebone.Geometry;
 using Barebone.Graphics;
 using Barebone.Input;
+using Barebone.Platform.Inputs;
 using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
 
 namespace Barebone.Monogame
 {
     public class Settings
     {
-        public Vector2I WindowSize;
+        public string WindowTitle;
+        public bool IsFullScreen;
+        public Vector2I Size;
         public bool AllowWindowResizing;
         public bool IsMouseVisible;
+        public bool AllowHardwareModeSwitch;
     }
 
     /// <summary>
@@ -31,17 +34,26 @@ namespace Barebone.Monogame
             _gameFactory = gameFactory;
             _gdm = new GraphicsDeviceManager(this)
             {
-                PreferredBackBufferWidth = settings?.WindowSize.X ?? 800,
-                PreferredBackBufferHeight = settings?.WindowSize.Y ?? 600
+                HardwareModeSwitch = settings?.AllowHardwareModeSwitch ?? false,
+                IsFullScreen = settings?.IsFullScreen ?? false,
+                PreferredBackBufferWidth = settings?.Size.X ?? 800,
+                PreferredBackBufferHeight = settings?.Size.Y ?? 600
             };
 
+            Window.Title = settings?.WindowTitle ?? "Barebone";
             IsMouseVisible = settings?.IsMouseVisible ?? true;
             TargetElapsedTime = TimeSpan.FromSeconds(1 / 60.0);
             IsFixedTimeStep = true; // Execute() is called 60 times per game-second, disregarding render framerate, also important for box2d physics.
             Window.AllowUserResizing = settings?.AllowWindowResizing ?? false;
             Window.ClientSizeChanged += WindowOnClientSizeChanged;
+            Window.TextInput += WindowOnTextInput;
 
             _input = new XnaInput();
+        }
+
+        private void WindowOnTextInput(object? sender, TextInputEventArgs e)
+        {
+            _input.OnTextInput(e.Character, (Button)e.Key);
         }
 
         private void WindowOnClientSizeChanged(object? sender, EventArgs e)
@@ -70,6 +82,7 @@ namespace Barebone.Monogame
 
         protected override void Update(GameTime gameTime)
         {
+            Input.Update();
             _game!.Update((float)gameTime.TotalGameTime.TotalSeconds, (float)gameTime.ElapsedGameTime.TotalSeconds);
         }
 

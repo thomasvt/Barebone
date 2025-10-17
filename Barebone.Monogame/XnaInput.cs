@@ -1,4 +1,5 @@
 ﻿using System.Numerics;
+using Barebone.Geometry;
 using Barebone.Input;
 using Barebone.Platform.Inputs;
 using Microsoft.Xna.Framework.Input;
@@ -16,7 +17,7 @@ namespace Barebone.Monogame
         private GamePadState _gamePad;
         private GamePadState _gamePadPrevious;
         public InputMode InputMode { get; private set; }
-        public Vector2 MousePosition => new(_mouse.X, _mouse.Y);
+        public Vector2I MousePosition => new(_mouse.X, _mouse.Y);
 
         public XnaInput()
         {
@@ -254,5 +255,12 @@ namespace Barebone.Monogame
             if (Is(increase, ButtonState.Pressed)) return 1;
             return 0;
         }
+
+        public void OnTextInput(char character, Button button)
+        {
+            TypeInput?.Invoke(character, button);
+        }
+
+        public event Action<char, Button>? TypeInput;
     }
 }

@@ -20,7 +20,7 @@ namespace Barebone.Graphics.Cameras
         private float GetDevicePixelSizeInWorld(float distance)
         {
             throw new NotImplementedException();
-            // return distance * ViewY;
+            // return distance * ViewHeight;
         }
 
         public Vector2 WorldToScreen(Vector3 worldLocation)
@@ -93,7 +93,7 @@ namespace Barebone.Graphics.Cameras
         /// <summary>
         /// How many world units fit on one screen's height?
         /// </summary>
-        public float ViewY { get; set; } = 600f;
+        public float ViewHeight { get; set; } = 600f;
 
         public Matrix4x4 GetViewTransform()
         {
@@ -103,10 +103,10 @@ namespace Barebone.Graphics.Cameras
         public Matrix4x4 GetProjectionTransform(in Viewport viewport)
         {
             if (Origin == OriginPosition.Center)
-                return Matrix4x4.CreateOrthographic(ViewY * viewport.AspectRatio, ViewY, NearPlane, FarPlane);
+                return Matrix4x4.CreateOrthographic(ViewHeight * viewport.AspectRatio, ViewHeight, NearPlane, FarPlane);
 
-            var width = ViewY * viewport.AspectRatio;
-            return Matrix4x4.CreateOrthographicOffCenter(0, width, ViewY, 0, NearPlane, FarPlane);
+            var width = ViewHeight * viewport.AspectRatio;
+            return Matrix4x4.CreateOrthographicOffCenter(0, width, ViewHeight, 0, NearPlane, FarPlane);
         }
 
         /// <summary>
@@ -115,18 +115,15 @@ namespace Barebone.Graphics.Cameras
         /// </summary>
         /// <param name="height">Heigth of the canvas. Width is derived from this and the viewport's aspectratio.</param>
         /// <param name="maxZ">Max allowed Z for render sorting with depth buffer. minZ is always 0.</param>
-        public static OrthographicCamera For2DCanvas(int height, int maxZ)
+        public void For2DCanvas(int height, int maxZ)
         {
-            return new OrthographicCamera
-            {
-                Position = new(0, 0, maxZ),
-                _lookAt = new(0, 0, 0),
-                _lookAtUp = new(0, 1, 0), // RREALLY weird up = Y+, coords of meshes are lower == higher on the screen
-                NearPlane = 0,
-                FarPlane = maxZ,
-                ViewY = height,
-                Origin = OriginPosition.TopLeft
-            };
+            Position = new(0, 0, maxZ);
+            _lookAt = new(0, 0, 0);
+            _lookAtUp = new(0, 1, 0); // RREALLY weird up = Y+, coords of meshes are lower == higher on the screen
+            NearPlane = 0;
+            FarPlane = maxZ;
+            ViewHeight = height;
+            Origin = OriginPosition.TopLeft;
         }
     }
 }

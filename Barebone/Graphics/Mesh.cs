@@ -83,7 +83,7 @@ namespace Barebone.Graphics
             return FillQuadInZ(aabb.MinCorner, aabb.TopLeft, aabb.TopRight, aabb.BottomRight, z, color);
         }
 
-        public Mesh DrawQuadInZ(in Vector2 a, in Vector2 b, in Vector2 c, in Vector2 d, in float halfWidth, in float z, Color color)
+        public Mesh StrokeQuadInZ(in Vector2 a, in Vector2 b, in Vector2 c, in Vector2 d, in float halfWidth, in float z, Color color)
         {
             LineInZ(a, b, halfWidth, z, color);
             LineInZ(b, c, halfWidth, z, color);
@@ -92,9 +92,9 @@ namespace Barebone.Graphics
             return this;
         }
 
-        public Mesh DrawQuadInZ(in Aabb aabb, in float halfWidth, in float z, Color color)
+        public Mesh StrokeAabbInZ(in Aabb aabb, in float halfWidth, in float z, Color color)
         {
-            return DrawQuadInZ(aabb.MinCorner, aabb.TopLeft, aabb.TopRight, aabb.BottomRight, halfWidth, z, color);
+            return StrokeQuadInZ(aabb.MinCorner, aabb.TopLeft, aabb.TopRight, aabb.BottomRight, halfWidth, z, color);
         }
 
         public unsafe Mesh FillPolygonInZ(in Polygon8 polygon, in float z, in Color color)
@@ -110,7 +110,7 @@ namespace Barebone.Graphics
             return this;
         }
 
-        public Mesh DrawPolygonInZ(in Polygon8 polygon, float strokeWidth, in float z, in Color color)
+        public Mesh StrokePolygonInZ(in Polygon8 polygon, float strokeWidth, in float z, in Color color)
         {
             if (polygon.Count < 3) throw new Exception("Polygons must have at least 3 corners.");
 
@@ -149,7 +149,7 @@ namespace Barebone.Graphics
             return this;
         }
 
-        public Mesh DrawRegularPolyInZ(in Vector2 center, in float radius, in float strokeWidth, in int segmentCount, in float z, in Color color, in float angleOffset = 0f)
+        public Mesh StrokeRegularPolyInZ(in Vector2 center, in float radius, in float strokeWidth, in int segmentCount, in float z, in Color color, in float angleOffset = 0f)
         {
             var angleStep = Angles._360 / segmentCount;
             var p0 = new Vector2(MathF.Cos(angleOffset), MathF.Sin(angleOffset)) * radius;

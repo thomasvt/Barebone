@@ -1,11 +1,12 @@
 using System.Numerics;
+using Barebone.Geometry;
 using Barebone.Platform.Inputs;
 
 namespace Barebone.Input;
 
 public interface IInput
 {
-    Vector2 MousePosition { get; }
+    Vector2I MousePosition { get; }
     InputMode InputMode { get; }
     void Update();
     bool IsJustPressed(Button button);
@@ -48,4 +49,9 @@ public interface IInput
     Vector2 GetKeyboardArrows();
 
     float GetKeyAxis(Button decrease, Button increase);
+
+    /// <summary>
+    /// Triggers repeatedly when keys are held down as is typical for typing and navigating UI. The repeat timing is managed by the OS.
+    /// </summary>
+    event Action<char, Button>? TypeInput;
 }

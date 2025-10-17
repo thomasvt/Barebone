@@ -6,10 +6,10 @@ using Barebone.Pools;
 namespace Barebone
 {
     /// <summary>
-    /// List-like struct with zero GC pressure and several much faster alternatives than List by sacrificing the steade item-order and exposing the internal array.
+    /// List-like struct with zero GC pressure and several much faster alternatives than List by sacrificing the stable item-order and exposing the internal array.
     /// Fast alternatives are:
     /// * use as unordered but fast queue using Add() and Pop() for cases where the pop order is irrelevant.
-    /// * SwapRemove: removes a range of items without copying data to close the gap.
+    /// * SwapRemove: removes a range of items by moving items from the back of the list over the range to remove.
     /// * AddRangeFast: performs ranged memory-copy instead of items 1 by 1.
     /// </summary>
     public class BBList<T> : Poolable
@@ -41,6 +41,25 @@ namespace Barebone
                 return idx;
             }
             return AddWithResize(item);
+        }
+
+
+        public void InsertAt(int idx, T item)
+        {
+            if (idx > Count) throw new ArgumentOutOfRangeException(nameof(idx));
+
+            if (idx == Count)
+            {
+                Add(item);
+            }
+            else
+            {
+                if (Count == _items.Length)
+                    GrowCapacity(Count+1);
+
+                Array.Copy(_items, idx, _items, idx + 1, Count-idx);
+                _items[idx] = item;
+            }
         }
 
         /// <summary>
@@ -145,7 +164,7 @@ namespace Barebone
             var idx = IndexOf(item);
             if (idx <= -1) return false;
 
-            SwapRemoveAt(idx);
+            SwapRemoveRange(idx);
             return true;
         }
 
@@ -165,10 +184,10 @@ namespace Barebone
         /// Fast remove of a range of items by copying over an equal amount of items from the back of the array (if applicable).
         /// This is faster than filling the gap by copying a larger part of the array to maintaining original item-order.
         /// </summary>
-        public void SwapRemoveAt(int idx, int count = 1)
+        public void SwapRemoveRange(int idx, int count = 1)
         {
             if (idx + count > Count)
-                throw new ArgumentException("The range to remove doesn't entirely fall within array bounds.");
+                throw new ArgumentOutOfRangeException("The range to remove doesn't entirely fall within array bounds.");
 
             if (idx + count < Count)
             {
@@ -178,6 +197,21 @@ namespace Barebone
             }
 
             Count -= count;
+        }
+
+        /// <summary>
+        /// Fast remove of a range of items by copying over an equal amount of items from the back of the array (if applicable).
+        /// This is faster than filling the gap by copying a larger part of the array to maintaining original item-order.
+        /// </summary>
+        public void SwapRemoveAt(int idx)
+        {
+            if (idx >= Count)
+                throw new ArgumentOutOfRangeException(nameof(idx), "Index out of range.");
+
+            if (idx < Count - 1)
+                _items[idx] = _items[Count - 1];
+
+            Count--;
         }
 
         /// <summary>
@@ -277,6 +311,12 @@ namespace Barebone
             }
 
             return false;
+        }
+
+        public T Peek()
+        {
+            if (Count == 0) throw new Exception("Cannot peek on an empty BBList");
+            return InternalArray[Count - 1];
         }
     }
 }

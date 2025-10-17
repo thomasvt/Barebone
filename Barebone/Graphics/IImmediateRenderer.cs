@@ -22,14 +22,16 @@ namespace Barebone.Graphics
 
         void End();
 
-        void SetClipArea(AabbI clipInScreenPx);
-        void DisableClipArea();
+        void PushClip(AabbI clipInScreenPx);
+        void ResetClip();
+        void PopClip();
 
         Viewport Viewport { get; }
 
         void ClearScreen(in System.Drawing.Color color);
 
         void ClearDepthBuffer();
+
 
         /// <summary>
         /// Creates a special <see cref="ITexture"/> that you can set as RenderTarget on this Renderer. You must Dispose() this yourself.

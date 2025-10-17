@@ -21,12 +21,13 @@ namespace Barebone.Monogame
             LightingEnabled = false
         };
 
-        private readonly RasterizerState _rasterizerStateScissorNoCull = new() { CullMode = CullMode.CullCounterClockwiseFace, ScissorTestEnable = true };
-        private readonly RasterizerState _rasterizerStateScissorCull = new() { CullMode = CullMode.None, ScissorTestEnable = true };
+        private readonly RasterizerState _rasterizerStateScissorNoCull = new() { CullMode = CullMode.None, ScissorTestEnable = true };
+        private readonly RasterizerState _rasterizerStateScissorCull = new() { CullMode = CullMode.CullCounterClockwiseFace, ScissorTestEnable = true };
 
         private ICamera? _camera;
         private readonly BBList<VertexPositionColor> _xnaVerticesBuffer = new();
         private readonly BBList<VertexPositionColorTexture> _xnaVerticesTexBuffer = new();
+        private readonly BBList<AabbI> _clipStack = new();
 
         /// <summary>
         /// Clears screen, depth buffer and stencil buffer.
@@ -46,6 +47,7 @@ namespace Barebone.Monogame
         /// </summary>
         public void Begin(ICamera camera, bool enableDepthBuffer, bool additiveBlend, bool cullCounterClockwise, bool linearSampling = true)
         {
+            _clipStack.Clear();
             _camera = camera;
 
             graphicsDevice.BlendState = additiveBlend ? BlendState.Additive : BlendState.NonPremultiplied;
@@ -196,22 +198,43 @@ namespace Barebone.Monogame
             _camera = null;
         }
 
-        public void SetClipArea(AabbI clipInScreenPx)
+        public void PushClip(AabbI clipInScreenPx)
         {
-            graphicsDevice.ScissorRectangle = new Rectangle(clipInScreenPx.MinCorner.X, clipInScreenPx.MinCorner.Y, clipInScreenPx.Width, clipInScreenPx.Height);
-
-            graphicsDevice.RasterizerState = graphicsDevice.RasterizerState.CullMode == CullMode.CullCounterClockwiseFace
-                ? _rasterizerStateScissorCull
-                : _rasterizerStateScissorNoCull;
+            _clipStack.Add(clipInScreenPx);
+            ApplyClip();
         }
 
-        public void DisableClipArea()
+        public void PopClip()
         {
-            graphicsDevice.ScissorRectangle = graphicsDevice.Viewport.Bounds;
+            _clipStack.Pop();
+            ApplyClip();
+        }
 
-            graphicsDevice.RasterizerState = graphicsDevice.RasterizerState.CullMode == CullMode.CullCounterClockwiseFace
-                ? RasterizerState.CullCounterClockwise
-                : RasterizerState.CullNone;
+        private void ApplyClip()
+        {
+            if (_clipStack.Count > 0)
+            {
+                var clip = _clipStack.Peek();
+                graphicsDevice.ScissorRectangle = new Rectangle(clip.MinCorner.X, clip.MinCorner.Y, clip.Width, clip.Height);
+
+                graphicsDevice.RasterizerState = graphicsDevice.RasterizerState.CullMode == CullMode.CullCounterClockwiseFace
+                    ? _rasterizerStateScissorCull
+                    : _rasterizerStateScissorNoCull;
+            }
+            else
+            {
+                graphicsDevice.ScissorRectangle = graphicsDevice.Viewport.Bounds;
+
+                graphicsDevice.RasterizerState = graphicsDevice.RasterizerState.CullMode == CullMode.CullCounterClockwiseFace
+                    ? RasterizerState.CullCounterClockwise
+                    : RasterizerState.CullNone;
+            }
+        }
+
+        public void ResetClip()
+        {
+            _clipStack.Clear();
+            ApplyClip();
         }
 
         public Viewport Viewport => new(graphicsDevice.Viewport.Width, graphicsDevice.Viewport.Height);

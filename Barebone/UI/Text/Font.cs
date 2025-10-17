@@ -216,7 +216,7 @@ namespace Barebone.UI.Text
 
                 var glyphQuad = new GlyphQuad(min, max, glyph.UVMin, glyph.UVMax);
                 
-                DrawGlyphQuad(buffer, glyphQuad, scale, position, gpuColor);
+                DrawGlyphQuad(buffer, glyphQuad, scale, gpuColor);
 
                 x += glyph.XAdvance * scale;
 
@@ -236,26 +236,27 @@ namespace Barebone.UI.Text
                     return 0;
             }
 
-            var x = 0;
+            var x = position.X;
+            var y = position.Y;
             if (unicodePrevious > 0)
                 x = GetKerningOffset(unicodePrevious, unicode);
 
-            var min = new Vector2(x + glyph.XOffset, glyph.YOffset);
+            var min = new Vector2(x + glyph.XOffset, y + glyph.YOffset);
             var max = min + new Vector2(glyph.Width, glyph.Heigth);
 
             var glyphQuad = new GlyphQuad(min, max, glyph.UVMin, glyph.UVMax);
 
-            DrawGlyphQuad(buffer, glyphQuad, scale, position, color);
+            DrawGlyphQuad(buffer, glyphQuad, scale, color);
 
             return glyph.XAdvance * scale;
         }
 
-        private static void DrawGlyphQuad(in BBList<GpuTexTriangle> buffer, in GlyphQuad glyphQuad, in float scale, in Vector2 position, in GpuColor color)
+        private static void DrawGlyphQuad(in BBList<GpuTexTriangle> buffer, in GlyphQuad glyphQuad, in float scale, in GpuColor color)
         {
-            var left = position.X + glyphQuad.QuadMin.X * scale;
-            var top = position.Y - glyphQuad.QuadMin.Y * scale;
-            var right = position.X + glyphQuad.QuadMax.X * scale;
-            var bottom = position.Y - glyphQuad.QuadMax.Y * scale;
+            var left = glyphQuad.QuadMin.X * scale;
+            var top = glyphQuad.QuadMin.Y * scale;
+            var right = glyphQuad.QuadMax.X * scale;
+            var bottom = glyphQuad.QuadMax.Y * scale;
 
             var uMin = glyphQuad.UVMin.X;
             var vMin = glyphQuad.UVMin.Y;
