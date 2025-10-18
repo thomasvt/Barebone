@@ -4,6 +4,7 @@ using Barebone.Platform.Inputs;
 
 namespace Barebone.Input;
 
+public record struct KeyStrokeEvent(bool Control, bool Shift, bool Alt, Button Button);
 public interface IInput
 {
     Vector2I MousePosition { get; }
@@ -51,7 +52,12 @@ public interface IInput
     float GetKeyAxis(Button decrease, Button increase);
 
     /// <summary>
-    /// Triggers repeatedly when keys are held down as is typical for typing and navigating UI. The repeat timing is managed by the OS.
+    /// OS managed text input according to keyboard locale and text-input mechanics. Also auto-repeats.
     /// </summary>
-    event Action<char, Button>? TypeInput;
+    event Action<char, Button>? TextInput;
+
+    /// <summary>
+    /// OS managed auto-repeated key stokes of all buttons. Mind that these partially overlap with TextInput events: this event gives you the actual buttons, TextInput gives you the translation to text-input.
+    /// </summary>
+    event Action<KeyStrokeEvent>? KeyStroke;
 }

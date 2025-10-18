@@ -28,13 +28,23 @@ namespace Barebone.UI.Text
 
         /// <param name="lineHeight">The total height of a line, aka how many pixels are between text lines.</param>
         /// <param name="base">The vertical offset from the top of the baseline of the text (where the bottom of the text aligns to) aka the bottom of tail-less characters.</param>
-        public Font(ITexture texture, int lineHeight, int @base, IEnumerable<Glyph> glyphs, IEnumerable<Kerning> kernings)
+        public Font(ITexture texture, int lineHeight, int @base, IReadOnlyList<Glyph> glyphs, IEnumerable<Kerning> kernings)
         {
             Texture = texture;
             LineHeight = lineHeight;
             Base = @base;
             Glyphs = glyphs.ToDictionary(g => g.Code);
             _kernings = kernings.ToDictionary(k => (uint)(k.First << 16) | (uint)k.Second, k => k.Amount);
+
+            DetectMonospaceFont(glyphs);
+        }
+
+        private void DetectMonospaceFont(IReadOnlyList<Glyph> glyphs)
+        {
+            var xAdvances = glyphs.Select(g => g.XAdvance).Distinct().ToList();
+            IsMonospaceFont = xAdvances.Count() == 1;
+            if (IsMonospaceFont)
+                MonospaceWidth = xAdvances.Single();
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -185,6 +195,38 @@ namespace Barebone.UI.Text
         }
 
         /// <summary>
+        /// Gets the character index of the glyph-start (left-side) closest to the given `caretX`. Used for screen picking caret positions.
+        /// Note that this can return text.Length if the caret should be behind the last glyph.
+        /// </summary>
+        public int GetCharacterAtCaretX(ReadOnlySpan<char> text, int caretX)
+        {
+            var width = 0;
+            var previousCharCode = (ushort)0;
+            var i = 0;
+            foreach (var code in text)
+            {
+                if (!Glyphs.TryGetValue(code, out var glyph))
+                {
+                    if (!Glyphs.TryGetValue('?', out glyph))
+                        continue;
+                }
+
+                var nextWidth = width + glyph.XAdvance + GetKerningOffset(previousCharCode, code);
+                if (caretX < nextWidth)
+                {
+                    if (caretX - width <= nextWidth - caretX)
+                        return i;
+                    return i + 1;
+                }
+                width = nextWidth;
+                previousCharCode = code;
+                i++;
+            }
+
+            return text.Length;
+        }
+
+        /// <summary>
         /// Appends the triangles representing the text to be rendered to your buffer without clearing it.
         /// </summary>
         public void AppendString(BBList<GpuTexTriangle> buffer, string text, Color color, Vector2 position, float scale = 1f)
@@ -272,9 +314,14 @@ namespace Barebone.UI.Text
             buffer.Add(new(a, c, d));
         }
 
-        public void Dispose()
-        {
-            
-        }
+        /// <summary>
+        /// Width of a single character of this font, if it's monospace.
+        /// </summary>
+        public int? MonospaceWidth { get; set; }
+
+        /// <summary>
+        /// Autodetected to True if widths taken by all characters of this font are the same.
+        /// </summary>
+        public bool IsMonospaceFont { get; set; }
     }
 }

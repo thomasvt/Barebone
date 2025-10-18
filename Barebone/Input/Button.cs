@@ -8,7 +8,7 @@
         /// <summary>Reserved.</summary>
         None = 0,
         /// <summary>BACKSPACE key.</summary>
-        Back = 8,
+        Backspace = 8,
         /// <summary>TAB key.</summary>
         Tab = 9,
         /// <summary>ENTER key.</summary>

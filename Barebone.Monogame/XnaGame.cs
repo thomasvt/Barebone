@@ -46,14 +46,8 @@ namespace Barebone.Monogame
             IsFixedTimeStep = true; // Execute() is called 60 times per game-second, disregarding render framerate, also important for box2d physics.
             Window.AllowUserResizing = settings?.AllowWindowResizing ?? false;
             Window.ClientSizeChanged += WindowOnClientSizeChanged;
-            Window.TextInput += WindowOnTextInput;
 
-            _input = new XnaInput();
-        }
-
-        private void WindowOnTextInput(object? sender, TextInputEventArgs e)
-        {
-            _input.OnTextInput(e.Character, (Button)e.Key);
+            _input = new XnaInput(Window);
         }
 
         private void WindowOnClientSizeChanged(object? sender, EventArgs e)

@@ -3,7 +3,7 @@ using System.Text.Json.Serialization;
 
 namespace Barebone.Geometry
 {
-    public struct Vector2I(int x, int y)
+    public struct Vector2I(int x, int y) : IEquatable<Vector2I>
     {
         public int X = x, Y = y;
 
@@ -73,6 +73,16 @@ namespace Barebone.Geometry
             return new Vector2(v.X, v.Y);
         }
 
+        public static bool operator ==(Vector2I a, Vector2I b)
+        {
+            return a.Equals(b);
+        }
+
+        public static bool operator !=(Vector2I a, Vector2I b)
+        {
+            return !a.Equals(b);
+        }
+
         public void Deconstruct(out int x, out int y)
         {
             x = X;
@@ -104,5 +114,20 @@ namespace Barebone.Geometry
 
         public static Vector2I Zero = new(0, 0);
         public static Vector2I One = new(1, 1);
+
+        public bool Equals(Vector2I other)
+        {
+            return X == other.X && Y == other.Y;
+        }
+
+        public override bool Equals(object? obj)
+        {
+            return obj is Vector2I other && Equals(other);
+        }
+
+        public override int GetHashCode()
+        {
+            return HashCode.Combine(X, Y);
+        }
     }
 }

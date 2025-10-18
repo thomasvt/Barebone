@@ -1,10 +1,11 @@
-﻿using System.Numerics;
-using Barebone.Geometry;
+﻿using Barebone.Geometry;
 using Barebone.Input;
 using Barebone.Platform.Inputs;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
 using ButtonState = Microsoft.Xna.Framework.Input.ButtonState;
 using Keys = Microsoft.Xna.Framework.Input.Keys;
+using Vector2 = System.Numerics.Vector2;
 
 namespace Barebone.Monogame
 {
@@ -19,9 +20,25 @@ namespace Barebone.Monogame
         public InputMode InputMode { get; private set; }
         public Vector2I MousePosition => new(_mouse.X, _mouse.Y);
 
-        public XnaInput()
+        public XnaInput(GameWindow window)
         {
             SetInputMode(InputMode.Keyboard);
+
+            window.TextInput += WindowOnTextInput;
+            window.KeyDown += WindowOnKeyDown;
+        }
+
+        private void WindowOnTextInput(object? sender, TextInputEventArgs e)
+        {
+            TextInput?.Invoke(e.Character, (Button)e.Key);
+        }
+
+        private void WindowOnKeyDown(object? sender, InputKeyEventArgs e)
+        {
+            var control = _keyboard[Keys.LeftControl] == KeyState.Down || _keyboard[Keys.RightControl] == KeyState.Down;
+            var shift = _keyboard[Keys.LeftShift] == KeyState.Down || _keyboard[Keys.RightShift] == KeyState.Down;
+            var alt = _keyboard[Keys.LeftAlt] == KeyState.Down || _keyboard[Keys.RightAlt] == KeyState.Down;
+            KeyStroke?.Invoke(new(control, shift, alt, (Button)e.Key));
         }
 
         public void Update()
@@ -256,11 +273,7 @@ namespace Barebone.Monogame
             return 0;
         }
 
-        public void OnTextInput(char character, Button button)
-        {
-            TypeInput?.Invoke(character, button);
-        }
-
-        public event Action<char, Button>? TypeInput;
+        public event Action<char, Button>? TextInput;
+        public event Action<KeyStrokeEvent>? KeyStroke;
     }
 }
