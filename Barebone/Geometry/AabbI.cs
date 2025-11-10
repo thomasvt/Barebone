@@ -1,4 +1,5 @@
-﻿using System.Numerics;
+﻿using System.Diagnostics.Contracts;
+using System.Numerics;
 using System.Text.Json.Serialization;
 
 namespace Barebone.Geometry
@@ -159,6 +160,16 @@ namespace Barebone.Geometry
         public override int GetHashCode()
         {
             return HashCode.Combine(MinCorner, MaxCornerExcl);
+        }
+
+        [Pure]
+        public AabbI Grow(int amount)
+        {
+            var minX = MinCorner.X - amount;
+            var minY = MinCorner.Y - amount;
+            var maxX = Math.Max(MaxCornerExcl.X + amount, minX);
+            var maxY = Math.Max(MaxCornerExcl.Y + amount, minY);
+            return new(minX, minY, maxX, maxY);
         }
     }
 }

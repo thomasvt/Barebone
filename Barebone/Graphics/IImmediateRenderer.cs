@@ -39,8 +39,8 @@ namespace Barebone.Graphics
         /// <param name="supportDepthBuffer">Also allow to render with Z-buffer to this sprite. This allocates more memory.</param>
         Sprite CreateRenderTargetSprite(Vector2I size, bool supportDepthBuffer, int preferredMultiSampleCount = 0);
 
-        void SwitchRenderTargetTo(ITexture texture);
-        void SwitchRenderTargetToScreen();
+        void SetRenderTarget(ITexture texture);
+        void ResetRenderTargetToScreen();
         void EnableMultiSampling();
     }
 }

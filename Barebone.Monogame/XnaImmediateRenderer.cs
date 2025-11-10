@@ -29,6 +29,8 @@ namespace Barebone.Monogame
         private readonly BBList<VertexPositionColorTexture> _xnaVerticesTexBuffer = new();
         private readonly BBList<AabbI> _clipStack = new();
 
+        private bool _inRenderPass = false;
+
         /// <summary>
         /// Clears screen, depth buffer and stencil buffer.
         /// </summary>
@@ -47,6 +49,8 @@ namespace Barebone.Monogame
         /// </summary>
         public void Begin(ICamera camera, bool enableDepthBuffer, bool additiveBlend, bool cullCounterClockwise, bool linearSampling = true)
         {
+            if (_inRenderPass) throw new Exception("Cannot start a new renderpass: the previous one was not ended.");
+            _inRenderPass = true;
             _clipStack.Clear();
             _camera = camera;
 
@@ -61,7 +65,7 @@ namespace Barebone.Monogame
         }
 
         /// <summary>
-        /// Creates a special <see cref="ITexture"/> that you can render to from this <see cref="IImmediateRenderer"/>. Call `SwitchRenderTargetTo()` to render to it. You must Dispose() this ITexture yourself.
+        /// Creates a special <see cref="ITexture"/> that you can render to from this <see cref="IImmediateRenderer"/>. Call `SetRenderTarget()` to render to it. You must Dispose() this ITexture yourself.
         /// </summary>
         public Sprite CreateRenderTargetSprite(Vector2I size, bool supportDepthBuffer, int preferredMultiSampleCount = 0)
         {
@@ -79,7 +83,7 @@ namespace Barebone.Monogame
             return new Sprite(new XnaTexture(renderTarget), new Aabb(new(0, 0), new(1, 1)), new Aabb(Vector2.Zero, size), true);
         }
 
-        public void SwitchRenderTargetTo(ITexture texture)
+        public void SetRenderTarget(ITexture texture)
         {
             var xnaSprite = texture as XnaTexture ?? throw new ArgumentException($"`texture` should be created by calling `{nameof(CreateRenderTargetSprite)}()`.");
             var renderTarget = xnaSprite.Texture as RenderTarget2D ?? throw new ArgumentException($"`texture` should be created by calling `{nameof(CreateRenderTargetSprite)}()`.");
@@ -87,7 +91,7 @@ namespace Barebone.Monogame
             graphicsDevice.SetRenderTarget(renderTarget);
         }
 
-        public void SwitchRenderTargetToScreen()
+        public void ResetRenderTargetToScreen()
         {
             graphicsDevice.SetRenderTarget(null);
         }
@@ -195,6 +199,7 @@ namespace Barebone.Monogame
 
         public void End()
         {
+            _inRenderPass = false;
             _camera = null;
         }
 

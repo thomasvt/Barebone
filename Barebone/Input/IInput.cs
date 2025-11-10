@@ -52,12 +52,15 @@ public interface IInput
     float GetKeyAxis(Button decrease, Button increase);
 
     /// <summary>
-    /// OS managed text input according to keyboard locale and text-input mechanics. Also auto-repeats.
+    /// OS managed auto-repeated text input according to keyboard locale and text-input mechanics.
     /// </summary>
     event Action<char, Button>? TextInput;
 
     /// <summary>
-    /// OS managed auto-repeated key stokes of all buttons. Mind that these partially overlap with TextInput events: this event gives you the actual buttons, TextInput gives you the translation to text-input.
+    /// OS managed auto-repeated input of individual keyboard buttons. Mind that these partially overlap with TextInput events: this event gives you the lower level button strikes, TextInput gives you higher level intepretation of key combinations into text-input.
     /// </summary>
     event Action<KeyStrokeEvent>? KeyStroke;
+
+    event Action<Button>? KeyDown;
+    event Action<Button>? KeyUp;
 }

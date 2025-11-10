@@ -22,6 +22,14 @@ namespace Barebone.Graphics.Cameras
             LookAt(new(0, 0, 0), Vector3.UnitY);
         }
 
+        public static PerspectiveCamera CreateLookAtXYPlane(float distanceOnZ, float nearPlane, float farPlane)
+        {
+            var camera = new PerspectiveCamera();
+            camera.LookAtXYPlane(distanceOnZ, nearPlane, farPlane);
+            return camera;
+        }
+            
+
         /// <summary>
         /// Returns the pixel coords where a world location is projected onto the screen.
         /// </summary>

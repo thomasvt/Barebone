@@ -10,7 +10,7 @@ namespace Barebone
     /// Fast alternatives are:
     /// * use as unordered but fast queue using Add() and Pop() for cases where the pop order is irrelevant.
     /// * SwapRemove: removes a range of items by moving items from the back of the list over the range to remove.
-    /// * AddRangeFast: performs ranged memory-copy instead of items 1 by 1.
+    /// * AddSpan: performs ranged memory-copy instead of items 1 by 1.
     /// </summary>
     public class BBList<T> : Poolable
     {
@@ -65,7 +65,7 @@ namespace Barebone
         /// <summary>
         /// Copies the items to the end of this BBList in a single copy operation.
         /// </summary>
-        public void AddRangeFast(T[] items)
+        public void AddArray(T[] items)
         {
             EnsureCapacity(Count + items.Length);
             items.CopyTo(_items.AsSpan()[Count..]);
@@ -89,7 +89,7 @@ namespace Barebone
         /// <summary>
         /// Copies the items to the end of this BBList in a single copy operation.
         /// </summary>
-        public void AddRangeFast(ReadOnlySpan<T> items)
+        public void AddSpan(ReadOnlySpan<T> items)
         {
             EnsureCapacity(Count + items.Length);
             items.CopyTo(_items.AsSpan()[Count..]);
@@ -99,7 +99,7 @@ namespace Barebone
         /// <summary>
         /// Copies the items to the end of this BBList in a single copy operation.
         /// </summary>
-        public void AddRangeFast(BBList<T> bbList)
+        public void AddBBList(BBList<T> bbList)
         {
             var items = bbList.AsReadOnlySpan();
             EnsureCapacity(Count + items.Length);
@@ -124,6 +124,7 @@ namespace Barebone
         }
 
         // Non-inline from List.Add to improve its code quality as uncommon path
+
         [MethodImpl(MethodImplOptions.NoInlining)]
         private int AddWithResize(in T item)
         {

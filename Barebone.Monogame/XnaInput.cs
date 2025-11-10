@@ -1,4 +1,5 @@
-﻿using Barebone.Geometry;
+﻿using System.Diagnostics;
+using Barebone.Geometry;
 using Barebone.Input;
 using Barebone.Platform.Inputs;
 using Microsoft.Xna.Framework;
@@ -26,6 +27,7 @@ namespace Barebone.Monogame
 
             window.TextInput += WindowOnTextInput;
             window.KeyDown += WindowOnKeyDown;
+            window.KeyUp += WindowOnKeyUp;
         }
 
         private void WindowOnTextInput(object? sender, TextInputEventArgs e)
@@ -38,7 +40,14 @@ namespace Barebone.Monogame
             var control = _keyboard[Keys.LeftControl] == KeyState.Down || _keyboard[Keys.RightControl] == KeyState.Down;
             var shift = _keyboard[Keys.LeftShift] == KeyState.Down || _keyboard[Keys.RightShift] == KeyState.Down;
             var alt = _keyboard[Keys.LeftAlt] == KeyState.Down || _keyboard[Keys.RightAlt] == KeyState.Down;
+            var isRepeat = _keyboard[e.Key] == KeyState.Down;
+            if (!isRepeat) KeyDown?.Invoke((Button)e.Key);
             KeyStroke?.Invoke(new(control, shift, alt, (Button)e.Key));
+        }
+
+        private void WindowOnKeyUp(object? sender, InputKeyEventArgs e)
+        {
+            KeyUp?.Invoke((Button)e.Key);
         }
 
         public void Update()
@@ -275,5 +284,7 @@ namespace Barebone.Monogame
 
         public event Action<char, Button>? TextInput;
         public event Action<KeyStrokeEvent>? KeyStroke;
+        public event Action<Button>? KeyDown;
+        public event Action<Button>? KeyUp;
     }
 }

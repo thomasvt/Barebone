@@ -2,6 +2,7 @@
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Xml.Serialization;
+using Barebone.Geometry;
 using Barebone.Graphics;
 using Barebone.Graphics.Gpu;
 using BareBone.Graphics;
@@ -174,7 +175,7 @@ namespace Barebone.UI.Text
         /// <summary>
         /// Returns the size of the rendered text in pixels.
         /// </summary>
-        public Vector2 Measure(ReadOnlySpan<char> text, float scale = 1f)
+        public Vector2I Measure(ReadOnlySpan<char> text)
         {
             var width = 0;
             var previousCharCode = (ushort)0;
@@ -191,7 +192,7 @@ namespace Barebone.UI.Text
                 previousCharCode = code;
             }
 
-            return new Vector2(width, LineHeight) * scale;
+            return new Vector2I(width, LineHeight);
         }
 
         /// <summary>

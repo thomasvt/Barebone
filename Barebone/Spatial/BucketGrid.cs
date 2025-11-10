@@ -64,7 +64,7 @@ namespace Barebone.Spatial
 
             var bucket = _buckets[cell.X + cell.Y * Size.X];
             if (bucket.Count == 0) return 0;
-            buffer.AddRangeFast(bucket);
+            buffer.AddBBList(bucket);
             return bucket.Count;
         }
 
@@ -72,7 +72,7 @@ namespace Barebone.Spatial
         {
             var bucket = _buckets[cell.X + cell.Y * Size.X];
             if (bucket.Count == 0) return 0;
-            buffer.AddRangeFast(bucket);
+            buffer.AddBBList(bucket);
             return bucket.Count;
         }
 
@@ -97,7 +97,7 @@ namespace Barebone.Spatial
                     if (x < 0 || x >= Size.X || y < 0 || y >= Size.Y) continue;
 
                     var bucket = _buckets[x + y * Size.X];
-                    buffer.AddRangeFast(bucket);
+                    buffer.AddBBList(bucket);
                     count += bucket.Count;
                 }
             return count;
@@ -113,7 +113,7 @@ namespace Barebone.Spatial
             for (var y = cellRange.MinCorner.Y; y < cellRange.MaxCornerExcl.Y; y++)
             {
                 var bucket = _buckets[x + y * Size.X];
-                buffer.AddRangeFast(bucket);
+                buffer.AddBBList(bucket);
                 count += bucket.Count;
             }
             return count;

@@ -10,6 +10,10 @@ namespace Barebone.Geometry
     /// </summary>
     public record struct Aabb(Vector2 MinCorner, Vector2 MaxCorner)
     {
+        public Aabb(float minX, float minY, float maxX, float maxY) : this(new(minX, minY), new(maxX, maxY))
+        {
+        }
+
         public bool Contains(Vector2 v)
         {
             return v.X >= MinCorner.X && v.X < MaxCorner.X && v.Y >= MinCorner.Y && v.Y < MaxCorner.Y;

@@ -102,7 +102,7 @@ namespace BareBone.Random
         /// Returns a vector in a random direction with random length within the given min and max.
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public Vector2 NextVector(float minLength, float maxLength)
+        public Vector2 NextVector2(float minLength, float maxLength)
         {
             return NextFloat(0, Angles._360).AngleToVector2(NextFloat(minLength, maxLength));
         }
@@ -111,7 +111,7 @@ namespace BareBone.Random
         /// Returns a vector in a random direction of the given length.
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public Vector2 NextVector(float length = 1f)
+        public Vector2 NextVector2(float length = 1f)
         {
             return NextFloat(0, Angles._360).AngleToVector2(length);
         }
@@ -120,7 +120,7 @@ namespace BareBone.Random
         /// Returns a vector with random length, in a random direction.
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public Vector2 NextVector(Aabb range)
+        public Vector2 NextVector2(Aabb range)
         {
             return new(NextFloat(range.Left, range.Right), NextFloat(range.Bottom, range.Top));
         }
