@@ -37,7 +37,7 @@ namespace Barebone.Graphics
             return this;
         }
 
-        public Mesh FillTriangle(in Vector3 a, in Vector3 b, in Vector3 c, Color color)
+        public Mesh FillTriangle(in Vector3 a, in Vector3 b, in Vector3 c, in Color color)
         {
             var gpuColor = color.ToGpuColor();
             Triangles.Add(new GpuTriangle(new(a, gpuColor), new(b, gpuColor), new(c, gpuColor)));
@@ -54,7 +54,7 @@ namespace Barebone.Graphics
             return FillTriangle(t.A.ToVector3(z), t.B.ToVector3(z), t.C.ToVector3(z), color);
         }
 
-        public Mesh FillQuad(in Vector3 a, in Vector3 b, in Vector3 c, in Vector3 d, Color color)
+        public Mesh FillQuad(in Vector3 a, in Vector3 b, in Vector3 c, in Vector3 d, in Color color)
         {
             var gpuColor = color.ToGpuColor();
             var aGpu = new GpuVertex(a, gpuColor);
@@ -66,7 +66,7 @@ namespace Barebone.Graphics
             return this;
         }
 
-        public Mesh FillQuadInZ(in Vector2 a, in Vector2 b, in Vector2 c, in Vector2 d, in float z, Color color)
+        public Mesh FillQuadInZ(in Vector2 a, in Vector2 b, in Vector2 c, in Vector2 d, in float z, in Color color)
         {
             var gpuColor = color.ToGpuColor();
             var aGpu = new GpuVertex(a.ToVector3(z), gpuColor);
@@ -78,12 +78,12 @@ namespace Barebone.Graphics
             return this;
         }
 
-        public Mesh FillAabbInZ(in Aabb aabb, in float z, Color color)
+        public Mesh FillAabbInZ(in Aabb aabb, in float z, in Color color)
         {
             return FillQuadInZ(aabb.MinCorner, aabb.TopLeft, aabb.TopRight, aabb.BottomRight, z, color);
         }
 
-        public Mesh StrokeQuadInZ(in Vector2 a, in Vector2 b, in Vector2 c, in Vector2 d, in float halfWidth, in float z, Color color)
+        public Mesh StrokeQuadInZ(in Vector2 a, in Vector2 b, in Vector2 c, in Vector2 d, in float halfWidth, in float z, in Color color)
         {
             LineInZ(a, b, halfWidth, z, color);
             LineInZ(b, c, halfWidth, z, color);
@@ -92,7 +92,7 @@ namespace Barebone.Graphics
             return this;
         }
 
-        public Mesh StrokeAabbInZ(in Aabb aabb, in float halfWidth, in float z, Color color)
+        public Mesh StrokeAabbInZ(in Aabb aabb, in float halfWidth, in float z, in Color color)
         {
             return StrokeQuadInZ(aabb.MinCorner, aabb.TopLeft, aabb.TopRight, aabb.BottomRight, halfWidth, z, color);
         }
