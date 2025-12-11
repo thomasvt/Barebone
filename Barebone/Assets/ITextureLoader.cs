@@ -1,4 +1,5 @@
-﻿using Barebone.Graphics;
+﻿using Barebone.Geometry;
+using Barebone.Graphics;
 
 namespace Barebone.Assets
 {
@@ -6,5 +7,6 @@ namespace Barebone.Assets
     {
         ITexture LoadTexture(string path);
         ITexture LoadTexture(Stream stream);
+        ITexture CreateTexture(Vector2I size);
     }
 }

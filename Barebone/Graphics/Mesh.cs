@@ -150,6 +150,28 @@ namespace Barebone.Graphics
             return this;
         }
 
+        public Mesh FillEllipseInZ(in Vector2 center, in Vector2 radius, in int segmentCount, in float z, in Color color)
+        {
+            var angleStep = Angles._360 / segmentCount;
+
+            var p0 = new Vector2(1, 0) * radius.X;
+
+            var c = new GpuVertex(center.ToVector3(z), color.ToGpuColor());
+            var gpuColor = color.ToGpuColor();
+            for (var i = 1; i <= segmentCount; i++)
+            {
+                var a1 = i * angleStep;
+                var cos = MathF.Cos(a1);
+                var sin = MathF.Sin(a1);
+                var p1 = new Vector2(cos, sin) * radius;
+
+                FillTriangle(c, new GpuVertex((center + p1).ToVector3(z), gpuColor), new GpuVertex((center + p0).ToVector3(z), gpuColor));
+
+                p0 = p1;
+            }
+            return this;
+        }
+
         public Mesh StrokeRegularPolyInZ(in Vector2 center, in float radius, in float strokeWidth, in int segmentCount, in float z, in Color color, in float angleOffset = 0f)
         {
             var angleStep = Angles._360 / segmentCount;

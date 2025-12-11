@@ -17,9 +17,9 @@ namespace Barebone.Monogame
     }
 
     /// <summary>
-    /// Startup for running an <see cref="IGame"/> on Monogame.
+    /// Root system for running a <see cref="IGame"/> on Monogame.
     /// </summary>
-    public class XnaGame : Game, IPlatform
+    public class XnaEngine : Game, IPlatform
     {
         private readonly Func<IPlatform, IGame> _gameFactory;
         private IGame? _game;
@@ -28,7 +28,7 @@ namespace Barebone.Monogame
         private XnaImmediateRenderer? _renderer;
         private XnaTextureLoader _textureLoader;
 
-        public XnaGame(Func<IPlatform, IGame> gameFactory, Settings? settings = null)
+        public XnaEngine(Func<IPlatform, IGame> gameFactory, Settings? settings = null)
         {
             _gameFactory = gameFactory;
             _gdm = new GraphicsDeviceManager(this)
@@ -86,6 +86,6 @@ namespace Barebone.Monogame
 
         public IInput Input => _input;
         public ITextureLoader TextureLoader => _textureLoader ?? throw new Exception("TextureLoader not initialized yet.");
-        public IImmediateRenderer ImmediateRenderer => _renderer ?? throw new Exception("ImmediateRenderer not initialized yet.");
+        public IImmediateRenderer Renderer => _renderer ?? throw new Exception("Renderer not initialized yet.");
     }
 }

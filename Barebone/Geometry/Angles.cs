@@ -9,6 +9,7 @@
 
         public const float DegreeToRadians = MathF.PI / 180f;
 
+        public const float _720 = MathF.Tau * 2;
         public const float _360 = MathF.Tau;
         public const float _270 = 270 * DegreeToRadians;
         public const float _240 = 240 * DegreeToRadians;

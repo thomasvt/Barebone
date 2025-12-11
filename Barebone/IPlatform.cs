@@ -9,7 +9,7 @@ namespace Barebone
     /// </summary>
     public interface IPlatform
     {
-        IImmediateRenderer ImmediateRenderer { get; }
+        IImmediateRenderer Renderer { get; }
         IInput Input { get; }
         ITextureLoader TextureLoader { get; }
     }
