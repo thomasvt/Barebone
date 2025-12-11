@@ -38,6 +38,7 @@ namespace Barebone.UI.Controls
             BorderColor = BorderColorNormal = PaletteApollo.Pink0;
             BorderColorFocus = PaletteApollo.Pink4;
             BackgroundColor = PaletteApollo.Blue1;
+            SelectionColor = PaletteApollo.Pink4;
             IsMultiLine = false;
             AllowTabIndent = false;
 
@@ -507,12 +508,12 @@ namespace Barebone.UI.Controls
             ResetCaretBlink();
         }
 
-
-
         public void SetText(string text, bool resetUndoHistory = true)
         {
-            ClearSelection();
-            _textEditor.SetFullText(text.Replace("\r", "").Replace("\t", ""), resetUndoHistory);
+            if (_textEditor.SetFullText(text.Replace("\r", "").Replace("\t", ""), resetUndoHistory))
+            {
+                ClearSelection();
+            }
         }
 
         /// <summary>
@@ -523,7 +524,11 @@ namespace Barebone.UI.Controls
             SetText(string.Empty);
         }
 
-        public string GetText() => _textEditor.GetFullText();
+        public string Text
+        {
+            get => _textEditor.GetFullText();
+            set => SetText(value, true);
+        }
 
         public override void Dispose()
         {
@@ -606,5 +611,6 @@ namespace Barebone.UI.Controls
         /// Enables to indent by pressing tab. Like in a code editor.
         /// </summary>
         public bool AllowTabIndent { get; set; }
+        
     }
 }

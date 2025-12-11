@@ -3,6 +3,7 @@ using Barebone.Geometry;
 using Barebone.Graphics;
 using Barebone.Graphics.Cameras;
 using Barebone.Input;
+using Barebone.Messaging;
 using Barebone.UI.Controls;
 using Barebone.UI.Text;
 
@@ -18,6 +19,7 @@ namespace Barebone.UI
         private UIControl? _focussedControl;
         private UIControl? _mouseCapturer;
         private Vector2I _previousMousePosition;
+        private readonly List<UIControl> _mouseHoverChain = new();
 
         public UserInterface(Font defaultFont, IInput input, Clock clock, IClipboard clipboard) : base(null!)
         {
@@ -46,11 +48,19 @@ namespace Barebone.UI
         public void Update()
         {
             ProcessMouseEvents();
+            UpdateInternal();
         }
 
         private void ProcessMouseEvents()
         {
             var mousePosition = _input.MousePosition;
+
+            if (_previousMousePosition != mousePosition)
+            {
+                ScreenPick(mousePosition, _mouseHoverChain);
+                DispatchMouseMoveEvent(_previousMousePosition, mousePosition);
+                _previousMousePosition = mousePosition;
+            }
 
             if (_input.IsJustPressed(Platform.Inputs.Button.MouseLeft))
                 DispatchMouseButtonChange(mousePosition, MouseButton.Left, ButtonState.Pressed);
@@ -60,11 +70,28 @@ namespace Barebone.UI
                 DispatchMouseButtonChange(mousePosition, MouseButton.Right, ButtonState.Pressed);
             else if (_input.IsJustReleased(Platform.Inputs.Button.MouseRight))
                 DispatchMouseButtonChange(mousePosition, MouseButton.Right, ButtonState.Released);
+        }
 
-            if (_previousMousePosition != _input.MousePosition)
+        public void ScreenPick(in Vector2I mousePosition, in List<UIControl> controlChain)
+        {
+            // we first retest the existing hover chain and clear IsMouseOver for controls that are no longer hovered.
+            var isMouseOver = true;
+            foreach (var control in controlChain)
             {
-                DispatchMouseMoveEvent(_previousMousePosition, mousePosition);
-                _previousMousePosition = _input.MousePosition;
+                if (!isMouseOver || !control.Viewport.Contains(mousePosition))
+                {
+                    isMouseOver = false;
+                    control.IsMouseOver = false;
+                }
+            }
+
+            // we now start over with a full screenpick. this is not the most efficient way, but it is a lot simpler.
+            controlChain.Clear();
+            ScreenPickInternal(controlChain, mousePosition);
+
+            foreach (var control in controlChain)
+            {
+                control.IsMouseOver = true;
             }
         }
 
@@ -74,11 +101,8 @@ namespace Barebone.UI
                 _mouseCapturer.OnMouseMoveInternal(previousPosition, position);
             else
             {
-                ScreenPick(position, true, (parent, child) =>
-                {
-                    parent.MarkMouseOverChild(child);
-                    child.OnMouseMoveInternal(previousPosition, position);
-                });
+                foreach (var control in _mouseHoverChain)
+                    control.OnMouseMoveInternal(previousPosition, position);
             }
         }
 
@@ -90,8 +114,8 @@ namespace Barebone.UI
             }
             else
             {
-                var control = ScreenPick(position, true)!;
-                control.OnMouseButtonChangeInternal(position, button, state);
+                foreach (var control in _mouseHoverChain)
+                    control.OnMouseButtonChangeInternal(position, button, state);
             }
         }
 

@@ -26,9 +26,10 @@ namespace Barebone.Graphics
             Triangles = null!;
         }
 
-        public void Clear()
+        public Mesh Clear()
         {
             Triangles.Clear();
+            return this;
         }
 
         public Mesh FillTriangle(in GpuVertex a, in GpuVertex b, in GpuVertex c)
@@ -126,17 +127,17 @@ namespace Barebone.Graphics
 
         public Mesh PointInZ(in Vector2 position, in float halfSize, in float z, in Color color)
         {
-            return FillRegularPolyInZ(position, halfSize, 4, z, color, color);
+            return FillCircleInZ(position, halfSize, 4, z, color, color);
         }
 
-        public Mesh FillRegularPolyInZ(in Vector2 center, in float radius, in int segmentCount, in float z, in Color colorIn, in Color colorOut, in float angleOffset = 0f)
+        public Mesh FillCircleInZ(in Vector2 center, in float radius, in int segmentCount, in float z, in Color colorIn, in Color? colorOut = null, in float angleOffset = 0f)
         {
             var angleStep = Angles._360 / segmentCount;
             
             var p0 = new Vector2(MathF.Cos(angleOffset), MathF.Sin(angleOffset)) * radius;
 
             var c = new GpuVertex(center.ToVector3(z), colorIn.ToGpuColor());
-            var colorOutGpu = colorOut.ToGpuColor();
+            var colorOutGpu = (colorOut ?? colorIn).ToGpuColor();
             for (var i = 1; i <= segmentCount; i++)
             {
                 var a1 = angleOffset + i * angleStep;

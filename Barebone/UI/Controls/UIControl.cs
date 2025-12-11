@@ -15,15 +15,6 @@ namespace Barebone.UI.Controls
         protected readonly List<UIControl> Children = new();
         
         public readonly UserInterface UI = ui;
-        private bool _hasFocus;
-        private Color _backgroundColor;
-        private Color _borderColor;
-        private Color _borderColorFocus;
-        private Color _borderColorNormal;
-        private int _borderThickness;
-        private bool _isMouseOver;
-        private AabbI _viewport;
-        private UIControl? _mouseOverControl;
 
         private void DoArrange()
         {
@@ -49,6 +40,18 @@ namespace Barebone.UI.Controls
                 child.Viewport = Viewport;
             }
         }
+
+        internal void UpdateInternal()
+        {
+            Update();
+            foreach (var control in Children)
+            {
+                control.UpdateInternal();
+            }
+        }
+
+        protected internal virtual void Update()
+        { }
 
         internal void DoRender(IImmediateRenderer renderer)
         {
@@ -93,28 +96,18 @@ namespace Barebone.UI.Controls
         }
 
         /// <summary>
-        /// Drills down the part of the control hierarchy that is touched by `position`. Returns the deepest (leaf) control that is hit. Invokes 'visitAction' for each control passed.
+        /// Recursively adds the control and its children to 'chain' if the given 'position' is inside this control's Viewport.
         /// </summary>
-        /// <param name="onlyMouseInteractive">Only considers controls that have IsMouseIntertive set to true.</param>
-        /// <param name="visitAction">Invoked for each control passed during the drilldown. Passes the parent and child as arguments. Parameter 'onlyMouseInteractive' does not imfluence this being called.</param>
-        protected UIControl? ScreenPick(Vector2I position, bool onlyMouseInteractive, Action<UIControl, UIControl>? visitAction = null)
+        protected void ScreenPickInternal(List<UIControl> chain, Vector2I position)
         {
-            foreach (var child in Children)
+            if (Viewport.Contains(position))
             {
-                if (child.Viewport.Contains(position))
+                chain.Add(this);
+                foreach (var child in Children)
                 {
-                    visitAction?.Invoke(this, child);
-
-                    var deepest = child.ScreenPick(position, onlyMouseInteractive, visitAction);
-                    if (deepest != null)
-                        return deepest;
+                    child.ScreenPickInternal(chain, position);
                 }
             }
-
-            // hit is not on a child, so it's directly on this control:
-            if (onlyMouseInteractive && !IsMouseInteractive)
-                return null;
-            return this;
         }
 
         public void SetFocus()
@@ -135,24 +128,7 @@ namespace Barebone.UI.Controls
         {
             OnMouseMove(previousPosition, position);
         }
-
-        internal void MarkMouseOverChild(UIControl child)
-        {
-            if (_mouseOverControl != child)
-            {
-                _mouseOverControl?.ResetIsMouseOver();
-                _mouseOverControl = child;
-                _mouseOverControl.IsMouseOver = true;
-            }
-        }
-
-        private void ResetIsMouseOver()
-        {
-            IsMouseOver = false;
-            _mouseOverControl?.ResetIsMouseOver();
-            _mouseOverControl = null;
-        }
-
+        
         protected virtual void OnMouseButtonChange(Vector2I position, MouseButton button, ButtonState state) { }
         protected virtual void OnMouseEnter() {}
         protected virtual void OnMouseLeave() {}
@@ -205,12 +181,12 @@ namespace Barebone.UI.Controls
 
         public bool IsMouseOver
         {
-            get => _isMouseOver;
+            get;
             internal set
             {
-                if (_isMouseOver == value) return;
+                if (field == value) return;
 
-                _isMouseOver = value;
+                field = value;
                 if (IsMouseOver) OnMouseEnter();
                 else OnMouseLeave();
             }
@@ -221,81 +197,81 @@ namespace Barebone.UI.Controls
 
         public bool HasFocus
         {
-            get => _hasFocus;
+            get;
             internal set
             {
-                if (_hasFocus == value) return;
-                _hasFocus = value;
+                if (field == value) return;
+                field = value;
                 OnFocusChanged(value);
             }
         }
 
         public Color BackgroundColor
         {
-            get => _backgroundColor;
+            get;
             set
             {
-                if (_backgroundColor == value) return;
-                _backgroundColor = value;
+                if (field == value) return;
+                field = value;
                 InvalidateVisual();
             }
         }
 
         public Color BorderColor
         {
-            get => _borderColor;
+            get;
             set
             {
-                if (_borderColor == value) return;
-                _borderColor = value;
+                if (field == value) return;
+                field = value;
                 InvalidateVisual();
             }
         }
-        
+
         public Color BorderColorNormal
         {
-            get => _borderColorNormal;
+            get;
             set
             {
-                if (_borderColorNormal == value) return;
-                _borderColorNormal = value;
+                if (field == value) return;
+                field = value;
                 InvalidateVisual();
             }
         }
 
         public Color BorderColorFocus
         {
-            get => _borderColorFocus;
+            get;
             set
             {
-                if (_borderColorFocus == value) return;
-                _borderColorFocus = value;
+                if (field == value) return;
+                field = value;
                 InvalidateVisual();
             }
         }
 
         public int BorderThickness
         {
-            get => _borderThickness;
+            get;
             set
             {
-                if (_borderThickness == value) return;
-                _borderThickness = value;
+                if (field == value) return;
+                field = value;
                 InvalidateVisual();
             }
         }
 
         public AabbI Viewport
         {
-            get => _viewport;
+            get;
             set
             {
-                if (_viewport == value) return;
+                if (field == value) return;
 
                 if (value.Width < 0) value.MaxCornerExcl = value.MaxCornerExcl with { X = value.MinCorner.X };
                 if (value.Height < 0) value.MaxCornerExcl = value.MaxCornerExcl with { Y = value.MinCorner.Y };
 
-                _viewport = value;
+                field = value;
                 InvalidateArrange();
             }
         }

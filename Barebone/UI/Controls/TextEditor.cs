@@ -25,6 +25,7 @@ namespace Barebone.UI.Controls
         public IReadOnlyList<string> Lines => _lines;
 
         private readonly IUndoHistory<Snapshot<TUndoData>> _history;
+        private string? _previousFullText;
 
         public TextEditor(bool enableUndo, Func<TUndoData> getCustomUndoData, Action<TUndoData> applyCustomUndoData)
         {
@@ -156,14 +157,20 @@ namespace Barebone.UI.Controls
             return string.Join(Environment.NewLine, _lines);
         }
 
-        public void SetFullText(string text, bool resetUndoHistory)
+        public bool SetFullText(string text, bool resetUndoHistory)
         {
-            if (resetUndoHistory)
-                _history.Clear();
-            else
-                _history.Record();
+            if (text != _previousFullText)
+            {
+                if (resetUndoHistory)
+                    _history.Clear();
+                else
+                    _history.Record();
 
-            ReplaceLines(text.Split('\n'));
+                ReplaceLines(text.Split('\n'));
+                _previousFullText = text;
+                return true;
+            }
+            return false;
         }
 
         public Vector2I ReplaceTextRange(Vector2I begin, Vector2I end, string text)

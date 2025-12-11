@@ -4,31 +4,35 @@ using Barebone.Geometry;
 namespace Barebone.Graphics.Cameras
 {
     /// <summary>
-    /// A perspective camera
+    /// A perspective camera, right handed, defaulted to Fov 60, position (0,0,10) looking at (0,0,0), Y up (0,1,0)
     /// </summary>
     public class PerspectiveCamera : ICamera
     {
-        private Vector3 _lookAt;
-        private Vector3 _lookAtUp;
+        public Vector3 LookTo { get; set; } = new(0, 0, -1);
+        public Vector3 Up { get; set; } = new(0, 1, 0);
+        public float FovY { get; set; } = Angles._060;
 
+        public Vector3 Position { get; set; } = new(0, 0, -10);
+
+        public Matrix4x4 GetViewTransform() => Matrix4x4.CreateLookTo(Position, LookTo, Up);
+
+        public Matrix4x4 GetProjectionTransform(in Viewport viewport) => Matrix4x4.CreatePerspectiveFieldOfView(FovY, viewport.AspectRatio, NearPlane, FarPlane);
+
+        public float NearPlane { get; set; } = 1;
+
+        public float FarPlane { get; set; } = 100;
+        
         /// <summary>
-        /// Configure the camera to have Y+ up, Z- away from camera, X+ to the right, looking at (0,0,0) at a given `distanceOnZ`.
+        /// Configure the camera to have Y+ up, Z+ towards the user, X+ to the right, looking at (0,0,0) at a given `distanceOnZ`.
         /// </summary>
         public void LookAtXYPlane(float distanceOnZ, float nearPlane, float farPlane)
         {
             Position = new(0, 0, distanceOnZ);
             NearPlane = nearPlane;
             FarPlane = farPlane;
-            LookAt(new(0, 0, 0), Vector3.UnitY);
+            LookTo = new(0, 0, -1);
+            Up = Vector3.UnitY;
         }
-
-        public static PerspectiveCamera CreateLookAtXYPlane(float distanceOnZ, float nearPlane, float farPlane)
-        {
-            var camera = new PerspectiveCamera();
-            camera.LookAtXYPlane(distanceOnZ, nearPlane, farPlane);
-            return camera;
-        }
-            
 
         /// <summary>
         /// Returns the pixel coords where a world location is projected onto the screen.
@@ -82,23 +86,5 @@ namespace Barebone.Graphics.Cameras
             var directionWorldSpace = Vector4.Transform(directionViewSpace, viewInverse);
             return new Ray3(Position, Vector3.Normalize(new Vector3(directionWorldSpace.X, directionWorldSpace.Y, directionWorldSpace.Z))); 
         }
-
-        public void LookAt(Vector3 target, Vector3 up)
-        {
-            _lookAt = target;
-            _lookAtUp = up;
-        }
-
-        public float FovY { get; set; } = Angles._090;
-
-        public Vector3 Position { get; set; }
-
-        public Matrix4x4 GetViewTransform() => Matrix4x4.CreateLookAt(Position, _lookAt, _lookAtUp);
-
-        public Matrix4x4 GetProjectionTransform(in Viewport viewport) => Matrix4x4.CreatePerspectiveFieldOfView(FovY, viewport.AspectRatio, NearPlane, FarPlane);
-
-        public float NearPlane { get; set; } = 1;
-
-        public float FarPlane { get; set; } = 10000;
     }
 }

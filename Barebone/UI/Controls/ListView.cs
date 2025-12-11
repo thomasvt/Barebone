@@ -32,7 +32,13 @@ namespace Barebone.UI.Controls
         {
             var item = new ListViewItem(this, label, userData, color);
             _items.Add(item);
+            InvalidateArrange();
             return item;
+        }
+
+        public void Clear()
+        {
+            _items.Clear();
         }
 
         protected override void Arrange()

@@ -90,6 +90,24 @@ namespace Barebone.Geometry
                 return new ReadOnlySpan<Vector2>(basePtr, Count);
         }
 
+        public readonly void FillArray(in Vector2[] array)
+        {
+            if (array.Length < Count) throw new ArgumentException($"Array is too small to contain all {Count} corners of this polygon.");
+            array[0] = _vertices[0];
+            array[1] = _vertices[1];
+            array[2] = _vertices[2];
+            if (Count <= 3) return;
+            array[3] = _vertices[3];
+            if (Count == 4) return;
+            array[4] = _vertices[4];
+            if (Count == 5) return;
+            array[5] = _vertices[5];
+            if (Count == 6) return;
+            array[6] = _vertices[6];
+            if (Count == 7) return;
+            array[7] = _vertices[7];
+        }
+
         /// <summary>
         /// Returns a new tranformed polygon.
         /// </summary>
