@@ -2,7 +2,6 @@
 using Barebone.Geometry;
 using Barebone.Graphics;
 using Barebone.Input;
-using Barebone.Platform.Inputs;
 using Microsoft.Xna.Framework;
 
 namespace Barebone.Monogame
