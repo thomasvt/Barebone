@@ -34,6 +34,14 @@ namespace Barebone.Graphics.Cameras
             Up = Vector3.UnitY;
         }
 
+        public void LookAt(Vector3 from, Vector3 to, float nearPlane, float farPlane)
+        {
+            Position = from;
+            LookTo = Vector3.Normalize(to - from);
+            NearPlane = nearPlane;
+            FarPlane = farPlane;
+        }
+
         /// <summary>
         /// Returns the pixel coords where a world location is projected onto the screen.
         /// </summary>
