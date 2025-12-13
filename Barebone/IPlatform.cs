@@ -12,5 +12,6 @@ namespace Barebone
         IImmediateRenderer Renderer { get; }
         IInput Input { get; }
         ITextureLoader TextureLoader { get; }
+        event Action<bool>? WindowActiveChanged;
     }
 }

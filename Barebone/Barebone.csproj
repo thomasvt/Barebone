@@ -15,7 +15,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Update="UI\Text\BMFont.fnt.Designer.cs">
+    <Compile Update="Graphics\Text\BMFont.fnt.Designer.cs">
       <DesignTime>True</DesignTime>
       <AutoGen>True</AutoGen>
       <DependentUpon>BMFont.fnt.xsd</DependentUpon>
@@ -23,7 +23,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Update="UI\Text\BMFont.fnt.xsd">
+    <None Update="Graphics\Text\BMFont.fnt.xsd">
       <Generator>MSDataSetGenerator</Generator>
       <LastGenOutput>BMFont.fnt.Designer.cs</LastGenOutput>
     </None>

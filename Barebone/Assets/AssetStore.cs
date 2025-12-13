@@ -7,12 +7,12 @@
     {
         private readonly Dictionary<string, T> _cache = new();
 
-        public T Get(string name)
+        public T Get(string filename)
         {
-            if (!_cache.TryGetValue(name, out var resouce))
+            if (!_cache.TryGetValue(filename, out var resouce))
             {
-                resouce = Load(name);
-                _cache[name] = resouce;
+                resouce = Load(filename);
+                _cache[filename] = resouce;
             }
             return resouce;
         }
@@ -22,7 +22,7 @@
             return names.Select(Get).ToArray();
         }
 
-        protected abstract T Load(string name);
+        protected abstract T Load(string filename);
 
         public void Dispose()
         {

@@ -3,7 +3,7 @@
     public static class TypeExtensions
     {
         /// <summary>
-        /// Writes a type including the generic argument's name like it occurs in C# code, instead of what .NET shows at runtime.
+        /// Writes a type including the generic argument's filename like it occurs in C# code, instead of what .NET shows at runtime.
         /// </summary>
         public static string GetCSharpTypeName(this Type t)
         {
@@ -26,7 +26,7 @@
                     // Because we want to show the type arguments as they occurs in C# code, we need to 
                     // make the parent type closed by finding the concrete types in the child's generic arguments.
                     //
-                    // It seems you can only recognize shared generic arguments by their generic parameter name: 'T', 'U' etc. A child class cannot
+                    // It seems you can only recognize shared generic arguments by their generic parameter filename: 'T', 'U' etc. A child class cannot
                     // reuse 'T' if the parent already has a 'T', so that seems to be airtight.
 
                     var parentGenParams = parentType.GetGenericArguments();

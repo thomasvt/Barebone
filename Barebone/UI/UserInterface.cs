@@ -10,7 +10,7 @@ using Barebone.UI.Text;
 namespace Barebone.UI
 {
     /// <summary>
-    /// Root object for a UI.
+    /// Root object for a User Interface that uses the window's pixels as unit.
     /// </summary>
     public class UserInterface : UIControl, IDisposable
     {
@@ -21,7 +21,7 @@ namespace Barebone.UI
         private Vector2I _previousMousePosition;
         private readonly List<UIControl> _mouseHoverChain = new();
 
-        public UserInterface(Font defaultFont, IInput input, Clock clock, IClipboard clipboard) : base(null!)
+        public UserInterface(Font defaultFont, IInput input, Clock clock, IClipboard? clipboard = null) : base(null!)
         {
             _input = input;
             DefaultFont = defaultFont;
@@ -30,7 +30,7 @@ namespace Barebone.UI
             input.KeyDown += ProcessKeyDown;
             input.KeyUp += ProcessKeyUp;
             Clock = clock;
-            Clipboard = clipboard;
+            Clipboard = clipboard ?? new MemoryClipboard();
             MessageBus = new MessageBus();
         }
 
@@ -47,6 +47,8 @@ namespace Barebone.UI
 
         public void Update()
         {
+            if (!IsEnabled) return;
+
             ProcessMouseEvents();
             UpdateInternal();
         }
@@ -177,5 +179,10 @@ namespace Barebone.UI
         /// Allows parts of the UI to communicate.
         /// </summary>
         public MessageBus MessageBus { get; }
+
+        /// <summary>
+        /// Enables interactivity. Default true. Set this to false when eg. the game's window is not active.
+        /// </summary>
+        public bool IsEnabled { get; set; } = true;
     }
 }
