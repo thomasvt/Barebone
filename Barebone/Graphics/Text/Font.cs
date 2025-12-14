@@ -1,6 +1,7 @@
 ﻿using System.Drawing;
 using System.Numerics;
 using System.Runtime.CompilerServices;
+using System.Text;
 using System.Xml.Serialization;
 using Barebone.Geometry;
 using Barebone.Graphics;
@@ -56,7 +57,7 @@ namespace Barebone.UI.Text
         }
 
         /// <summary>
-        /// Creates a <see cref="Font"/> for the generated output from the BMFont tool. The Font will include the `pngTexture` altered for rendering.
+        /// Creates a <see cref="Font"/> for the output from the BMFont tool. The Font will include the `pngTexture` altered for rendering.
         /// </summary>
         public static Font FromBMFontFile(string fntFile, ITexture pngTexture)
         {
@@ -66,10 +67,20 @@ namespace Barebone.UI.Text
             return FromBMFontStream(File.OpenRead(fntFile), pngTexture);
         }
 
+        /// <summary>
+        /// Creates a <see cref="Font"/> from a string that contains the output from the BMFont tool. The Font will include the `pngTexture` altered for rendering.
+        /// </summary>
+        public static Font FromBMFontXml(string fntXml, ITexture pngTexture)
+        {
+            using var stream = new MemoryStream(Encoding.UTF8.GetBytes(fntXml));
+            stream.Position = 0;
+            return FromBMFontStream(stream, pngTexture);
+        }
+
         public static Font FromBMFontStream(Stream fntStream, ITexture pngTexture)
         {
             if (new XmlSerializer(typeof(global::font)).Deserialize(fntStream) is not global::font fontDefinition)
-                throw new Exception(".fnt file content is not valid. Did you use BMFont to generate?");
+                throw new Exception(".fnt file content is not valid. Did you use BMFont to generate it?");
 
             var common = fontDefinition.Items.OfType<fontCommon>().First();
             var @base = int.Parse(common.@base);

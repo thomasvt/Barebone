@@ -2,7 +2,7 @@
 
 namespace Barebone.Assets
 {
-    public class DocStore(string path) : JsonStore(path)
+    public class DocStore(string path) : TextFileStore(path)
     {
         public T GetAs<T>(string filename)
         {

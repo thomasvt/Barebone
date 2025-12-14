@@ -1,11 +1,12 @@
-﻿using System.Drawing;
-using Barebone.Geometry;
+﻿using Barebone.Geometry;
 using Barebone.Graphics;
 using Barebone.Graphics.Cameras;
 using Barebone.Input;
 using Barebone.Messaging;
 using Barebone.UI.Controls;
 using Barebone.UI.Text;
+using System.Drawing;
+using System.Runtime.Intrinsics.Arm;
 
 namespace Barebone.UI
 {
@@ -184,5 +185,11 @@ namespace Barebone.UI
         /// Enables interactivity. Default true. Set this to false when eg. the game's window is not active.
         /// </summary>
         public bool IsEnabled { get; set; } = true;
+
+        public void SetSize(Vector2I size)
+        {
+            // this triggers an Arrange cycle
+            Viewport = new(Vector2I.Zero, size);
+        }
     }
 }

@@ -1,6 +1,6 @@
 ﻿namespace Barebone.Assets
 {
-    public class JsonStore(string path) : AssetStore<string>
+    public class TextFileStore(string path) : AssetStore<string>
     {
         protected override string Load(string filename)
         {
