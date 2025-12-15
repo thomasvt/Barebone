@@ -9,6 +9,9 @@ using Barebone.UI.Text;
 
 namespace Barebone.UI.Controls
 {
+    /// <summary>
+    /// A single or multi-line text editor with Undo
+    /// </summary>
     public class TextBox : UIControl
     {
         private readonly Vector2I _textOffset = new(8, 2);
@@ -20,9 +23,6 @@ namespace Barebone.UI.Controls
         private readonly TextEditor<Vector2I> _textEditor;
         private float _caretBlinkStart;
         private Font _font;
-
-        private Color _textColor;
-        private int _topIndex;
 
         private Vector2I _selectBegin;
         private Vector2I _selectEnd;
@@ -44,7 +44,7 @@ namespace Barebone.UI.Controls
 
             _textEditor.TextModified += () =>
             {
-                TextModified?.Invoke();
+                TextChanged?.Invoke();
                 InvalidateVisual();
             };
             _textEditor.AddLineNoUndo(string.Empty); // for caret positioning, there must always be >= 1 line here!
@@ -201,52 +201,52 @@ namespace Barebone.UI.Controls
                 switch (e.Button)
                 {
                     case Barebone.Platform.Inputs.Button.Enter:
-                    {
-                        if (!IsMultiLine) return;
-                        TypeText("\n");
-                        var firstNonWhite = GetFirstNonWhitespace(_textEditor.Lines[_caret.Y - 1], int.MaxValue);
-                        if (firstNonWhite != null)
                         {
-                            // bring to same indent as previous line.
-                            TypeText(new string(' ', firstNonWhite.Value));
+                            if (!IsMultiLine) return;
+                            TypeText("\n");
+                            var firstNonWhite = GetFirstNonWhitespace(_textEditor.Lines[_caret.Y - 1], int.MaxValue);
+                            if (firstNonWhite != null)
+                            {
+                                // bring to same indent as previous line.
+                                TypeText(new string(' ', firstNonWhite.Value));
+                            }
+                            break;
                         }
-                        break;
-                    }
                     case Barebone.Platform.Inputs.Button.Backspace:
-                    {
-                        if (IsSelectionEmpty())
                         {
-                            var from = _textEditor.StepBackwards(_caret, false);
-                            _textEditor.RemoveTextRange(from, _caret);
-                            MoveCaretTo(from);
+                            if (IsSelectionEmpty())
+                            {
+                                var from = _textEditor.StepBackwards(_caret, false);
+                                _textEditor.RemoveTextRange(from, _caret);
+                                MoveCaretTo(from);
+                            }
+                            else
+                                RemoveSelection();
+                            break;
                         }
-                        else
-                            RemoveSelection();
-                        break;
-                    }
                     case Barebone.Platform.Inputs.Button.Delete:
-                    {
-                        if (IsSelectionEmpty())
                         {
-                            var to = _textEditor.StepForwards(_caret, false);
-                            _textEditor.RemoveTextRange(_caret, to);
+                            if (IsSelectionEmpty())
+                            {
+                                var to = _textEditor.StepForwards(_caret, false);
+                                _textEditor.RemoveTextRange(_caret, to);
+                            }
+                            else
+                                RemoveSelection();
+                            break;
                         }
-                        else
-                            RemoveSelection();
-                        break;
-                    }
                     case Barebone.Platform.Inputs.Button.Tab:
-                    {
-                        if (!AllowTabIndent) return;
-                        var count = TabIndentSize - _caret.X % TabIndentSize;
-                        TypeText(new(' ', count));
-                        break;
-                    }
+                        {
+                            if (!AllowTabIndent) return;
+                            var count = TabIndentSize - _caret.X % TabIndentSize;
+                            TypeText(new(' ', count));
+                            break;
+                        }
                     case Barebone.Platform.Inputs.Button.Escape:
-                    {
-                        ClearSelection();
-                        break;
-                    }
+                        {
+                            ClearSelection();
+                            break;
+                        }
                 }
             }
             else
@@ -510,10 +510,8 @@ namespace Barebone.UI.Controls
 
         public void SetText(string text, bool resetUndoHistory = true)
         {
-            if (_textEditor.SetFullText(text.Replace("\r", "").Replace("\t", ""), resetUndoHistory))
-            {
-                ClearSelection();
-            }
+            _textEditor.SetFullText(text.Replace("\r", "").Replace("\t", ""), resetUndoHistory);
+            ClearSelection();
         }
 
         /// <summary>
@@ -541,12 +539,12 @@ namespace Barebone.UI.Controls
         /// </summary>
         public int TopIndex
         {
-            get => _topIndex;
+            get;
             set
             {
-                if (_topIndex == value) return;
+                if (field == value) return;
 
-                _topIndex = value;
+                field = value;
                 InvalidateVisual();
             }
         }
@@ -563,12 +561,12 @@ namespace Barebone.UI.Controls
 
         public Color TextColor
         {
-            get => _textColor;
+            get;
             set
             {
-                if (_textColor == value) return;
+                if (field == value) return;
 
-                _textColor = value;
+                field = value;
                 InvalidateVisual();
             }
         }
@@ -596,7 +594,10 @@ namespace Barebone.UI.Controls
 
         public int LineCount => _textEditor.LineCount;
 
-        public event Action? TextModified;
+        /// <summary>
+        /// Raised at each change of the text.
+        /// </summary>
+        public event Action? TextChanged;
 
         /// <summary>
         /// Allows the textbox to hold more than 1 line of text by pressing Enter, or pasting in text with newlines.
@@ -611,6 +612,6 @@ namespace Barebone.UI.Controls
         /// Enables to indent by pressing tab. Like in a code editor.
         /// </summary>
         public bool AllowTabIndent { get; set; }
-        
+
     }
 }

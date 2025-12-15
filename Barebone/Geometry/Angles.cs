@@ -8,6 +8,7 @@
         public static float ToRadians(this float degrees) => degrees * DegreeToRadians;
 
         public const float DegreeToRadians = MathF.PI / 180f;
+        public const float RadiansToDegree = 180f / MathF.PI;
 
         public const float _720 = MathF.Tau * 2;
         public const float _360 = MathF.Tau;
@@ -28,6 +29,7 @@
         public const float _003 = 3 * DegreeToRadians;
         public const float _002 = 2 * DegreeToRadians;
         public const float _001 = 1 * DegreeToRadians;
+        
     }
 }
 

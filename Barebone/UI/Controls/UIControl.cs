@@ -7,14 +7,20 @@ using Barebone.Pools;
 
 namespace Barebone.UI.Controls
 {
-    public class UIControl(UserInterface ui)
+    public class UIControl
     {
         protected readonly Mesh Mesh = Pool.Rent<Mesh>();
         protected bool IsVisualInvalid { get; private set; }
         protected bool IsArrangeInvalid { get; private set; }
-        protected readonly List<UIControl> Children = new();
+        protected internal readonly List<UIControl> Children = new();
         
-        public readonly UserInterface UI = ui;
+        public readonly UserInterface UI;
+
+        public UIControl(UserInterface ui)
+        {
+            UI = ui;
+            IsHitTestEnabled = true;
+        }
 
         private void DoArrange()
         {
@@ -100,7 +106,7 @@ namespace Barebone.UI.Controls
         /// </summary>
         protected void ScreenPickInternal(List<UIControl> chain, Vector2I position)
         {
-            if (Viewport.Contains(position))
+            if (Viewport.Contains(position) && IsHitTestEnabled)
             {
                 chain.Add(this);
                 foreach (var child in Children)
@@ -283,7 +289,7 @@ namespace Barebone.UI.Controls
             return $"[{GetType().Name}] {Name}";
         }
 
-        public bool IsMouseInteractive { get; set; } = true;
+        public bool IsHitTestEnabled { get; set; }
 
         
     }

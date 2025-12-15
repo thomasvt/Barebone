@@ -4,8 +4,6 @@ namespace Barebone.UI.Controls
 {
     public class ListViewItemContainer : ButtonBase
     {
-        private bool _isSelected;
-
         public ListViewItemContainer(ListView listView, ListViewItem item) : base(listView.UI)
         {
             Item = item;
@@ -38,11 +36,11 @@ namespace Barebone.UI.Controls
 
         public bool IsSelected
         {
-            get => _isSelected;
+            get;
             private set
             {
-                if (_isSelected == value) return;
-                _isSelected = value;
+                if (field == value) return;
+                field = value;
                 UpdateStyle();
             }
         }

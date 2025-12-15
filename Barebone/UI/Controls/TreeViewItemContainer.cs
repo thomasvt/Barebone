@@ -32,15 +32,15 @@ namespace Barebone.UI.Controls
                     expandButton.Text = isExpanded ? "v" : ">";
                 };
 
-                dockPanel.AddGap(DockSide.Left, indent);
-                dockPanel.AddChild(DockSide.Left, 16, 8, expandButton);
+                dockPanel.AddGap(DockType.Left, indent);
+                dockPanel.AddChild(DockType.Left, 16, 8, expandButton);
             }
             else
             {
-                dockPanel.AddGap(DockSide.Left, indent + 16 + 8);
+                dockPanel.AddGap(DockType.Left, indent + 16 + 8);
             }
 
-            dockPanel.AddlastChild(new TextBlock(ui) { Text = item.Label, TextColor = item.Color ?? ui.DefaultTextColor });
+            dockPanel.AddLastChild(new TextBlock(ui) { Text = item.Label, TextColor = item.Color ?? ui.DefaultTextColor });
         }
 
         protected override void UpdateStyle()

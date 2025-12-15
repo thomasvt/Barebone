@@ -9,18 +9,14 @@ namespace Barebone.UI.Controls
 {
     public class TextBlock : UIControl
     {
-        private Color _textColor;
-        private string _text;
         private readonly BBList<GpuTexTriangle> _textTriangles = new();
         private Font _font;
-        private HorizontalAlignment _horizontalAlignment;
-        private VerticalAlignment _verticalAlignment;
 
         public TextBlock(UserInterface ui) : base(ui)
         {
             Font = ui.DefaultFont;
             TextColor = ui.DefaultTextColor;
-            IsMouseInteractive = false;
+            IsHitTestEnabled = false;
         }
 
         protected override void Draw()
@@ -33,7 +29,9 @@ namespace Barebone.UI.Controls
         {
             _textTriangles.Clear();
 
-            var maxLinesVisible = Viewport.Height / _font.LineHeight;
+            if (string.IsNullOrWhiteSpace(Text)) return;
+
+            var maxLinesVisible = Viewport.Height / _font.LineHeight + 1;
             var textSize = _font.Measure(Text);
 
             var textOffsetX = HorizontalAlignment switch
@@ -72,23 +70,23 @@ namespace Barebone.UI.Controls
 
         public string Text
         {
-            get => _text;
+            get;
             set
             {
-                if (_text == value) return;
+                if (field == value) return;
 
-                _text = value;
+                field = value;
                 InvalidateVisual();
             }
         }
         public Color TextColor
         {
-            get => _textColor;
+            get;
             set
             {
-                if (_textColor == value) return;
+                if (field == value) return;
 
-                _textColor = value;
+                field = value;
                 InvalidateVisual();
             }
         }
@@ -106,22 +104,22 @@ namespace Barebone.UI.Controls
 
         public HorizontalAlignment HorizontalAlignment
         {
-            get => _horizontalAlignment;
+            get;
             set
             {
-                if (_horizontalAlignment == value) return;
-                _horizontalAlignment = value;
+                if (field == value) return;
+                field = value;
                 InvalidateVisual();
             }
         }
 
         public VerticalAlignment VerticalAlignment
         {
-            get => _verticalAlignment;
+            get;
             set
             {
-                if (_verticalAlignment == value) return;
-                _verticalAlignment = value;
+                if (field == value) return;
+                field = value;
                 InvalidateVisual();
             }
         }

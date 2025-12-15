@@ -13,8 +13,6 @@ namespace Barebone.UI.Controls
         private readonly TreeViewItem _treeRootItem;
         private readonly BBList<GpuTexTriangle> _textTriangles = new();
         private Font _font;
-        private Color _textColor;
-        private int _indent;
         private readonly StackPanel _stackPanel;
         private TreeViewItemContainer? _selectedContainer;
 
@@ -26,7 +24,7 @@ namespace Barebone.UI.Controls
             Indent = 12;
             Font = ui.DefaultFont;
 
-            Children.Add(_stackPanel = new StackPanel(ui) { Orientation = Orientation.Vertical, ItemSize = 20 });
+            Children.Add(_stackPanel = new StackPanel(ui) { Orientation = Orientation.Vertical, DefaultItemSize = 20 });
         }
 
         public TreeViewItem AddItem(string label, Color? color)
@@ -55,7 +53,7 @@ namespace Barebone.UI.Controls
                 };
                 container.Click = () => Select(container);
 
-                _stackPanel.AddChild(container);
+                _stackPanel.AddItem(container);
 
                 cursor.Y += _font.LineHeight;
                 if (item.IsExpanded && item.Items.Count > 0)
@@ -96,24 +94,24 @@ namespace Barebone.UI.Controls
 
         public Color TextColor
         {
-            get => _textColor;
+            get;
             set
             {
-                if (_textColor == value) return;
+                if (field == value) return;
 
-                _textColor = value;
+                field = value;
                 InvalidateVisual();
             }
         }
 
         public int Indent
         {
-            get => _indent;
+            get;
             set
             {
-                if (_indent == value) return;
+                if (field == value) return;
 
-                _indent = value;
+                field = value;
                 InvalidateVisual();
             }
         }

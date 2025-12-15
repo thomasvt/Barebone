@@ -5,8 +5,6 @@ namespace Barebone.UI.Controls
     public record TreeViewItem(TreeView TreeView, string Label, Color? Color = null)
     {
         private readonly List<TreeViewItem> _items = new();
-        private bool _isExpanded;
-
         public TreeViewItem AddChild(string label, Color? color)
         {
             var item = new TreeViewItem(TreeView, label, color);
@@ -17,11 +15,11 @@ namespace Barebone.UI.Controls
 
         public bool IsExpanded
         {
-            get => _isExpanded;
+            get;
             set
             {
-                if (_isExpanded == value) return;
-                _isExpanded = value;
+                if (field == value) return;
+                field = value;
                 TreeView.InvalidateArrange();
             }
         }

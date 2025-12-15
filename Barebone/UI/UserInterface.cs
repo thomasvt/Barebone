@@ -6,7 +6,6 @@ using Barebone.Messaging;
 using Barebone.UI.Controls;
 using Barebone.UI.Text;
 using System.Drawing;
-using System.Runtime.Intrinsics.Arm;
 
 namespace Barebone.UI
 {

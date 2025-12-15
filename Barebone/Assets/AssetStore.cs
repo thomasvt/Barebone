@@ -7,16 +7,22 @@
     {
         private readonly Dictionary<string, T> _cache = new();
 
-        public T Get(string filename)
+        /// <summary>
+        /// Gets the asset with the given name. Reuses already loaded assets.
+        /// </summary>
+        public T Get(string name)
         {
-            if (!_cache.TryGetValue(filename, out var resouce))
+            if (!_cache.TryGetValue(name, out var resouce))
             {
-                resouce = Load(filename);
-                _cache[filename] = resouce;
+                resouce = Load(name);
+                _cache[name] = resouce;
             }
             return resouce;
         }
 
+        /// <summary>
+        /// Gets multiple assets by name. Reuses already loaded assets when available.
+        /// </summary>
         public T[] GetMany(params string[] names)
         {
             return names.Select(Get).ToArray();

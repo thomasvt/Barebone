@@ -8,11 +8,7 @@ namespace Barebone.UI.Controls
     /// </summary>
     public abstract class ButtonBase : UIControl
     {
-        private bool _isMouseButtonDown;
         public Action? Click;
-        private Color _backgroundColorNormal;
-        private Color _backgroundColorHover;
-        private Color _backgroundColorPressed;
 
         protected ButtonBase(UserInterface ui) : base(ui)
         {
@@ -25,12 +21,12 @@ namespace Barebone.UI.Controls
 
         public bool IsMouseButtonDown
         {
-            get => _isMouseButtonDown;
+            get;
             set
             {
-                if (_isMouseButtonDown == value) return;
+                if (field == value) return;
 
-                _isMouseButtonDown = value;
+                field = value;
                 UpdateStyle();
             }
         }
@@ -78,32 +74,32 @@ namespace Barebone.UI.Controls
 
         public Color BackgroundColorNormal
         {
-            get => _backgroundColorNormal;
+            get;
             set
             {
-                if (_backgroundColorNormal == value) return;
-                _backgroundColorNormal = value;
+                if (field == value) return;
+                field = value;
                 UpdateStyle();
             }
         }
 
         public Color BackgroundColorHover
         {
-            get => _backgroundColorHover;
+            get;
             set
             {
-                if (_backgroundColorHover == value) return;
-                _backgroundColorHover = value;
+                if (field == value) return;
+                field = value;
                 UpdateStyle();
             }
         }
         public Color BackgroundColorPressed
         {
-            get => _backgroundColorPressed;
+            get;
             set
             {
-                if (_backgroundColorPressed == value) return;
-                _backgroundColorPressed = value;
+                if (field == value) return;
+                field = value;
                 UpdateStyle();
             }
         }

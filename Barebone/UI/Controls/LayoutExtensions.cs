@@ -2,7 +2,7 @@
 
 namespace Barebone.UI.Controls
 {
-    public enum DockSide
+    public enum DockType
     {
         Left, Top, Right, Bottom
     }
@@ -11,24 +11,24 @@ namespace Barebone.UI.Controls
     {
         // mind that AabbI is designed for Y+ up, while we use it for a UI here, which is Y+ down. So using their Top and Bottom properties is avoided.
 
-        public static void Dock(this AabbI area, DockSide dockSide, int size, int gap, out AabbI dockArea, out AabbI remainder)
+        public static void Dock(this AabbI area, DockType dockType, int size, int gap, out AabbI dockArea, out AabbI remainder)
         {
-            switch (dockSide)
+            switch (dockType)
             {
-                case DockSide.Left:
+                case DockType.Left:
                     area.DockLeft(size, gap, out dockArea, out remainder);
                     break;
-                case DockSide.Top:
+                case DockType.Top:
                     area.DockTop(size, gap, out dockArea, out remainder);
                     break;
-                case DockSide.Right:
+                case DockType.Right:
                     area.DockRight(size, gap, out dockArea, out remainder);
                     break;
-                case DockSide.Bottom:
+                case DockType.Bottom:
                     area.DockBottom(size, gap, out dockArea, out remainder);
                     break;
                 default:
-                    throw new ArgumentOutOfRangeException(nameof(dockSide));
+                    throw new ArgumentOutOfRangeException(nameof(dockType));
             }
         }
 

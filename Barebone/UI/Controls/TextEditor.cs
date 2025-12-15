@@ -25,12 +25,11 @@ namespace Barebone.UI.Controls
         public IReadOnlyList<string> Lines => _lines;
 
         private readonly IUndoHistory<Snapshot<TUndoData>> _history;
-        private string? _previousFullText;
 
         public TextEditor(bool enableUndo, Func<TUndoData> getCustomUndoData, Action<TUndoData> applyCustomUndoData)
         {
             _applyCustomUndoData = applyCustomUndoData;
-            _history = enableUndo 
+            _history = enableUndo
                 ? new UndoHistory<Snapshot<TUndoData>>(100, () => new Snapshot<TUndoData>(_lines.ToArray(), getCustomUndoData.Invoke()))
                 : new NullUndoHistory<Snapshot<TUndoData>>();
         }
@@ -115,10 +114,10 @@ namespace Barebone.UI.Controls
                 _lines.AddRange(lines);
             }
             else
-            { 
+            {
                 _lines.Add(lines.FirstOrDefault(""));
             }
-            
+
             TextModified?.Invoke();
         }
 
@@ -157,20 +156,14 @@ namespace Barebone.UI.Controls
             return string.Join(Environment.NewLine, _lines);
         }
 
-        public bool SetFullText(string text, bool resetUndoHistory)
+        public void SetFullText(string text, bool resetUndoHistory)
         {
-            if (text != _previousFullText)
-            {
-                if (resetUndoHistory)
-                    _history.Clear();
-                else
-                    _history.Record();
+            if (resetUndoHistory)
+                _history.Clear();
+            else
+                _history.Record();
 
-                ReplaceLines(text.Split('\n'));
-                _previousFullText = text;
-                return true;
-            }
-            return false;
+            ReplaceLines(text.Split('\n'));
         }
 
         public Vector2I ReplaceTextRange(Vector2I begin, Vector2I end, string text)
@@ -245,7 +238,7 @@ namespace Barebone.UI.Controls
         private Vector2I InsertInternal(Vector2I textIdx, string text)
         {
             var linesToInsert = text.Split('\n').Select(l => l.Replace("\r", "").Replace("\t", "")).ToArray().AsSpan();
-            
+
             if (linesToInsert.Length == 0) return textIdx;
             if (!IsMultiLine)
                 linesToInsert = linesToInsert[..1];

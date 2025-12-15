@@ -4,14 +4,14 @@ namespace Barebone.UI.Controls
 {
     public class StackPanel : UIControl
     {
-        private int _itemSize;
-        private Orientation _orientation;
+        private readonly List<StackLayoutInfo> _layoutInfos = new();
 
         public StackPanel(UserInterface ui) : base(ui)
         {
-            IsMouseInteractive = false;
-            ItemSize = 20;
+            DefaultItemSize = 20;
         }
+
+        private record StackLayoutInfo(int Size, UIControl Control);
 
         protected override void Arrange()
         {
@@ -19,55 +19,49 @@ namespace Barebone.UI.Controls
 
             if (Orientation == Orientation.Vertical)
             {
-                foreach (var child in Children)
+                foreach (var info in _layoutInfos)
                 {
-                    child.Viewport = new AabbI(cursor, cursor + new Vector2I(Viewport.Width, ItemSize));
-                    cursor.Y += ItemSize;
+                    var child = info.Control;
+                    child.Viewport = new AabbI(cursor, cursor + new Vector2I(Viewport.Width, info.Size));
+                    cursor.Y += info.Size;
                 }
             }
             else
             {
-                foreach (var child in Children)
+                foreach (var info in _layoutInfos)
                 {
-                    child.Viewport = new AabbI(cursor, cursor + new Vector2I(ItemSize, Viewport.Height));
-                    cursor.X += ItemSize;
+                    var child = info.Control;
+                    child.Viewport = new AabbI(cursor, cursor + new Vector2I(info.Size, Viewport.Height));
+                    cursor.X += info.Size;
                 }
             }
         }
 
         public void Clear()
         {
+            _layoutInfos.Clear();
             Children.Clear();
             InvalidateArrange();
         }
 
-        public void AddChild(UIControl control)
+        public void AddItem(UIControl control, int? size = null)
         {
+            size ??= DefaultItemSize;
+            _layoutInfos.Add(new StackLayoutInfo(size.Value, control));
             Children.Add(control);
             InvalidateArrange();
         }
 
-        public int ItemSize
-        {
-            get => _itemSize;
-            set
-            {
-                if (_itemSize == value) return;
-
-                _itemSize = value;
-                InvalidateArrange();
-            }
-        }
-
         public Orientation Orientation
         {
-            get => _orientation;
+            get;
             set
             {
-                if (_orientation == value) return;
-                _orientation = value;
+                if (field == value) return;
+                field = value;
                 InvalidateArrange();
             }
         }
+        public int DefaultItemSize { get; set; }
     }
 }

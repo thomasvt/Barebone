@@ -9,29 +9,32 @@ namespace Barebone.UI.Controls
 {
     public class ListView : UIControl
     {
-        private readonly UserInterface _ui;
         private readonly List<ListViewItem> _items = new();
         private readonly BBList<GpuTexTriangle> _textTriangles = new();
         private Font _font;
-        private Color _textColor;
-        private int _indent;
         private readonly StackPanel _stackPanel;
         private ListViewItemContainer? _selectedContainer;
+
+        public IReadOnlyList<ListViewItem> Items => _items;
 
         public ListView(UserInterface ui) : base(ui)
         {
             IsFocussable = true;
-            _ui = ui;
             Indent = 12;
             Font = ui.DefaultFont;
 
-            Children.Add(_stackPanel = new StackPanel(ui) { Orientation = Orientation.Vertical, ItemSize = ui.DefaultFont.LineHeight + 8 });
+            Children.Add(_stackPanel = new StackPanel(ui) { Orientation = Orientation.Vertical, DefaultItemSize = ui.DefaultFont.LineHeight + 8 });
         }
 
         public ListViewItem AddItem(string label, object? userData = null, Color? color = null)
         {
             var item = new ListViewItem(this, label, userData, color);
             _items.Add(item);
+
+            var container = new ListViewItemContainer(this, item);
+            container.Click = () => Select(container);
+            _stackPanel.AddItem(container);
+
             InvalidateArrange();
             return item;
         }
@@ -39,25 +42,15 @@ namespace Barebone.UI.Controls
         public void Clear()
         {
             _items.Clear();
-        }
-
-        protected override void Arrange()
-        {
             _stackPanel.Clear();
-            GenerateItemContainers(_items, Viewport.MinCorner);
-            base.Arrange();
         }
-
-        private void GenerateItemContainers(IReadOnlyList<ListViewItem> items, Vector2I cursor)
+        
+        public void Select(ListViewItem item)
         {
-            foreach (var item in items)
+            foreach (var child in _stackPanel.Children)
             {
-                var container = new ListViewItemContainer(this, item);
-                container.Click = () => Select(container);
-
-                _stackPanel.AddChild(container);
-
-                cursor.Y += _stackPanel.ItemSize;
+                if (child is ListViewItemContainer container && container.Item == item) 
+                    Select(container);
             }
         }
 
@@ -92,24 +85,24 @@ namespace Barebone.UI.Controls
 
         public Color TextColor
         {
-            get => _textColor;
+            get;
             set
             {
-                if (_textColor == value) return;
+                if (field == value) return;
 
-                _textColor = value;
+                field = value;
                 InvalidateVisual();
             }
         }
 
         public int Indent
         {
-            get => _indent;
+            get;
             set
             {
-                if (_indent == value) return;
+                if (field == value) return;
 
-                _indent = value;
+                field = value;
                 InvalidateVisual();
             }
         }
