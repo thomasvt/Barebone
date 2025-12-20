@@ -1,6 +1,5 @@
 ﻿using System.Drawing;
 using System.Numerics;
-using Barebone.Geometry;
 using Barebone.Graphics;
 using Barebone.Graphics.Gpu;
 using Barebone.UI.Text;
@@ -9,6 +8,7 @@ namespace Barebone.UI.Controls
 {
     public class ListView : UIControl
     {
+        private readonly UserInterface _ui;
         private readonly List<ListViewItem> _items = new();
         private readonly BBList<GpuTexTriangle> _textTriangles = new();
         private Font _font;
@@ -19,6 +19,7 @@ namespace Barebone.UI.Controls
 
         public ListView(UserInterface ui) : base(ui)
         {
+            _ui = ui;
             IsFocussable = true;
             Indent = 12;
             Font = ui.DefaultFont;
@@ -26,13 +27,19 @@ namespace Barebone.UI.Controls
             Children.Add(_stackPanel = new StackPanel(ui) { Orientation = Orientation.Vertical, DefaultItemSize = ui.DefaultFont.LineHeight + 8 });
         }
 
-        public ListViewItem AddItem(string label, object? userData = null, Color? color = null)
+        public ListViewItem AddItem(string text, object? userData = null, Color? color = null)
         {
-            var item = new ListViewItem(this, label, userData, color);
+            color ??= _ui.DefaultTextColor;
+            return AddItem(new TextBlock(_ui) { Text = text, VerticalAlignment = VerticalAlignment.Center, TextColor = color.Value }, userData);
+        }
+
+        public ListViewItem AddItem(UIControl control, object? userData = null)
+        {
+            var item = new ListViewItem(this, control, userData);
             _items.Add(item);
 
             var container = new ListViewItemContainer(this, item);
-            container.Click = () => Select(container);
+            container.Click = () => Select(container, true);
             _stackPanel.AddItem(container);
 
             InvalidateArrange();
@@ -50,19 +57,19 @@ namespace Barebone.UI.Controls
             foreach (var child in _stackPanel.Children)
             {
                 if (child is ListViewItemContainer container && container.Item == item) 
-                    Select(container);
+                    Select(container, false);
             }
         }
 
-        private void Select(ListViewItemContainer? container)
+        private void Select(ListViewItemContainer? container, bool isUserInteraction)
         {
             if (container == _selectedContainer) return;
 
             _selectedContainer?.Deselect();
             _selectedContainer = container;
             _selectedContainer?.Select();
-            if (_selectedContainer != null)
-                Selected?.Invoke(_selectedContainer.Item);
+            if (_selectedContainer != null && isUserInteraction)
+                SelectedByUser?.Invoke(_selectedContainer.Item);
         }
 
         protected override void Render(IImmediateRenderer renderer)
@@ -107,6 +114,6 @@ namespace Barebone.UI.Controls
             }
         }
 
-        public event Action<ListViewItem>? Selected;
+        public event Action<ListViewItem>? SelectedByUser;
     }
 }

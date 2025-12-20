@@ -2,5 +2,5 @@
 
 namespace Barebone.UI.Controls
 {
-    public record ListViewItem(ListView ListView, string Label, object? UserData, Color? Color = null);
+    public record ListViewItem(ListView ListView, UIControl Control, object? UserData);
 }

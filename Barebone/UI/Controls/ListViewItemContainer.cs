@@ -11,8 +11,7 @@ namespace Barebone.UI.Controls
             BackgroundColorHover = PaletteApollo.Pink1;
             BackgroundColorPressed = PaletteApollo.Pink2;
 
-            var textBlock = new TextBlock(listView.UI) { Text = item.Label, VerticalAlignment = VerticalAlignment.Center, TextColor = item.Color ?? listView.UI.DefaultTextColor };
-            Children.Add(textBlock);
+            Children.Add(item.Control);
         }
 
         protected override void UpdateStyle()

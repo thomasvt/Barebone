@@ -8,7 +8,7 @@
         private readonly Dictionary<string, T> _cache = new();
 
         /// <summary>
-        /// Gets the asset with the given name. Reuses already loaded assets.
+        /// Loads or reuses the previously loaded asset with the given name.
         /// </summary>
         public T Get(string name)
         {
@@ -28,7 +28,10 @@
             return names.Select(Get).ToArray();
         }
 
-        protected abstract T Load(string filename);
+        /// <summary>
+        /// Loads the asset from file.
+        /// </summary>
+        public abstract T Load(string filename);
 
         public void Dispose()
         {

@@ -23,7 +23,7 @@
         /// <summary>
         /// Docks a new child at a certain side of the parent.
         /// </summary>
-        public void AddChild(DockType side, int size, int gap, UIControl control)
+        public void AddItem(DockType side, int size, int gap, UIControl control)
         {
             Children.Add(control);
             _dockItems.Add(new DockItem(side, size, gap, control));

@@ -33,7 +33,7 @@ namespace Barebone.UI.Controls
                 };
 
                 dockPanel.AddGap(DockType.Left, indent);
-                dockPanel.AddChild(DockType.Left, 16, 8, expandButton);
+                dockPanel.AddItem(DockType.Left, 16, 8, expandButton);
             }
             else
             {
