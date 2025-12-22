@@ -3,7 +3,7 @@ using YamlDotNet.Serialization;
 
 namespace Barebone.Assets
 {
-    public class TextFileLoader(string path)
+    public class TextFilePersister(string path)
     {
         private Deserializer? _deserializer;
         private Serializer? _serializer;

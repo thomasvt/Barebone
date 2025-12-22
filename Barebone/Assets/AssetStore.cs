@@ -12,12 +12,12 @@
         /// </summary>
         public T Get(string name)
         {
-            if (!_cache.TryGetValue(name, out var resouce))
+            if (!_cache.TryGetValue(name, out var resource))
             {
-                resouce = Load(name);
-                _cache[name] = resouce;
+                resource = Load(name);
+                _cache[name] = resource;
             }
-            return resouce;
+            return resource;
         }
 
         /// <summary>
