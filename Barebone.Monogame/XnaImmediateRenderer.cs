@@ -102,12 +102,12 @@ namespace Barebone.Monogame
             gdm.ApplyChanges();
         }
 
-        public void Draw(in Matrix4x4 worldTransform, in Mesh mesh, in Color? replacementColor = null)
+        public void Draw(in Matrix4x4 worldTransform, in Mesh mesh)
         {
-            Draw(worldTransform, mesh.Triangles.AsReadOnlySpan(), replacementColor);
+            Draw(worldTransform, mesh.Triangles.AsReadOnlySpan());
         }
 
-        public void Draw(in Matrix4x4 worldTransform, in ReadOnlySpan<GpuTriangle> triangles, in Color? replacementColor = null)
+        public void Draw(in Matrix4x4 worldTransform, in ReadOnlySpan<GpuTriangle> triangles)
         {
             if (triangles.Length == 0 || _camera == null) return;
 
@@ -122,15 +122,15 @@ namespace Barebone.Monogame
             _effect.GraphicsDevice.DrawUserPrimitives(PrimitiveType.TriangleList, _xnaVerticesBuffer.InternalArray, 0, triangles.Length);
         }
 
-        public void Draw(in Matrix4x4 worldTransform, in ReadOnlySpan<GpuTexTriangle> triangles, in ITexture texture)
+        public void Draw(in Matrix4x4 worldTransform, in ReadOnlySpan<GpuTexTriangle> triangles, in ITexture? texture = null)
         {
             if (triangles.Length == 0 || _camera == null) return;
 
-            var xnaTexture = (XnaTexture)texture;
+            var xnaTexture = (XnaTexture?)texture;
 
             _effect.World = worldTransform.ToXna();
-            _effect.Texture = xnaTexture.Texture;
-            _effect.TextureEnabled = true;
+            _effect.Texture = xnaTexture?.Texture;
+            _effect.TextureEnabled = xnaTexture != null;
             _effect.CurrentTechnique.Passes[0].Apply(); // don't use First() to prevent iterator allocation
 
             _xnaVerticesTexBuffer.Clear();

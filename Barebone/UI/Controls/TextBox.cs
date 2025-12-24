@@ -150,7 +150,7 @@ namespace Barebone.UI.Controls
         {
             var p = TextIndexToScreen(_caret);
             if (p.HasValue)
-                renderer.Draw(Matrix4x4.CreateTranslation(p.Value.X, p.Value.Y, 0), _caretMesh, TextColor);
+                renderer.Draw(Matrix4x4.CreateTranslation(p.Value.X, p.Value.Y, 0), _caretMesh);
         }
 
         protected override void OnFocusChanged(bool isFocussed)

@@ -9,7 +9,7 @@ using Barebone.Graphics.Gpu;
 namespace Barebone.Graphics
 {
     /// <summary>
-    /// Renderable Mesh, with procedural drawing methods. Not threadsafe!
+    /// Renderable Mesh for 2D procedural drawing methods, but supports 3D too. Color only, no texturing. Not threadsafe!
     /// </summary>
     public class Mesh : Poolable
     {

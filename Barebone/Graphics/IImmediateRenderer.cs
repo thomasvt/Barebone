@@ -11,9 +11,9 @@ namespace Barebone.Graphics
     {
         void Begin(ICamera camera, bool enableDepthBuffer, bool additiveBlend, bool cullCounterClockwise, bool linearSampling = true);
 
-        void Draw(in Matrix4x4 worldTransform, in ReadOnlySpan<GpuTriangle> triangles, in Color? replacementColor = null);
-        void Draw(in Matrix4x4 worldTransform, in ReadOnlySpan<GpuTexTriangle> triangles, in ITexture texture);
-        void Draw(in Matrix4x4 worldTransform, in Mesh mesh, in Color? replacementColor = null);
+        void Draw(in Matrix4x4 worldTransform, in ReadOnlySpan<GpuTriangle> triangles);
+        void Draw(in Matrix4x4 worldTransform, in ReadOnlySpan<GpuTexTriangle> triangles, in ITexture? texture = null);
+        void Draw(in Matrix4x4 worldTransform, in Mesh mesh);
 
         /// <summary>
         /// Draws a quad with the sprite on it. If Scale is 1, 1 world unit equals one pixel of the sprite.

@@ -143,7 +143,7 @@ public class BBOwningList<T> : Poolable where T : Poolable, new()
                 Pool.Return(item);
         }
 
-        if (freeCapacity)
+        if (freeCapacity && _items.Length != 0)
         {
             ArrayPool<T>.Shared.Return(_items);
             _items = [];
