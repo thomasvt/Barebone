@@ -1,26 +1,26 @@
 ﻿using System.Numerics;
-using Barebone.Graphics.Manifold.Core;
+using Barebone.Graphics.NodeArt.Core;
 
-namespace Barebone.Graphics.Manifold
+namespace Barebone.Graphics.NodeArt
 {
-    public class CircleNode : Node
+    public class CircleNode : NaNode
     {
-        public Parameter<float> Radius { get; }
-        public Parameter<float> MinAngle { get; }
-        public Parameter<float> MaxAngle { get; }
-        public Parameter<int> SegmentCount { get; }
-        public Parameter<float> Rotation { get; }
+        public NaParameter<float> Radius { get; }
+        public NaParameter<float> MinAngle { get; }
+        public NaParameter<float> MaxAngle { get; }
+        public NaParameter<int> SegmentCount { get; }
+        public NaParameter<float> Rotation { get; }
 
         public CircleNode()
         {
-            Radius = NewParameter(1f);
-            MinAngle = NewParameter(0f);
-            MaxAngle = NewParameter(MathF.Tau);
-            SegmentCount = NewParameter(16);
-            Rotation = NewParameter(0f);
+            Radius = DefineParameter(1f);
+            MinAngle = DefineParameter(0f);
+            MaxAngle = DefineParameter(MathF.Tau);
+            SegmentCount = DefineParameter(16);
+            Rotation = DefineParameter(0f);
         }
 
-        public override void Cook(in Core.Geometry output)
+        protected override void Cook(in Core.NaGeometry output)
         {
             if (Radius.Value <= 0f || SegmentCount.Value < 3)
                 throw new Exception("Circle must have Radius > 0 and SegmentCount > 2");

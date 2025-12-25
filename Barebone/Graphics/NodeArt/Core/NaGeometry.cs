@@ -1,8 +1,8 @@
 ﻿using Barebone.Pools;
 
-namespace Barebone.Graphics.Manifold.Core
+namespace Barebone.Graphics.NodeArt.Core
 {
-    public sealed class Geometry : Poolable
+    public sealed class NaGeometry : Poolable
     {
         public PointSet PointSet { get; private set; } = null!;
         public SegmentSet SegmentSet { get; private set; } = null!;
@@ -28,15 +28,15 @@ namespace Barebone.Graphics.Manifold.Core
             GlobalAttributes.Return();
         }
 
-        public static Geometry RentNew()
+        public static NaGeometry RentNew()
         {
-            return Pool.Rent<Geometry>();
+            return Pool.Rent<NaGeometry>();
         }
 
         /// <summary>
         /// Makes destination a deep clone of this geometry.
         /// </summary>
-        public void CloneTo(in Geometry destination)
+        public void CloneTo(in NaGeometry destination)
         {
             PointSet.CloneTo(destination.PointSet);
             SegmentSet.CloneTo(destination.SegmentSet);

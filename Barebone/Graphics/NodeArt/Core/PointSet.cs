@@ -1,7 +1,7 @@
 ﻿using System.Numerics;
 using Barebone.Pools;
 
-namespace Barebone.Graphics.Manifold.Core
+namespace Barebone.Graphics.NodeArt.Core
 {
     public sealed class PointSet : Poolable
     {

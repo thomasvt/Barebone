@@ -1,5 +1,5 @@
 ﻿
-namespace Barebone.Graphics.Manifold.Core
+namespace Barebone.Graphics.NodeArt.Core
 {
     public enum GeometryDomain
     {

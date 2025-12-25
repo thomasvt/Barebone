@@ -1,15 +1,16 @@
 ﻿using Barebone.Pools;
 
-namespace Barebone.Graphics.Manifold.Core
+namespace Barebone.Graphics.NodeArt.Core
 {
     
 
     public sealed class AttributeSet : Poolable
     {
+
         // todo Make a poolable Dictionary
         private readonly Dictionary<string, IAttributeArray> _attributes = new();
 
-        public AttributeArray<T> Add<T>(string name, int capacity) where T : struct
+        public AttributeArray<T> RegisterAttribute<T>(string name, int capacity) where T : struct
         {
             var attributeArray = Pool.Rent<AttributeArray<T>>();
             attributeArray.Name = name;
@@ -47,6 +48,9 @@ namespace Barebone.Graphics.Manifold.Core
 
         public void Clear()
         {
+            // cant we reuse the named arrays during the lifetime of the owner node? This prevents reallocating while the same 
+            // attributes are used for each cook anyway. 
+
             foreach (var attributeArray in _attributes.Values)
             {
                 attributeArray.Return();

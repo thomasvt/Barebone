@@ -11,7 +11,8 @@ namespace BareBone.Random
     /// </summary>
     public readonly struct Seed(uint value) : IEquatable<Seed>
     {
-        internal readonly uint Value = value;
+        public readonly uint Value = value;
+        public int SValue => (int)value;
 
         private const uint SeedInternal = 1546519154U;
 

@@ -1,26 +1,36 @@
-﻿using System.Drawing;
-using System.Numerics;
+﻿using System.Numerics;
 using Barebone.Geometry;
 using BareBone.Geometry.Triangulation;
 using BareBone.Graphics;
 using Barebone.Graphics.Gpu;
-using Barebone.Graphics.Manifold.Core;
-using Point = Barebone.Graphics.Manifold.Core.Point;
+using Barebone.Graphics.NodeArt.Core;
+using Point = Barebone.Graphics.NodeArt.Core.Point;
 
-namespace Barebone.Graphics.Manifold.Drawers
+namespace Barebone.Graphics.NodeArt.Drawers
 {
     /// <summary>
     /// Converts Manifold output to GPU renderable triangles to visualize points, segments and filled shapes. Is supposed to be rendered without depth buffer.
     /// </summary>
-    public class DebugDrawer
+    public class DebugNaDrawer
     {
         private readonly Triangulator _triangulator = new();
         private readonly BBList<Vector2> _cornerBuffer = new();
+        private Matrix3x2 _transform = Matrix3x2.Identity;
+
+        public void SetTransform(in Matrix3x2 transform)
+        {
+            _transform = transform;
+        }
+
+        private Vector2 T(in Vector2 position)
+        {
+            return Vector2.Transform(position, _transform);
+        }
 
         /// <summary>
-        /// Tesselates the given geometry into triangles for GPU rendering and adds them to your triangleBuffer.
+        /// Tesselates the given geometry into triangles for GPU rendering and appends them to your triangle buffer.
         /// </summary>
-        public void Draw(in BBList<GpuTexTriangle> buffer, in Core.Geometry geometry)
+        public void Draw(in BBList<GpuTexTriangle> buffer, in Core.NaGeometry geometry)
         {
             var points = geometry.PointSet.Points.AsReadOnlySpan();
 
@@ -45,10 +55,10 @@ namespace Barebone.Graphics.Manifold.Drawers
 
         private void DrawPoint(in BBList<GpuTexTriangle> triangleBuffer, in Point p)
         {
-            var a = new GpuTexVertex(new Vector3(p.Position + new Vector2(-PointHalfSize, -PointHalfSize), 0), PointColor, Vector2.Zero);
-            var b = new GpuTexVertex(new Vector3(p.Position + new Vector2(-PointHalfSize, PointHalfSize), 0), PointColor, Vector2.Zero);
-            var c = new GpuTexVertex(new Vector3(p.Position + new Vector2(PointHalfSize, PointHalfSize), 0), PointColor, Vector2.Zero);
-            var d = new GpuTexVertex(new Vector3(p.Position + new Vector2(PointHalfSize, -PointHalfSize), 0), PointColor, Vector2.Zero);
+            var a = new GpuTexVertex(new Vector3(T(p.Position + new Vector2(-PointHalfSize, -PointHalfSize)), 0), PointColor, Vector2.Zero);
+            var b = new GpuTexVertex(new Vector3(T(p.Position + new Vector2(-PointHalfSize, PointHalfSize)), 0), PointColor, Vector2.Zero);
+            var c = new GpuTexVertex(new Vector3(T(p.Position + new Vector2(PointHalfSize, PointHalfSize)), 0), PointColor, Vector2.Zero);
+            var d = new GpuTexVertex(new Vector3(T(p.Position + new Vector2(PointHalfSize, -PointHalfSize)), 0), PointColor, Vector2.Zero);
 
             triangleBuffer.Add(new(a, b, c));
             triangleBuffer.Add(new(a, c, d));
@@ -61,10 +71,10 @@ namespace Barebone.Graphics.Manifold.Drawers
             var longDist = Vector2.Normalize(p1.Position - p0.Position) * SegmentHalfWidth;
             var latDist = longDist.CrossLeft();
 
-            var a = new GpuTexVertex(new Vector3(p0.Position - longDist - latDist, 0), SegmentColor, Vector2.Zero);
-            var b = new GpuTexVertex(new Vector3(p0.Position - longDist + latDist, 0), SegmentColor, Vector2.Zero);
-            var c = new GpuTexVertex(new Vector3(p1.Position + longDist + latDist, 0), SegmentColor, Vector2.Zero);
-            var d = new GpuTexVertex(new Vector3(p1.Position + longDist - latDist, 0), SegmentColor, Vector2.Zero);
+            var a = new GpuTexVertex(new Vector3(T(p0.Position - longDist - latDist), 0), SegmentColor, Vector2.Zero);
+            var b = new GpuTexVertex(new Vector3(T(p0.Position - longDist + latDist), 0), SegmentColor, Vector2.Zero);
+            var c = new GpuTexVertex(new Vector3(T(p1.Position + longDist + latDist), 0), SegmentColor, Vector2.Zero);
+            var d = new GpuTexVertex(new Vector3(T(p1.Position + longDist - latDist), 0), SegmentColor, Vector2.Zero);
 
             triangleBuffer.Add(new(a, b, c));
             triangleBuffer.Add(new(a, c, d));
@@ -75,15 +85,15 @@ namespace Barebone.Graphics.Manifold.Drawers
             var cornerSpan = corners.AsReadOnlySpan();
             foreach (var triangle in _triangulator.Triangulate(_cornerBuffer.AsArraySegment()))
             {
-                var a = new GpuTexVertex(new Vector3(cornerSpan[triangle.A], 0), ShapeColor, Vector2.Zero);
-                var b = new GpuTexVertex(new Vector3(cornerSpan[triangle.B], 0), ShapeColor, Vector2.Zero);
-                var c = new GpuTexVertex(new Vector3(cornerSpan[triangle.C], 0), ShapeColor, Vector2.Zero);
+                var a = new GpuTexVertex(new Vector3(T(cornerSpan[triangle.A]), 0), ShapeColor, Vector2.Zero);
+                var b = new GpuTexVertex(new Vector3(T(cornerSpan[triangle.B]), 0), ShapeColor, Vector2.Zero);
+                var c = new GpuTexVertex(new Vector3(T(cornerSpan[triangle.C]), 0), ShapeColor, Vector2.Zero);
 
                 triangleBuffer.Add(new GpuTexTriangle(a, b, c));
             }
         }
 
-        private static void AssembleShapeCorners(BBList<Vector2> buffer, Core.Geometry geometry, Shape shape, ReadOnlySpan<Point> points)
+        private static void AssembleShapeCorners(BBList<Vector2> buffer, Core.NaGeometry geometry, Shape shape, ReadOnlySpan<Point> points)
         {
             buffer.Clear();
             var paths = geometry.PathSet.Paths.AsReadOnlySpan();

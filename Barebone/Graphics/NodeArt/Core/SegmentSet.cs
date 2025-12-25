@@ -1,8 +1,6 @@
-﻿using System.ComponentModel.DataAnnotations;
-using System.Data;
-using Barebone.Pools;
+﻿using Barebone.Pools;
 
-namespace Barebone.Graphics.Manifold.Core
+namespace Barebone.Graphics.NodeArt.Core
 {
     public sealed class SegmentSet : Poolable
     {

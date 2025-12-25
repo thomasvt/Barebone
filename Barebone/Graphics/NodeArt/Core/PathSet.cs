@@ -1,6 +1,6 @@
 ﻿using Barebone.Pools;
 
-namespace Barebone.Graphics.Manifold.Core
+namespace Barebone.Graphics.NodeArt.Core
 {
     public sealed class PathSet : Poolable
     {

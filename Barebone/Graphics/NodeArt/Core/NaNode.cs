@@ -1,11 +1,11 @@
 ﻿using Barebone.Pools;
 
-namespace Barebone.Graphics.Manifold.Core
+namespace Barebone.Graphics.NodeArt.Core
 {
-    public abstract class Node : Poolable
+    public abstract class NaNode : Poolable
     {
-        protected List<IParameter> Parameters = new();
-        private Geometry? _output;
+        protected List<INaParameter> Parameters = new();
+        private NaGeometry? _output;
 
         protected internal override void Construct()
         {
@@ -18,22 +18,12 @@ namespace Barebone.Graphics.Manifold.Core
             _output = null;
         }
 
-        public bool IsDirty
-        {
-            get
-            {
-                foreach (var p in Parameters)
-                {
-                    if (p.IsDirty) return true;
-                }
-                return false;
-            }
-        }
+        public bool IsDirty { get; private set; }
 
         /// <summary>
         /// Resets all parameters of this node to their default value.
         /// </summary>
-        public void ResetToDefaults()
+        internal void ResetToDefaults()
         {
             foreach (var p in Parameters)
             {
@@ -41,9 +31,18 @@ namespace Barebone.Graphics.Manifold.Core
             }
         }
 
-        protected Parameter<T> NewParameter<T>(T defaultValue)
+        /// <summary>
+        /// You must call this for all external parameters that should invalidate the previous cooking output when their value changes.
+        /// </summary>
+        public void DependsOn(INaParameter parameter)
         {
-            var p = new Parameter<T>(defaultValue);
+            parameter.ValueChange += () => IsDirty = true;
+        }
+
+        protected NaParameter<T> DefineParameter<T>(T? defaultValue = default)
+        {
+            var p = new NaParameter<T>(defaultValue);
+            p.ValueChange += () => IsDirty = true;
             Parameters.Add(p);
             return p;
         }
@@ -51,14 +50,14 @@ namespace Barebone.Graphics.Manifold.Core
         /// <summary>
         /// Cooks the node and returns the resulting geometry. Reuses earlier results if no inputs have changed.
         /// </summary>
-        public Geometry GetResult()
+        public NaGeometry GetResult()
         {
             if (_output != null && !IsDirty)
                 return _output;
 
             if (_output == null)
             {
-                _output = Geometry.RentNew();
+                _output = NaGeometry.RentNew();
             }
             else
             {
@@ -67,18 +66,10 @@ namespace Barebone.Graphics.Manifold.Core
             }
 
             Cook(_output);
-            ResetIsDirty();
+            IsDirty = false;
             return _output;
         }
 
-        private void ResetIsDirty()
-        {
-            foreach (var parameter in Parameters)
-            {
-                parameter.ResetIsDirty();
-            }
-        }
-
-        public abstract void Cook(in Geometry output);
+        protected abstract void Cook(in NaGeometry output);
     }
 }

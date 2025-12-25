@@ -1,21 +1,21 @@
-﻿using Barebone.Graphics.Manifold.Core;
+﻿using Barebone.Graphics.NodeArt.Core;
 
-namespace Barebone.Graphics.Manifold
+namespace Barebone.Graphics.NodeArt
 {
-    public class PointWrangleNode : Node
+    public class PointWrangleNode : NaNode
     {
         public delegate void PointWrangleDelegate(ref Point point);
 
-        public Parameter<PointWrangleDelegate?> Delegate { get; set; }
-        public Parameter<Node?> Input { get; set; }
+        public NaParameter<PointWrangleDelegate> Delegate { get; set; }
+        public NaParameter<NaNode> Input { get; set; }
 
         public PointWrangleNode()
         {
-            Delegate = NewParameter((PointWrangleDelegate?)null);
-            Input = NewParameter<Node?>(null);
+            Delegate = DefineParameter<PointWrangleDelegate>();
+            Input = DefineParameter<NaNode>();
         }
 
-        public override void Cook(in Core.Geometry output)
+        protected override void Cook(in NaGeometry output)
         {
             if (Input.Value == null) throw new Exception("Node has no Input.");
 
