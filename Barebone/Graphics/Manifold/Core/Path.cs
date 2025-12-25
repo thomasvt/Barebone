@@ -1,18 +1,7 @@
-﻿using Barebone.Pools;
-
-namespace Barebone.Graphics.Manifold.Core
+﻿namespace Barebone.Graphics.Manifold.Core
 {
-    public sealed class Path : Poolable
-    {
-        public BBList<int> SegmentIndices { get; private set; } = null!;
-        protected internal override void Construct()
-        {
-            SegmentIndices = Pool.Rent<BBList<int>>();
-        }
-
-        protected internal override void Destruct()
-        {
-            SegmentIndices.Return();
-        }
-    }
+    /// <summary>
+    /// We use the convention that Paths must be ordered sequences of segments, so we don't need to store wasteful arrays of segment indices.
+    /// </summary>
+    public record struct Path(int Idx, int FirstSegmentIdx, int LastSegmentIdx);
 }

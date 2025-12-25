@@ -1,4 +1,6 @@
-﻿using Barebone.Pools;
+﻿using System.ComponentModel.DataAnnotations;
+using System.Data;
+using Barebone.Pools;
 
 namespace Barebone.Graphics.Manifold.Core
 {
@@ -19,6 +21,26 @@ namespace Barebone.Graphics.Manifold.Core
         {
             Segments.Return();
             Attributes.Return();
+        }
+
+        public void Clear()
+        {
+            Segments.Clear();
+            Attributes.Clear();
+        }
+
+        public int AddSegment(int aIdx, int bIdx)
+        {
+            var idx = Segments.Count;
+            Segments.Add(new Segment(idx, SegmentType.Line, aIdx, bIdx, -1, -1));
+            return idx;
+        }
+
+        public void CloneTo(SegmentSet dest)
+        {
+            dest.Segments.Clear();
+            dest.Segments.AddBBList(Segments);
+            Attributes.CloneTo(dest.Attributes);
         }
     }
 }

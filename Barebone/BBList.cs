@@ -319,5 +319,11 @@ namespace Barebone
             if (Count == 0) throw new Exception("Cannot peek on an empty BBList");
             return InternalArray[Count - 1];
         }
+
+        public T this[int idx]
+        {
+            get => throw new Exception("Use AsReadOnlySpan() for much beter performance.");
+            set => throw new Exception("Use AsSpan() for much better performance.");
+        }
     }
 }

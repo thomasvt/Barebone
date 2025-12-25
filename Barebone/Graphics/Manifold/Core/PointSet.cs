@@ -1,4 +1,5 @@
-﻿using Barebone.Pools;
+﻿using System.Numerics;
+using Barebone.Pools;
 
 namespace Barebone.Graphics.Manifold.Core
 {
@@ -18,6 +19,26 @@ namespace Barebone.Graphics.Manifold.Core
         {
             Points.Return();
             Attributes.Return();
+        }
+
+        public void Clear()
+        {
+            Points.Clear();
+            Attributes.Clear();
+        }
+
+        public int AddPoint(Vector2 position)
+        {
+            var idx = Points.Count;
+            Points.Add(new Point(idx, position));
+            return idx;
+        }
+
+        public void CloneTo(PointSet dest)
+        {
+            dest.Points.Clear();
+            dest.Points.AddBBList(Points);
+            Attributes.CloneTo(dest.Attributes);
         }
     }
 

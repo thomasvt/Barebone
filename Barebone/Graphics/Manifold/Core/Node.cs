@@ -5,7 +5,7 @@ namespace Barebone.Graphics.Manifold.Core
     public abstract class Node : Poolable
     {
         protected List<IParameter> Parameters = new();
-        private Geometry? _cachedOutput;
+        private Geometry? _output;
 
         protected internal override void Construct()
         {
@@ -14,8 +14,8 @@ namespace Barebone.Graphics.Manifold.Core
 
         protected internal override void Destruct()
         {
-            _cachedOutput?.Return();
-            _cachedOutput = null;
+            _output?.Return();
+            _output = null;
         }
 
         public bool IsDirty
@@ -53,17 +53,22 @@ namespace Barebone.Graphics.Manifold.Core
         /// </summary>
         public Geometry GetResult()
         {
-            if (_cachedOutput != null && !IsDirty) 
-                return _cachedOutput;
+            if (_output != null && !IsDirty)
+                return _output;
 
-            _cachedOutput?.Return();
-            _cachedOutput = null;
+            if (_output == null)
+            {
+                _output = Geometry.RentNew();
+            }
+            else
+            {
+                // we reuse already allocated capacity, but clear out the contents
+                _output.Clear();
+            }
 
-            var output = Geometry.RentNew();
-            Cook(output);
-            _cachedOutput = output;
+            Cook(_output);
             ResetIsDirty();
-            return output;
+            return _output;
         }
 
         private void ResetIsDirty()

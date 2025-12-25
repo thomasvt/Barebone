@@ -19,5 +19,25 @@ namespace Barebone.Graphics.Manifold.Core
             Shapes.Return();
             Attributes.Return();
         }
+
+        public void Clear()
+        {
+            Shapes.Clear();
+            Attributes.Clear();
+        }
+
+        public void CloneTo(ShapeSet dest)
+        {
+            dest.Shapes.Clear();
+            dest.Shapes.AddBBList(Shapes);
+            Attributes.CloneTo(dest.Attributes);
+        }
+
+        public int AddShape(int pathIdx)
+        {
+            var idx = Shapes.Count;
+            Shapes.Add(new(idx, pathIdx));
+            return idx;
+        }
     }
 }

@@ -7,5 +7,5 @@
         CubicBezier
     }
 
-    public record struct Segment(SegmentType Type, int Point0, int Point1, int ControlPoint0, int ControlPoint1);
+    public record struct Segment(int Idx, SegmentType Type, int PointIdx0, int PointIdx1, int ControlPointIdx0, int ControlPointIdx1);
 }

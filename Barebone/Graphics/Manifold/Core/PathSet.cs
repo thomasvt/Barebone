@@ -15,10 +15,28 @@ namespace Barebone.Graphics.Manifold.Core
 
         protected internal override void Destruct()
         {
-            foreach (var item in Paths.AsReadOnlySpan())
-                item.Return();
             Paths.Return();
             Attributes.Return();
+        }
+
+        public void Clear()
+        {
+            Paths.Clear();
+            Attributes.Clear();
+        }
+
+        public void CloneTo(PathSet dest)
+        {
+            dest.Paths.Clear();
+            dest.Paths.AddBBList(Paths);;
+            Attributes.CloneTo(dest.Attributes);
+        }
+
+        public int AddPath(int firstSegmentIdx, int lastSegmentIdx)
+        {
+            var idx = Paths.Count;
+            Paths.Add(new Path(idx, firstSegmentIdx, lastSegmentIdx));
+            return idx;
         }
     }
 }

@@ -42,11 +42,25 @@ namespace Barebone.Graphics.Manifold.Core
 
         protected internal override void Destruct()
         {
+            Clear();
+        }
+
+        public void Clear()
+        {
             foreach (var attributeArray in _attributes.Values)
             {
                 attributeArray.Return();
             }
             _attributes.Clear();
+        }
+
+        public void CloneTo(AttributeSet dest)
+        {
+            dest.Clear();
+            foreach (var (name, attributeArray) in _attributes)
+            {
+                dest._attributes.Add(name, attributeArray.Clone());
+            }
         }
     }
 }
