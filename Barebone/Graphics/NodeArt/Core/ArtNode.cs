@@ -2,10 +2,10 @@
 
 namespace Barebone.Graphics.NodeArt.Core
 {
-    public abstract class NaNode : Poolable
+    public abstract class ArtNode : Poolable
     {
         protected List<INaParameter> Parameters = new();
-        private NaGeometry? _output;
+        private ArtGeometry? _output;
 
         protected internal override void Construct()
         {
@@ -39,9 +39,9 @@ namespace Barebone.Graphics.NodeArt.Core
             parameter.ValueChange += () => IsDirty = true;
         }
 
-        protected NaParameter<T> DefineParameter<T>(T? defaultValue = default)
+        protected ArtParameter<T> DefineParameter<T>(T? defaultValue = default)
         {
-            var p = new NaParameter<T>(defaultValue);
+            var p = new ArtParameter<T>(defaultValue);
             p.ValueChange += () => IsDirty = true;
             Parameters.Add(p);
             return p;
@@ -50,14 +50,14 @@ namespace Barebone.Graphics.NodeArt.Core
         /// <summary>
         /// Cooks the node and returns the resulting geometry. Reuses earlier results if no inputs have changed.
         /// </summary>
-        public NaGeometry GetResult()
+        public ArtGeometry GetResult()
         {
             if (_output != null && !IsDirty)
                 return _output;
 
             if (_output == null)
             {
-                _output = NaGeometry.RentNew();
+                _output = ArtGeometry.RentNew();
             }
             else
             {
@@ -70,6 +70,6 @@ namespace Barebone.Graphics.NodeArt.Core
             return _output;
         }
 
-        protected abstract void Cook(in NaGeometry output);
+        protected abstract void Cook(in ArtGeometry output);
     }
 }

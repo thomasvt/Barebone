@@ -3,13 +3,13 @@ using Barebone.Graphics.NodeArt.Core;
 
 namespace Barebone.Graphics.NodeArt
 {
-    public class CircleNode : NaNode
+    public class CircleNode : ArtNode
     {
-        public NaParameter<float> Radius { get; }
-        public NaParameter<float> MinAngle { get; }
-        public NaParameter<float> MaxAngle { get; }
-        public NaParameter<int> SegmentCount { get; }
-        public NaParameter<float> Rotation { get; }
+        public ArtParameter<float> Radius { get; }
+        public ArtParameter<float> MinAngle { get; }
+        public ArtParameter<float> MaxAngle { get; }
+        public ArtParameter<int> SegmentCount { get; }
+        public ArtParameter<float> Rotation { get; }
 
         public CircleNode()
         {
@@ -20,7 +20,7 @@ namespace Barebone.Graphics.NodeArt
             Rotation = DefineParameter(0f);
         }
 
-        protected override void Cook(in Core.NaGeometry output)
+        protected override void Cook(in Core.ArtGeometry output)
         {
             if (Radius.Value <= 0f || SegmentCount.Value < 3)
                 throw new Exception("Circle must have Radius > 0 and SegmentCount > 2");

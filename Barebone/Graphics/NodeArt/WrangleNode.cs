@@ -2,20 +2,20 @@
 
 namespace Barebone.Graphics.NodeArt
 {
-    public class PointWrangleNode : NaNode
+    public class PointWrangleNode : ArtNode
     {
         public delegate void PointWrangleDelegate(ref Point point);
 
-        public NaParameter<PointWrangleDelegate> Delegate { get; set; }
-        public NaParameter<NaNode> Input { get; set; }
+        public ArtParameter<PointWrangleDelegate> Delegate { get; set; }
+        public ArtParameter<ArtNode> Input { get; set; }
 
         public PointWrangleNode()
         {
             Delegate = DefineParameter<PointWrangleDelegate>();
-            Input = DefineParameter<NaNode>();
+            Input = DefineParameter<ArtNode>();
         }
 
-        protected override void Cook(in NaGeometry output)
+        protected override void Cook(in ArtGeometry output)
         {
             if (Input.Value == null) throw new Exception("Node has no Input.");
 

@@ -11,7 +11,7 @@ namespace Barebone.Graphics.NodeArt.Drawers
     /// <summary>
     /// Converts Manifold output to GPU renderable triangles to visualize points, segments and filled shapes. Is supposed to be rendered without depth buffer.
     /// </summary>
-    public class DebugNaDrawer
+    public class DebugArtDrawer
     {
         private readonly Triangulator _triangulator = new();
         private readonly BBList<Vector2> _cornerBuffer = new();
@@ -30,7 +30,7 @@ namespace Barebone.Graphics.NodeArt.Drawers
         /// <summary>
         /// Tesselates the given geometry into triangles for GPU rendering and appends them to your triangle buffer.
         /// </summary>
-        public void Draw(in BBList<GpuTexTriangle> buffer, in Core.NaGeometry geometry)
+        public void Draw(in BBList<GpuTexTriangle> buffer, in Core.ArtGeometry geometry)
         {
             var points = geometry.PointSet.Points.AsReadOnlySpan();
 
@@ -93,7 +93,7 @@ namespace Barebone.Graphics.NodeArt.Drawers
             }
         }
 
-        private static void AssembleShapeCorners(BBList<Vector2> buffer, Core.NaGeometry geometry, Shape shape, ReadOnlySpan<Point> points)
+        private static void AssembleShapeCorners(BBList<Vector2> buffer, Core.ArtGeometry geometry, Shape shape, ReadOnlySpan<Point> points)
         {
             buffer.Clear();
             var paths = geometry.PathSet.Paths.AsReadOnlySpan();

@@ -3,14 +3,14 @@
 namespace Barebone.Geometry.Curves
 {
     /// <summary>
-    /// Cubic Bezier curve (2 points, 2 handle points). X0 and X3 are the endpoints, X1 and X2 are the handles. A, B and C are the parameters of the 3rd grade polynomials defining fx(t) and fy(t). 
+    /// Cubic Bezier curve (2 points, 2 handle points). p0 and p3 are the endpoints, p1 and p2 are the handles. A, B and C are the parameters of the 3rd grade polynomials defining fx(t) and fy(t). 
     /// </summary>
     public readonly struct BezierCurve(Vector2 p0, Vector2 p1, Vector2 p2, Vector2 p3)
     {
         public readonly Vector2 P0 = p0, P1 = p1, P2 = p2, P3 = p3;
 
         /// <summary>
-        /// Converts the curve into a chain of straigh-line segments and returns those points.
+        /// Converts the curve into a chain of straight-line segments and returns those points.
         /// </summary>
         public IEnumerable<Vector2> CalculateLineSegments(int segmentCount)
         {
@@ -67,7 +67,7 @@ namespace Barebone.Geometry.Curves
         }
 
         /// <summary>
-        /// Returns a bezier from (0,0) to (1,1) with provided bezier handles to be used in animations.
+        /// Returns a bezier from (0,0) to (1,1) with provided bezier handles (global positions) to be used in animations.
         /// </summary>
         public static BezierCurve GetEasingCurve(in Vector2 inHandle, in Vector2 outHandle)
         {

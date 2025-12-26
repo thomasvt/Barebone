@@ -2,7 +2,7 @@
 
 namespace Barebone.Graphics.NodeArt.Core
 {
-    public sealed class NaGeometry : Poolable
+    public sealed class ArtGeometry : Poolable
     {
         public PointSet PointSet { get; private set; } = null!;
         public SegmentSet SegmentSet { get; private set; } = null!;
@@ -28,15 +28,15 @@ namespace Barebone.Graphics.NodeArt.Core
             GlobalAttributes.Return();
         }
 
-        public static NaGeometry RentNew()
+        public static ArtGeometry RentNew()
         {
-            return Pool.Rent<NaGeometry>();
+            return Pool.Rent<ArtGeometry>();
         }
 
         /// <summary>
         /// Makes destination a deep clone of this geometry.
         /// </summary>
-        public void CloneTo(in NaGeometry destination)
+        public void CloneTo(in ArtGeometry destination)
         {
             PointSet.CloneTo(destination.PointSet);
             SegmentSet.CloneTo(destination.SegmentSet);

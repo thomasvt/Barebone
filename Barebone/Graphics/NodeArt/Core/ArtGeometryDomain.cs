@@ -1,7 +1,7 @@
 ﻿
 namespace Barebone.Graphics.NodeArt.Core
 {
-    public enum GeometryDomain
+    public enum ArtGeometryDomain
     {
         Point,
         Segment,

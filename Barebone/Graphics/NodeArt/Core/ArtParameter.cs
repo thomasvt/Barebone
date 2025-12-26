@@ -10,7 +10,7 @@
         event Action? ValueChange;
     }
 
-    public class NaParameter<T>(T? defaultValue) : INaParameter
+    public class ArtParameter<T>(T? defaultValue) : INaParameter
     {
         public T? Value {
             get;

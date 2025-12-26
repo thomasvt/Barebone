@@ -4,7 +4,7 @@
     {
         // (Bezier calculation was uncharted territory for me, so I added a lot of comment here for my future ignorant self. Please let me know if you know a better way to do this)
 
-        // Bezier curves are not just mathematical functions f(t). They can have multiple points at a single value of t, eg. they can form a looping. Single math functions cannot model that.
+        // Bezier curves are not just mathematical functions f(x). They can have multiple points at a single value of t, eg. they can form a looping. Single math functions cannot model that.
 
         // Instead, Bezier curves are a combination of two math functions fx(s) and fy(s) where each 2D point on the curve is (x,y) = (fx(s), fy(s)) 
         // The function definitions and their parameters (and how to calculate them from all 4 Bezier points) can be found here:
@@ -13,7 +13,7 @@
         // A problem with bezier curves is that they get calculated per s, where s is not one of the axes, but the distance ALONG the CURVE itself. So, if you imagine a bezier curve to be a rope,
         // s is the percentage distance along that rope. The fx(s) and fy(s) functions then return the X and Y position of where the corresponding point on the rope is.
 
-        // Therfore, when we need to find Y values for a given point on X, we can't just use those functions.
+        // Therefore, when we need to find Y values for a given point on X, we can't just use those functions.
 
         // We need to use 2 steps:
         // 1. use fx(s) to find s at a certain X - this is not straight forward as we want the opposite of what fx(s) does: we need the input s where output x is a known value.
