@@ -113,16 +113,14 @@ namespace Barebone.Pools
         private readonly BBList<T> _freeList = new();
 
         /// <summary>
-        /// Preallocates a number of objects for later renting.
+        /// Pre-allocates a number of objects for later renting.
         /// </summary>
         public void Reserve(int count)
         {
             var idx = _freeList.Count;
-            _freeList.EnsureCapacity(_freeList.Count + count);
+            _freeList.SetFixedCount(_freeList.Count + count, false);
             for (var i = 0; i < count; i++)
                 _freeList.InternalArray[idx + i] = new T();
-                
-            _freeList.Count += count;
         }
 
         public T Rent()

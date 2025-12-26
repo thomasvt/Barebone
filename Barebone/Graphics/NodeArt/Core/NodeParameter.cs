@@ -1,6 +1,6 @@
 ﻿namespace Barebone.Graphics.NodeArt.Core
 {
-    public interface INaParameter
+    public interface INodeParameter
     {
         /// <summary>
         /// Resets this parameter to its default value.
@@ -10,8 +10,10 @@
         event Action? ValueChange;
     }
 
-    public class ArtParameter<T>(T? defaultValue) : INaParameter
+    public class NodeParameter<T>(string name, T? defaultValue) : INodeParameter
     {
+        public string Name { get; } = name;
+
         public T? Value {
             get;
             set
@@ -29,5 +31,11 @@
         }
 
         public event Action? ValueChange;
+
+        public T GetValueOrThrow()
+        {
+            if (Value == null) throw new Exception($"Parameter '{Name}' is not set.");
+            return Value!;
+        }
     }
 }

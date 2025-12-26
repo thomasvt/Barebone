@@ -1,4 +1,6 @@
 ﻿using Barebone.Pools;
+using System.Diagnostics.Contracts;
+using System.Xml.Linq;
 
 namespace Barebone.Graphics.NodeArt.Core
 {
@@ -10,18 +12,22 @@ namespace Barebone.Graphics.NodeArt.Core
         // todo Make a poolable Dictionary
         private readonly Dictionary<string, IAttributeArray> _attributes = new();
 
-        public AttributeArray<T> RegisterAttribute<T>(string name, int capacity) where T : struct
-        {
-            var attributeArray = Pool.Rent<AttributeArray<T>>();
-            attributeArray.Name = name;
-            attributeArray.EnsureCapacity(capacity);
-            _attributes[name] = attributeArray;
-            return attributeArray;
-        }
-
         public AttributeArray<T> Get<T>(string name) where T : struct
         {
             return (AttributeArray<T>)_attributes[name];
+        }
+
+        public AttributeArray<T> GetOrCreate<T>(string name, int size) where T : struct
+        {
+            if (!_attributes.ContainsKey(name))
+            {
+                var attributeArray = Pool.Rent<AttributeArray<T>>();
+                attributeArray.Name = name;
+                attributeArray.SetSize(size);
+                _attributes[name] = attributeArray;
+            }
+
+            return Get<T>(name);
         }
 
         public bool TryGet<T>(string name, out AttributeArray<T>? attribute) where T : struct
@@ -38,7 +44,7 @@ namespace Barebone.Graphics.NodeArt.Core
 
         protected internal override void Construct()
         {
-            _attributes.Clear(); // todo make poolable dictionary
+            
         }
 
         protected internal override void Destruct()
@@ -48,9 +54,6 @@ namespace Barebone.Graphics.NodeArt.Core
 
         public void Clear()
         {
-            // cant we reuse the named arrays during the lifetime of the owner node? This prevents reallocating while the same 
-            // attributes are used for each cook anyway. 
-
             foreach (var attributeArray in _attributes.Values)
             {
                 attributeArray.Return();
@@ -58,12 +61,23 @@ namespace Barebone.Graphics.NodeArt.Core
             _attributes.Clear();
         }
 
-        public void CloneTo(AttributeSet dest)
+        /// <summary>
+        /// Makes the dest contain the exact same attributes and data as this one.
+        /// </summary>
+        public void CloneInto(AttributeSet dest)
         {
             dest.Clear();
-            foreach (var (name, attributeArray) in _attributes)
+            foreach (var arr in _attributes.Values)
             {
-                dest._attributes.Add(name, attributeArray.Clone());
+                dest._attributes.Add(arr.Name, arr.Clone());
+            }
+        }
+
+        public void SetItemCount(int count)
+        {
+            foreach (var arr in _attributes.Values)
+            {
+                arr.SetSize(count);
             }
         }
     }

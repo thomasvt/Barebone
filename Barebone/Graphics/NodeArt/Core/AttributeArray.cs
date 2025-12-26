@@ -10,6 +10,9 @@ namespace Barebone.Graphics.NodeArt.Core
        /// Returns a newly rented deep clone.
        /// </summary>
        IAttributeArray Clone();
+
+       void SetSize(int size);
+       void Clear();
     }
 
     public sealed class AttributeArray<T> : Poolable, IAttributeArray where T : struct
@@ -24,6 +27,11 @@ namespace Barebone.Graphics.NodeArt.Core
             clone.EnsureCapacity(Values.Count);
             clone.Values.AddBBList(Values);
             return clone;
+        }
+
+        public void Clear()
+        {
+            Values.Clear();
         }
 
         protected internal override void Construct()
@@ -45,5 +53,28 @@ namespace Barebone.Graphics.NodeArt.Core
         {
             return Values.AsSpan();
         }
+
+        public T Get(int idx)
+        {
+            if (idx < 0 || idx >= Values.Count)
+                throw new IndexOutOfRangeException($"Index {idx} is out of range [0..{Values.Count})");
+
+            return Values.InternalArray[idx];
+        }
+
+        public void Set(int idx, T value)
+        {
+            if (idx < 0 || idx >= Values.Count)
+                throw new IndexOutOfRangeException($"Index {idx} is out of range [0..{Values.Count})");
+
+            Values.InternalArray[idx] = value;
+        }
+
+        public void SetSize(int size)
+        {
+            Values.SetFixedCount(size, true);
+        }
+
+        public int Size => Values.Count;
     }
 }

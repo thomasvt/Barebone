@@ -30,17 +30,17 @@ namespace Barebone.Graphics.NodeArt.Drawers
         /// <summary>
         /// Tesselates the given geometry into triangles for GPU rendering and appends them to your triangle buffer.
         /// </summary>
-        public void Draw(in BBList<GpuTexTriangle> buffer, in Core.ArtGeometry geometry)
+        public void Draw(in BBList<GpuTexTriangle> buffer, in GeometrySet geometry)
         {
-            var points = geometry.PointSet.Points.AsReadOnlySpan();
+            var points = geometry.PointSet.Items;
 
-            foreach (var shape in geometry.ShapeSet.Shapes.AsReadOnlySpan())
+            foreach (var shape in geometry.ShapeSet.Items)
             {
                 AssembleShapeCorners(_cornerBuffer, geometry, shape, points);
-                DrawPolygon(buffer, _cornerBuffer);
+                FillPolygon(buffer, _cornerBuffer);
             }
 
-            foreach (var segment in geometry.SegmentSet.Segments.AsReadOnlySpan())
+            foreach (var segment in geometry.SegmentSet.Items)
             {
                 var p0 = points[segment.PointIdx0];
                 var p1 = points[segment.PointIdx1];
@@ -80,7 +80,7 @@ namespace Barebone.Graphics.NodeArt.Drawers
             triangleBuffer.Add(new(a, c, d));
         }
 
-        private void DrawPolygon(in BBList<GpuTexTriangle> triangleBuffer, in BBList<Vector2> corners)
+        private void FillPolygon(in BBList<GpuTexTriangle> triangleBuffer, in BBList<Vector2> corners)
         {
             var cornerSpan = corners.AsReadOnlySpan();
             foreach (var triangle in _triangulator.Triangulate(_cornerBuffer.AsArraySegment()))
@@ -93,12 +93,12 @@ namespace Barebone.Graphics.NodeArt.Drawers
             }
         }
 
-        private static void AssembleShapeCorners(BBList<Vector2> buffer, Core.ArtGeometry geometry, Shape shape, ReadOnlySpan<Point> points)
+        private static void AssembleShapeCorners(BBList<Vector2> buffer, Core.GeometrySet geometry, Shape shape, ReadOnlySpan<Point> points)
         {
             buffer.Clear();
-            var paths = geometry.PathSet.Paths.AsReadOnlySpan();
+            var paths = geometry.PathSet.Items;
             var path = paths[shape.PathIdx];
-            var segments = geometry.SegmentSet.Segments.AsReadOnlySpan();
+            var segments = geometry.SegmentSet.Items;
             for (var segmentIdx = path.FirstSegmentIdx; segmentIdx <= path.LastSegmentIdx; segmentIdx++)
             {
                 var segment = segments[segmentIdx];

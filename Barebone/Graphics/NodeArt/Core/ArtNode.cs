@@ -4,8 +4,8 @@ namespace Barebone.Graphics.NodeArt.Core
 {
     public abstract class ArtNode : Poolable
     {
-        protected List<INaParameter> Parameters = new();
-        private ArtGeometry? _output;
+        protected List<INodeParameter> Parameters = new();
+        private GeometrySet? _output;
 
         protected internal override void Construct()
         {
@@ -34,14 +34,14 @@ namespace Barebone.Graphics.NodeArt.Core
         /// <summary>
         /// You must call this for all external parameters that should invalidate the previous cooking output when their value changes.
         /// </summary>
-        public void DependsOn(INaParameter parameter)
+        public void DependsOn(INodeParameter parameter)
         {
             parameter.ValueChange += () => IsDirty = true;
         }
 
-        protected ArtParameter<T> DefineParameter<T>(T? defaultValue = default)
+        protected NodeParameter<T> DefineParameter<T>(string name, T? defaultValue = default)
         {
-            var p = new ArtParameter<T>(defaultValue);
+            var p = new NodeParameter<T>(name, defaultValue);
             p.ValueChange += () => IsDirty = true;
             Parameters.Add(p);
             return p;
@@ -50,19 +50,19 @@ namespace Barebone.Graphics.NodeArt.Core
         /// <summary>
         /// Cooks the node and returns the resulting geometry. Reuses earlier results if no inputs have changed.
         /// </summary>
-        public ArtGeometry GetResult()
+        public GeometrySet GetResult()
         {
             if (_output != null && !IsDirty)
                 return _output;
 
             if (_output == null)
             {
-                _output = ArtGeometry.RentNew();
+                _output = GeometrySet.RentNew();
             }
             else
             {
                 // we reuse already allocated capacity, but clear out the contents
-                _output.Clear();
+                _output.SetItemCountsToZero();
             }
 
             Cook(_output);
@@ -70,6 +70,6 @@ namespace Barebone.Graphics.NodeArt.Core
             return _output;
         }
 
-        protected abstract void Cook(in ArtGeometry output);
+        protected abstract void Cook(in GeometrySet output);
     }
 }

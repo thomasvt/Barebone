@@ -2,13 +2,12 @@
 
 namespace Barebone.Graphics.NodeArt.Core
 {
-    public sealed class ArtGeometry : Poolable
+    public sealed class GeometrySet : Poolable
     {
         public PointSet PointSet { get; private set; } = null!;
         public SegmentSet SegmentSet { get; private set; } = null!;
         public PathSet PathSet { get; private set; } = null!;
         public ShapeSet ShapeSet { get; private set; } = null!;
-        public AttributeSet GlobalAttributes { get; private set; } = null!;
 
         protected internal override void Construct()
         {
@@ -16,7 +15,6 @@ namespace Barebone.Graphics.NodeArt.Core
             SegmentSet = Pool.Rent<SegmentSet>();
             PathSet = Pool.Rent<PathSet>();
             ShapeSet = Pool.Rent<ShapeSet>();
-            GlobalAttributes = Pool.Rent<AttributeSet>();
         }
 
         protected internal override void Destruct()
@@ -25,33 +23,30 @@ namespace Barebone.Graphics.NodeArt.Core
             SegmentSet.Return();
             PathSet.Return();
             ShapeSet.Return();
-            GlobalAttributes.Return();
         }
 
-        public static ArtGeometry RentNew()
+        public static GeometrySet RentNew()
         {
-            return Pool.Rent<ArtGeometry>();
+            return Pool.Rent<GeometrySet>();
         }
 
         /// <summary>
         /// Makes destination a deep clone of this geometry.
         /// </summary>
-        public void CloneTo(in ArtGeometry destination)
+        public void CloneInto(in GeometrySet destination)
         {
-            PointSet.CloneTo(destination.PointSet);
-            SegmentSet.CloneTo(destination.SegmentSet);
-            PathSet.CloneTo(destination.PathSet);
-            ShapeSet.CloneTo(destination.ShapeSet);
-            GlobalAttributes.CloneTo(destination.GlobalAttributes);
+            PointSet.CloneInto(destination.PointSet);
+            SegmentSet.CloneInto(destination.SegmentSet);
+            PathSet.CloneInto(destination.PathSet);
+            ShapeSet.CloneInto(destination.ShapeSet);
         }
 
-        public void Clear()
+        public void SetItemCountsToZero()
         {
-            PointSet.Clear();
-            SegmentSet.Clear();
-            PathSet.Clear();
-            ShapeSet.Clear();
-            GlobalAttributes.Clear();
+            PointSet.SetSize(0);
+            SegmentSet.SetSize(0);
+            PathSet.SetSize(0);
+            ShapeSet.SetSize(0);
         }
     }
 }

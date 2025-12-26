@@ -15,7 +15,7 @@ namespace Barebone
     public class BBList<T> : Poolable
     {
         private T[] _items = [];
-        public int Count { get; internal set; }
+        public int Count { get; private set; }
 
         protected internal override void Construct()
         {
@@ -324,6 +324,19 @@ namespace Barebone
         {
             get => throw new Exception("Use AsReadOnlySpan() for much beter performance.");
             set => throw new Exception("Use AsSpan() for much better performance.");
+        }
+
+        /// <summary>
+        /// Sets the list to a fixed number of items. Existing items within that range remain,
+        /// New slots are initialized with default values if 'clearNewSlots' is true.
+        /// </summary>
+        public void SetFixedCount(int count, bool clearNewSlots)
+        {
+            EnsureCapacity(count);
+            var oldCount = Count;
+            Count = count;
+            if (oldCount < Count)
+                AsSpan()[oldCount..].Clear();
         }
     }
 }

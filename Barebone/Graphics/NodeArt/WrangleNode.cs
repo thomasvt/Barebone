@@ -6,28 +6,21 @@ namespace Barebone.Graphics.NodeArt
     {
         public delegate void PointWrangleDelegate(ref Point point);
 
-        public ArtParameter<PointWrangleDelegate> Delegate { get; set; }
-        public ArtParameter<ArtNode> Input { get; set; }
+        public NodeParameter<PointWrangleDelegate> Delegate { get; set; }
+        public NodeParameter<ArtNode> Input { get; set; }
 
         public PointWrangleNode()
         {
-            Delegate = DefineParameter<PointWrangleDelegate>();
-            Input = DefineParameter<ArtNode>();
+            Delegate = DefineParameter<PointWrangleDelegate>(nameof(Delegate));
+            Input = DefineParameter<ArtNode>(nameof(Input));
         }
 
-        protected override void Cook(in ArtGeometry output)
+        protected override void Cook(in GeometrySet output)
         {
-            if (Input.Value == null) throw new Exception("Node has no Input.");
+            Input.GetValueOrThrow().GetResult().CloneInto(output);
+            var wrangle = Delegate.GetValueOrThrow();
 
-            var input = Input.Value.GetResult();
-            var wrangle = Delegate.Value;
-
-            input.CloneTo(output);
-
-            if (wrangle == null)
-                return;
-
-            foreach (ref var p in output.PointSet.Points.AsSpan())
+            foreach (ref var p in output.PointSet.Items)
                 wrangle(ref p);
         }
     }
