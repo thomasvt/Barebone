@@ -50,7 +50,7 @@ namespace Barebone.Graphics.NodeArt.Core
         /// <summary>
         /// Cooks the node and returns the resulting geometry. Reuses earlier results if no inputs have changed.
         /// </summary>
-        public GeometrySet GetResult()
+        public virtual GeometrySet GetResult()
         {
             if (_output != null && !IsDirty)
                 return _output;
