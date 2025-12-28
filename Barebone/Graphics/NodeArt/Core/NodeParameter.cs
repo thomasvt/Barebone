@@ -6,8 +6,6 @@
         /// Resets this parameter to its default value.
         /// </summary>
         void ResetToDefault();
-
-        event Action? ValueChange;
     }
 
     public class NodeParameter<T>(string name, T? defaultValue) : INodeParameter
@@ -21,7 +19,6 @@
                 if (Equals(field, value)) return;
 
                 field = value;
-                ValueChange?.Invoke();
             }
         }
 
@@ -29,8 +26,6 @@
         {
             Value = defaultValue;
         }
-
-        public event Action? ValueChange;
 
         public T GetValueOrThrow()
         {

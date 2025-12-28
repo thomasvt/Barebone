@@ -8,7 +8,7 @@ using Point = Barebone.Graphics.NodeArt.Core.Point;
 
 namespace Barebone.Graphics.NodeArt.Drawers
 {
-    public class ArtDrawer
+    public class NodeArtTesselator
     {
         private readonly Triangulator _triangulator = new();
         private readonly BBList<Vector2> _polygonBuffer = new();
@@ -16,7 +16,7 @@ namespace Barebone.Graphics.NodeArt.Drawers
         /// <summary>
         /// Tesselates the given geometry into triangles for GPU rendering and appends them to your triangle buffer.
         /// </summary>
-        public void Draw(in BBList<GpuTexTriangle> buffer, in GeometrySet geometry)
+        public void Tesselate(in GeometrySet geometry, in BBList<GpuTexTriangle> triangleBuffer)
         {
             var points = geometry.PointSet.Items;
 
@@ -32,7 +32,7 @@ namespace Barebone.Graphics.NodeArt.Drawers
                 {
                     var color = fillColors.Get(shape.Idx);
                     if (color.A > 0)
-                        FillPolygon(buffer, _polygonBuffer, color.ToGpuColor());
+                        FillPolygon(triangleBuffer, _polygonBuffer, color.ToGpuColor());
                 }
 
             }

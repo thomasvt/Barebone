@@ -107,6 +107,11 @@ namespace Barebone.Monogame
             Draw(worldTransform, mesh.Triangles.AsReadOnlySpan());
         }
 
+        public void Draw(in Matrix4x4 worldTransform, in TexMesh mesh)
+        {
+            Draw(worldTransform, mesh.Triangles.AsReadOnlySpan(), mesh.Texture);
+        }
+
         public void Draw(in Matrix4x4 worldTransform, in ReadOnlySpan<GpuTriangle> triangles)
         {
             if (triangles.Length == 0 || _camera == null) return;

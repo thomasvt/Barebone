@@ -14,9 +14,9 @@ namespace Barebone.Graphics.NodeArt
             Color = DefineParameter(nameof(Color), System.Drawing.Color.White);
         }
 
-        protected override void Cook(in GeometrySet output)
+        protected override void CookInternal(in GeometrySet output)
         {
-            Input.GetValueOrThrow().GetResult().CloneInto(output);
+            Input.GetValueOrThrow().Cook().CloneInto(output);
 
             var colorArray = output.ShapeSet.GetOrCreateAttributeArray<Color>("color");
             foreach (var shape in output.ShapeSet.Items)

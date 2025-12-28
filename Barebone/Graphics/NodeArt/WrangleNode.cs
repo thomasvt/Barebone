@@ -15,9 +15,9 @@ namespace Barebone.Graphics.NodeArt
             Input = DefineParameter<ArtNode>(nameof(Input));
         }
 
-        protected override void Cook(in GeometrySet output)
+        protected override void CookInternal(in GeometrySet output)
         {
-            Input.GetValueOrThrow().GetResult().CloneInto(output);
+            Input.GetValueOrThrow().Cook().CloneInto(output);
             var wrangle = Delegate.GetValueOrThrow();
 
             foreach (ref var p in output.PointSet.Items)

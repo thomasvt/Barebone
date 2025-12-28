@@ -21,7 +21,7 @@ namespace Barebone.Graphics.NodeArt
             Rotation = DefineParameter(nameof(Rotation), 0f);
         }
 
-        protected override void Cook(in GeometrySet output)
+        protected override void CookInternal(in GeometrySet output)
         {
             if (Radius.Value <= 0f || SegmentCount.Value < 3)
                 throw new Exception("Circle must have Radius > 0 and SegmentCount > 2");
