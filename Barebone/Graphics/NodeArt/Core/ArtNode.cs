@@ -5,7 +5,7 @@ namespace Barebone.Graphics.NodeArt.Core
     public abstract class ArtNode : Poolable
     {
         protected List<INodeParameter> Parameters = new();
-        public GeometrySet? Output = null!;
+        private GeometrySet? _output = null!;
 
         protected internal override void Construct()
         {
@@ -39,11 +39,11 @@ namespace Barebone.Graphics.NodeArt.Core
         /// </summary>
         public virtual GeometrySet Cook()
         {
-            Output?.Return();
-            Output = GeometrySet.RentNew();
+            _output?.Return();
+            _output = GeometrySet.RentNew();
 
-            CookInternal(Output);
-            return Output;
+            CookInternal(_output);
+            return _output;
         }
 
         protected abstract void CookInternal(in GeometrySet output);
