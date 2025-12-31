@@ -320,12 +320,6 @@ namespace Barebone
             return InternalArray[Count - 1];
         }
 
-        public T this[int idx]
-        {
-            get => throw new Exception("Use AsReadOnlySpan() for much beter performance.");
-            set => throw new Exception("Use AsSpan() for much better performance.");
-        }
-
         /// <summary>
         /// Sets the list to a fixed number of items. Existing items within that range remain,
         /// New slots are initialized with default values if 'clearNewSlots' is true.
