@@ -17,16 +17,15 @@ namespace Barebone.AI.Goap
         }
 
         /// <summary>
-        /// Yes No flags representing various attributes or bucket-membership describing the world.
-        /// </summary>
-        private ulong _flags;
-
-        /// <summary>
         /// Defines which bits in Flags are in use.
         /// </summary>
         private ulong _inUse;
 
         public int FlagCount => BitOperations.PopCount(_inUse);
+        /// <summary>
+        /// Yes No flags representing various attributes or bucket-membership describing the world.
+        /// </summary>
+        public ulong Flags { get; private set; }
 
         public void Set(int idx, bool value)
         {
@@ -34,9 +33,9 @@ namespace Barebone.AI.Goap
                 throw new IndexOutOfRangeException("WorldState flag index must be between 0 and 63.");
 
             // update Flags:
-            _flags &= ~(1ul << idx); // keep all except the bit at idx
+            Flags &= ~(1ul << idx); // keep all except the bit at idx
             if (value)
-                _flags |= 1ul << idx; // set the bit at idx to 1
+                Flags |= 1ul << idx; // set the bit at idx to 1
 
             // mark idx as used:
             _inUse |= 1ul << idx;
@@ -48,20 +47,21 @@ namespace Barebone.AI.Goap
         public bool Satisfies(WorldState specification)
         {
             // We assume there are no bugs in Set() and don't filter specification's _flags by its _inUse mask.
-            return specification._flags == (_flags & specification._inUse) // all used flags must match
+            return specification.Flags == (Flags & specification._inUse) // all used flags must match
                    && (specification._inUse & ~_inUse) == 0; // all InUse flags in specification must also be InUse in this WorldState
         }
 
         /// <summary>
-        /// Returns the count of flags that satisfy the corresponding flag in `specification`. 
+        /// Returns the number of flags 'specification' that are not satisfied by this WorldState. 
         /// </summary>
-        public byte GetScore(WorldState specification)
+        public int GetUnsatisfiedFlagCount(WorldState specification)
         {
-            var sameFlagValue = ~(_flags ^ specification._flags);
-            var sameFlagValueInUse = sameFlagValue 
+            var sameFlags = ~(Flags ^ specification.Flags);
+            var satisfiedFlags = sameFlags 
                                      & specification._inUse // do they matter to the specification?
                                      & _inUse; // prevent flags that are not InUse in this WorldState from accidentally having the right value
-            return (byte)BitOperations.PopCount(sameFlagValueInUse);
+            var satisfiedCount = BitOperations.PopCount(satisfiedFlags);
+            return specification.FlagCount - satisfiedCount;
         }
 
         /// <summary>
@@ -71,7 +71,7 @@ namespace Barebone.AI.Goap
         {
             var maskEffects = effects._inUse;
             var maskRemainder = ~maskEffects;
-            _flags = (maskRemainder & _flags) | (maskEffects & effects._flags);
+            Flags = (maskRemainder & Flags) | (maskEffects & effects.Flags);
         }
     }
 }

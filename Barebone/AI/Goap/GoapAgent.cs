@@ -5,7 +5,7 @@ namespace Barebone.AI.Goap
     public class GoapAgent : Poolable
     {
         private readonly List<GoapNode> _openList = new();
-        private readonly List<GoapNode> _nodeGarbage = new();
+        private readonly Dictionary<ulong, GoapNode> _existingNodes = new();
         private BBList<GoapAction> _planBuffer = null!;
         private BBList<GoapAction> _actions = null!;
 
@@ -46,7 +46,7 @@ namespace Barebone.AI.Goap
                 var currentAction = _planBuffer.InternalArray[_planStepIdx];
                 if (currentAction != _previousAction)
                 {
-                    Console.WriteLine("Start: " + currentAction.Name);
+                    Console.WriteLine(currentAction.Name);
                     currentAction.Start();
                 }
                 _planStepResult = currentAction.Update();
@@ -87,10 +87,16 @@ namespace Barebone.AI.Goap
         /// </summary>
         private void Plan(in IGoapPawn pawn, in int maxPlanLength)
         {
+            // We use AStar algorithm to find the cheapest path from the pawns current WorldState to the goal's WorldState.
+            // So each node on the graph is uniquely identified by the WorldState's Flags combination.
+            // The possible connections from one node to other nodes are the pawn's Actions for which the Preconditions are satisfies on that given node(=WorldState).
+            // The Score of each node is how many flags of the WorldState have the same value as the goal's Worldstate's flags.
+            // This score is therefore also used as heuristic to guide the path finding.
+            // If no perfect goal match is found, the highest Scoring one is chosen.
             
-            _nodeGarbage.Clear();
             _openList.Clear();
-            _planBuffer.Clear();
+            _planBuffer.Clear(); 
+            _existingNodes.Clear();
 
             var actions = _actions.AsReadOnlySpan();
             var worldState = pawn.GetWorldState();
@@ -103,8 +109,8 @@ namespace Barebone.AI.Goap
                 {
                     // initialize open list with current world state
                     var newNode = Pool.Rent<GoapNode>();
-                    _nodeGarbage.Add(newNode);
-                    newNode.Init(null, worldState, null, 0, worldState.GetScore(goal));
+                    newNode.Init(null, worldState, null, 0, 0, worldState.GetUnsatisfiedFlagCount(goal));
+                    _existingNodes.Add(newNode.State.Flags, newNode);
                     _openList.Add(newNode);
                 }
 
@@ -116,29 +122,44 @@ namespace Barebone.AI.Goap
 
                     if (currentNode.State.Satisfies(goal))
                     {
-                        // todo we may want to collect all optimal plans here instead of just the first one found.
+                        // todo we want to collect all plans instead of just the first one so we can pick the one with lowest cost.
                         // and then choose a random one among them.
                         winner = currentNode;
                         break;
                     }
 
                     // add all possible actions from here:
-                    if (currentNode.PlanLength < maxPlanLength)
+                    if (currentNode.PlanDepth < maxPlanLength)
                     {
                         foreach (var action in actions)
                         {
                             if (!action.Preconditions.Satisfies(currentNode.State)) continue;
+
                             var newState = currentNode.State;
                             newState.ApplyEffects(action.Effects);
 
+                            var planDepth = currentNode.PlanDepth + 1;
+                            var planCost = currentNode.PlanCost + action.Cost;
+                            var score = newState.GetUnsatisfiedFlagCount(goal);
+
+                            if (_existingNodes.TryGetValue(newState.Flags, out var existingNode))
+                            {
+                                // this node already visited.
+                                if (planCost < existingNode.PlanCost) // current path to this node is better?
+                                    existingNode.ChangeParent(currentNode, planDepth, planCost); // yes: adjust node data
+
+                                continue; // don't create a node that already exists.
+                            }
+                            
                             var newNode = Pool.Rent<GoapNode>();
-                            _nodeGarbage.Add(newNode);
-                            newNode.Init(action, newState, currentNode, currentNode.PlanLength + 1,
-                                newState.GetScore(goal));
+                            newNode.Init(action, newState, currentNode, planDepth, planCost, score);
+                            _existingNodes.Add(newNode.State.Flags, newNode);
+
                             _openList.Add(newNode);
                         }
 
-                        _openList.Sort(CompareScoreAscending);
+                        
+                        _openList.Sort(ByScoreDescending);
                     }
                 }
 
@@ -146,7 +167,7 @@ namespace Barebone.AI.Goap
                 if (winner != null)
                 {
                     // assemble winning plan: all actions in reverse order.
-                    var planLength = winner.PlanLength;
+                    var planLength = winner.PlanDepth;
                     _planBuffer.SetFixedCount(planLength, false);
                     var node = winner;
                     var i = planLength - 1;
@@ -160,17 +181,15 @@ namespace Barebone.AI.Goap
             }
 
             // cleanup:
-            foreach (var node in _nodeGarbage)
+            foreach (var node in _existingNodes.Values)
                 node.Return();
-            _nodeGarbage.Clear();
+            _existingNodes.Clear();
             _openList.Clear();
-
-            Console.WriteLine($"New plan: [{string.Join(", ", _planBuffer.AsArraySegment().Select(a => a.Name))}]");
         }
 
-        private static int CompareScoreAscending(GoapNode a, GoapNode b)
+        private static int ByScoreDescending(GoapNode a, GoapNode b)
         {
-            return a.Score.CompareTo(b.Score);
+            return -a.Heuristic.CompareTo(b.Heuristic);
         }
 
         public void RegisterIdleAction(GoapAction action)
