@@ -1,4 +1,5 @@
-﻿using Barebone.Pools;
+﻿using System;
+using Barebone.Pools;
 
 namespace Barebone.AI.Goap
 {
@@ -191,15 +192,11 @@ namespace Barebone.AI.Goap
         {
             return -a.CostPlusHeuristic.CompareTo(b.CostPlusHeuristic);
         }
-
-        public void RegisterIdleAction(GoapAction action)
+        
+        public void Init(GoapAction idleAction, params GoapAction[] actions)
         {
-            _idleAction = action;
-        }
-
-        public void RegisterAction(GoapAction action)
-        {
-            _actions.Add(action);
+            _idleAction = idleAction;
+            _actions.AddArray(actions);
         }
     }
 }
