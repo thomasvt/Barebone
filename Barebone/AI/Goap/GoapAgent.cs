@@ -189,7 +189,7 @@ namespace Barebone.AI.Goap
 
         private static int ByScoreDescending(GoapNode a, GoapNode b)
         {
-            return -a.Heuristic.CompareTo(b.Heuristic);
+            return -a.CostPlusHeuristic.CompareTo(b.CostPlusHeuristic);
         }
 
         public void RegisterIdleAction(GoapAction action)

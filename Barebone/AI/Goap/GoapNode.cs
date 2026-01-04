@@ -20,9 +20,9 @@ namespace Barebone.AI.Goap
         /// <summary>
         /// Goodness of this node while finding the best path. Lower is better.
         /// </summary>
-        public int Heuristic { get; private set; }
+        public int CostPlusHeuristic { get; private set; }
 
-        public int GoalCostEstimate { get; set; }
+        public int Heuristic { get; set; }
 
         protected internal override void Construct()
         {
@@ -31,23 +31,23 @@ namespace Barebone.AI.Goap
             ParentNode = null;
             PlanDepth = 0;
             PlanCost = 0;
+            CostPlusHeuristic = 0;
             Heuristic = 0;
-            GoalCostEstimate = 0;
         }
 
         protected internal override void Destruct()
         {
         }
 
-        public void Init(in GoapAction? action, in WorldState state, in GoapNode? parent, in int planDepth, in int planCost, in int goalCostEstimate)
+        public void Init(in GoapAction? action, in WorldState state, in GoapNode? parent, in int planDepth, in int planCost, in int heuristic)
         {
             Action = action;
             State = state;
             ParentNode = parent;
             PlanDepth = planDepth;
             PlanCost = planCost;
-            GoalCostEstimate = goalCostEstimate;
-            Heuristic = PlanCost + goalCostEstimate;
+            Heuristic = heuristic;
+            CostPlusHeuristic = PlanCost + heuristic;
         }
 
         public void ChangeParent(in GoapNode node, in int planDepth, in int planCost)
@@ -55,7 +55,7 @@ namespace Barebone.AI.Goap
             ParentNode = node;
             PlanDepth = planDepth;
             PlanCost = planCost;
-            Heuristic = planCost + GoalCostEstimate;
+            CostPlusHeuristic = planCost + Heuristic;
         }
     }
 }
