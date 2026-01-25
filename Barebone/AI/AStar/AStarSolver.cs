@@ -5,21 +5,16 @@ namespace Barebone.AI.AStar
 {
     public class AStarSolver(Vector2I gridSize, AStarSolver.HeuristicDelegate heuristic)
     {
-        public delegate float HeuristicDelegate(in Position from, in Position to);
+        public delegate float HeuristicDelegate(in Vector2I from, in Vector2I to);
+        
+        private record struct Node(float G, Vector2I ParentPos, bool IsVisited);
 
-        public record struct Position(short X, short Y)
-        {
-            public static Position operator+(Position a, Position b) => new((short)(a.X + b.X), (short)(a.Y + b.Y));
-        }
+        private record struct Connection(Vector2I Direction, float Cost);
 
-        private record struct Node(float G, Position ParentPos, bool IsVisited);
-
-        private record struct Connection(Position Direction, float Cost);
-
-        private readonly PriorityQueue<Position, float> _openList = new(1000);
+        private readonly PriorityQueue<Vector2I, float> _openList = new(1000);
         private readonly Node[] _nodes = new Node[gridSize.X * gridSize.Y];
 
-        public void FindPath(in bool[] obstacle, in Position start, in Position goal, in BBList<Position> solutionBuffer)
+        public void FindPath(in bool[] obstacle, in Vector2I start, in Vector2I goal, in BBList<Vector2I> solutionBuffer)
         {
             if (obstacle.Length != gridSize.X * gridSize.Y)
                 throw new ArgumentException("Obstacle array size does not match grid size.");
@@ -77,7 +72,7 @@ namespace Barebone.AI.AStar
             }
         }
 
-        private void ConstructPath(in Position goalPosition, in BBList<Position> solutionBuffer)
+        private void ConstructPath(in Vector2I goalPosition, in BBList<Vector2I> solutionBuffer)
         {
             solutionBuffer.Clear();
             var currentPos = goalPosition;
@@ -94,7 +89,7 @@ namespace Barebone.AI.AStar
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private int PosToIdx(in Position position)
+        private int PosToIdx(in Vector2I position)
         {
             return position.Y * gridSize.X + position.X;
         }
