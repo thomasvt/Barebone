@@ -147,9 +147,10 @@ namespace Barebone.Monogame
         /// <summary>
         /// Draws a quad with the sprite (texture) on it. The quad takes the size of the sprite, scaled by `scale`.
         /// </summary>
-        public void Draw(in Matrix4x4 worldTransform, in Sprite sprite, Color tint, bool flipX = false, float scale = 1f)
+        public void Draw(in Matrix4x4 worldTransform, in Sprite sprite, Color? tint = null, bool flipX = false, float scale = 1f)
         {
             if (_camera == null) return;
+            tint ??= Color.White;
 
             var xnaTexture = (XnaTexture)sprite.Texture;
 
@@ -170,7 +171,7 @@ namespace Barebone.Monogame
             var cUV = sprite.UvCoords.TopRight.ToXna();
             var dUV = sprite.UvCoords.BottomRight.ToXna();
 
-            var xnaTint = tint.ToXna();
+            var xnaTint = tint.Value.ToXna();
 
             if (flipX)
             {

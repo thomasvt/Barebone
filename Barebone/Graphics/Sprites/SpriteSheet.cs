@@ -1,7 +1,5 @@
-﻿using System.Drawing;
-using System.Numerics;
+﻿using System.Numerics;
 using Barebone.Geometry;
-using Barebone.Graphics;
 
 namespace Barebone.Graphics.Sprites
 {

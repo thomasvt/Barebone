@@ -19,7 +19,7 @@ namespace Barebone.Graphics
         /// <summary>
         /// Draws a quad with the sprite on it. If Scale is 1, 1 world unit equals one pixel of the sprite.
         /// </summary>
-        void Draw(in Matrix4x4 worldTransform, in Sprite sprite, Color tint, bool flipX = false, float scale = 1f);
+        void Draw(in Matrix4x4 worldTransform, in Sprite sprite, Color? tint = null, bool flipX = false, float scale = 1f);
 
         void End();
 
