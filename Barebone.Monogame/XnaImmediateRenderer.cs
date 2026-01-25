@@ -104,6 +104,14 @@ namespace Barebone.Monogame
 
         public void Draw(in Matrix4x4 worldTransform, in Mesh mesh)
         {
+            foreach (var subMesh in mesh.SubMeshes)
+            {
+                Draw(worldTransform, subMesh);
+            }
+        }
+
+        public void Draw(in Matrix4x4 worldTransform, in ColorMesh mesh)
+        {
             Draw(worldTransform, mesh.Triangles.AsReadOnlySpan());
         }
 

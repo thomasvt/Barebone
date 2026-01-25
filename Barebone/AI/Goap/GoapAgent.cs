@@ -47,7 +47,6 @@ namespace Barebone.AI.Goap
                 var currentAction = _planBuffer.InternalArray[_planStepIdx];
                 if (currentAction != _previousAction)
                 {
-                    Console.WriteLine(currentAction.Name);
                     currentAction.Start();
                 }
                 _planStepResult = currentAction.Update();

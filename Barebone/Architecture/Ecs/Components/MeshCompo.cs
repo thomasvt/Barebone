@@ -5,7 +5,7 @@ namespace Barebone.Architecture.Ecs.Components
 {
     public struct MeshCompo
     {
-        public Mesh? Mesh = null;
+        public ColorMesh? Mesh = null;
         public bool IsMeshOwner = true;
 
         public MeshCompo()

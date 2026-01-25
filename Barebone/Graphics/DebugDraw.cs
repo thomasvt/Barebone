@@ -16,7 +16,7 @@ namespace Barebone.Graphics
 
         private readonly BBList<DebugDrawItem> _items = Pool.Rent<BBList<DebugDrawItem>>();
         private readonly BBList<DebugTextItem> _textItems = Pool.Rent<BBList<DebugTextItem>>();
-        private readonly Mesh _mesh = Pool.Rent<Mesh>();
+        private readonly ColorMesh _mesh = Pool.Rent<ColorMesh>();
         private readonly BBList<GpuTexTriangle> _texTriangles = Pool.Rent<BBList<GpuTexTriangle>>();
         private Font? _font;
 
@@ -92,7 +92,7 @@ namespace Barebone.Graphics
             _texTriangles.Clear();
             foreach (var item in _textItems.AsReadOnlySpan())
             {
-                _font!.AppendString(_texTriangles, item.Text, item.Color ?? DefaultColor, item.Position);
+                _font!.AppendString(false, _texTriangles, item.Text, item.Color ?? DefaultColor, item.Position);
             }
             renderer.Draw(Matrix4x4.Identity, _texTriangles.AsReadOnlySpan(), _font!.Texture);
         }

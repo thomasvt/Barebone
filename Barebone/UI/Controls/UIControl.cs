@@ -9,7 +9,7 @@ namespace Barebone.UI.Controls
 {
     public class UIControl
     {
-        protected readonly Mesh Mesh = Pool.Rent<Mesh>();
+        protected readonly ColorMesh Mesh = Pool.Rent<ColorMesh>();
         protected bool IsVisualInvalid { get; private set; }
         protected bool IsArrangeInvalid { get; private set; }
         protected internal readonly List<UIControl> Children = new();

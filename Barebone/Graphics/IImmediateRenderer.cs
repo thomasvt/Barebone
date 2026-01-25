@@ -14,6 +14,7 @@ namespace Barebone.Graphics
         void Draw(in Matrix4x4 worldTransform, in ReadOnlySpan<GpuTriangle> triangles);
         void Draw(in Matrix4x4 worldTransform, in ReadOnlySpan<GpuTexTriangle> triangles, in ITexture? texture = null);
         void Draw(in Matrix4x4 worldTransform, in Mesh mesh);
+        void Draw(in Matrix4x4 worldTransform, in ColorMesh mesh);
         void Draw(in Matrix4x4 worldTransform, in TexMesh mesh);
 
         /// <summary>

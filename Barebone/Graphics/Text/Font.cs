@@ -161,7 +161,7 @@ namespace Barebone.UI.Text
         }
 
         /// <summary>
-        /// Returns the size of the rendered text in pixels, but the height only measures from the top to the Base of the characters. Tails are not included. Use this as line-height, and have letter-tails penetrate into eg. margin space of a control.
+        /// Returns the size of the rendered text in texels, but the height only measures from the top to the Base of the characters. Tails are not included. Use this as line-height, and have letter-tails penetrate into eg. margin space of a control.
         /// </summary>
         public Vector2 MeasureBase(ReadOnlySpan<char> text, float scale = 1f)
         {
@@ -184,7 +184,7 @@ namespace Barebone.UI.Text
         }
 
         /// <summary>
-        /// Returns the size of the rendered text in pixels.
+        /// Returns the size of the rendered text in texels.
         /// </summary>
         public Vector2I Measure(ReadOnlySpan<char> text)
         {
@@ -208,7 +208,7 @@ namespace Barebone.UI.Text
 
         /// <summary>
         /// Gets the character index of the glyph-start (left-side) closest to the given `caretX`. Used for screen picking caret positions.
-        /// Note that this can return text.Length if the caret should be behind the last glyph.
+        /// Note that this can return text.Length if the caret is to the right of the last glyph.
         /// </summary>
         public int GetCharacterAtCaretX(ReadOnlySpan<char> text, int caretX)
         {
@@ -241,7 +241,7 @@ namespace Barebone.UI.Text
         /// <summary>
         /// Appends the triangles representing the text to be rendered to your buffer without clearing it.
         /// </summary>
-        public void AppendString(BBList<GpuTexTriangle> buffer, string text, Color color, Vector2 position, float scale = 1f)
+        public void AppendString(bool yPointsDown, BBList<GpuTexTriangle> buffer, string text, Color color, in Vector2 position, float scale = 1f, in float z = 0)
         {
             if (buffer == null)
                 throw new ArgumentNullException(nameof(buffer));
@@ -250,8 +250,8 @@ namespace Barebone.UI.Text
 
             var gpuColor = color.ToGpuColor();
 
-            var x = position.X;
-            var y = position.Y;
+            var x = 0f;
+            var y = 0f;
             var previousCharCode = (ushort)0;
             for (var i = 0; i < text.Length; i++)
             {
@@ -270,9 +270,9 @@ namespace Barebone.UI.Text
 
                 var glyphQuad = new GlyphQuad(min, max, glyph.UVMin, glyph.UVMax);
                 
-                DrawGlyphQuad(buffer, glyphQuad, scale, gpuColor);
+                DrawGlyphQuad(yPointsDown, buffer, position, glyphQuad, scale, gpuColor, z);
 
-                x += glyph.XAdvance * scale;
+                x += glyph.XAdvance;
 
                 previousCharCode = code;
             }
@@ -282,7 +282,7 @@ namespace Barebone.UI.Text
         /// Appends a single character. Returns how much your cursor should advance in X to position for a subsequent character.
         /// </summary>
         /// <param name="unicodePrevious">The unicode of the previous character for kerning. Pass in 0 if there isn't a previous char or you don't want kerning.</param>
-        public float AppendUnicode(BBList<GpuTexTriangle> buffer, in ushort unicodePrevious, in ushort unicode, in GpuColor color, Vector2 position, in float scale = 1)
+        public float AppendUnicode(in bool yPointsDown, BBList<GpuTexTriangle> buffer, in ushort unicodePrevious, in ushort unicode, in GpuColor color, in Vector2 position, in float scale = 1, in float z = 0)
         {
             if (!Glyphs.TryGetValue(unicode, out var glyph))
             {
@@ -290,8 +290,8 @@ namespace Barebone.UI.Text
                     return 0;
             }
 
-            var x = position.X;
-            var y = position.Y;
+            var x = 0;
+            var y = 0;
             if (unicodePrevious > 0)
                 x = GetKerningOffset(unicodePrevious, unicode);
 
@@ -300,30 +300,53 @@ namespace Barebone.UI.Text
 
             var glyphQuad = new GlyphQuad(min, max, glyph.UVMin, glyph.UVMax);
 
-            DrawGlyphQuad(buffer, glyphQuad, scale, color);
+            DrawGlyphQuad(yPointsDown, buffer, position, glyphQuad, scale, color, z);
 
-            return glyph.XAdvance * scale;
+            return glyph.XAdvance;
         }
 
-        private static void DrawGlyphQuad(in BBList<GpuTexTriangle> buffer, in GlyphQuad glyphQuad, in float scale, in GpuColor color)
+        private static void DrawGlyphQuad(in bool yPointsDown, in BBList<GpuTexTriangle> buffer, in Vector2 position, in GlyphQuad glyphQuad, in float scale, in GpuColor color, in float z = 0)
         {
-            var left = glyphQuad.QuadMin.X * scale;
-            var top = glyphQuad.QuadMin.Y * scale;
-            var right = glyphQuad.QuadMax.X * scale;
-            var bottom = glyphQuad.QuadMax.Y * scale;
+            if (yPointsDown)
+            {
+                var left = position.X + glyphQuad.QuadMin.X * scale;
+                var top = position.Y + glyphQuad.QuadMin.Y * scale;
+                var right = position.X + glyphQuad.QuadMax.X * scale;
+                var bottom = position.Y + glyphQuad.QuadMax.Y * scale;
 
-            var uMin = glyphQuad.UVMin.X;
-            var vMin = glyphQuad.UVMin.Y;
-            var uMax = glyphQuad.UVMax.X;
-            var vMax = glyphQuad.UVMax.Y;
+                var uMin = glyphQuad.UVMin.X;
+                var vMin = glyphQuad.UVMin.Y;
+                var uMax = glyphQuad.UVMax.X;
+                var vMax = glyphQuad.UVMax.Y;
 
-            var a = new GpuTexVertex(new Vector3(left, top, 0f), color, new Vector2(uMin, vMin));
-            var b = new GpuTexVertex(new Vector3(right, top, 0f), color, new Vector2(uMax, vMin));
-            var c = new GpuTexVertex(new Vector3(right, bottom, 0f), color, new Vector2(uMax, vMax));
-            var d = new GpuTexVertex(new Vector3(left, bottom, 0f), color, new Vector2(uMin, vMax));
+                var a = new GpuTexVertex(new Vector3(left, top, z), color, new Vector2(uMin, vMin));
+                var b = new GpuTexVertex(new Vector3(right, top, z), color, new Vector2(uMax, vMin));
+                var c = new GpuTexVertex(new Vector3(right, bottom, z), color, new Vector2(uMax, vMax));
+                var d = new GpuTexVertex(new Vector3(left, bottom, z), color, new Vector2(uMin, vMax));
 
-            buffer.Add(new(a, b, c));
-            buffer.Add(new(a, c, d));
+                buffer.Add(new(a, b, c));
+                buffer.Add(new(a, c, d));
+            }
+            else
+            {
+                var left = position.X + glyphQuad.QuadMin.X * scale;
+                var top = position.Y - glyphQuad.QuadMin.Y * scale;
+                var right = position.X + glyphQuad.QuadMax.X * scale;
+                var bottom = position.Y - glyphQuad.QuadMax.Y * scale;
+
+                var uMin = glyphQuad.UVMin.X;
+                var vMin = glyphQuad.UVMin.Y;
+                var uMax = glyphQuad.UVMax.X;
+                var vMax = glyphQuad.UVMax.Y;
+
+                var a = new GpuTexVertex(new Vector3(left, top, z), color, new Vector2(uMin, vMin));
+                var b = new GpuTexVertex(new Vector3(right, top, z), color, new Vector2(uMax, vMin));
+                var c = new GpuTexVertex(new Vector3(right, bottom, z), color, new Vector2(uMax, vMax));
+                var d = new GpuTexVertex(new Vector3(left, bottom, z), color, new Vector2(uMin, vMax));
+
+                buffer.Add(new(a, b, c));
+                buffer.Add(new(a, c, d));
+            }
         }
 
         /// <summary>

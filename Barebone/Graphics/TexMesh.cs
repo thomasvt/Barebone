@@ -1,7 +1,9 @@
-﻿using Barebone.Graphics.Gpu;
+﻿using System.Drawing;
+using Barebone.Graphics.Gpu;
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using Barebone.Geometry;
+using Barebone.UI.Text;
 
 namespace Barebone.Graphics
 {
@@ -13,6 +15,18 @@ namespace Barebone.Graphics
         public Vector2 TextureOrigin { get; set; } = Vector2.Zero;
         public Vector2 TextureScale { get; set; } = Vector2.One;
         public ITexture? Texture { get; set; }
+
+        /// <summary>
+        /// Prints text onto the TexMesh using the specified Font. Note that the texture of the font will be assigned as the texture of this TexMesh and a Texmesh can have only one texture.
+        /// </summary>
+        public void Print(bool yPointsDown, Vector2 position, string text, Color color, Font font, float scale = 1f, float z = 0f)
+        {
+            if (Texture != null && Texture != font.Texture)
+                throw new InvalidOperationException("Cannot print text: the TexMesh already has a different texture assigned than that of the font.");
+
+            Texture = font.Texture;
+            font.AppendString(yPointsDown, Triangles, text, color, position, scale, z);
+        }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected override GpuTexTriangle ToTriangle(in GpuTexVertex a, in GpuTexVertex b, in GpuTexVertex c)

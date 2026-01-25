@@ -18,7 +18,7 @@ namespace Barebone.UI.Controls
 
         private Vector2I _caret = Vector2I.Zero;
 
-        private readonly Mesh _caretMesh = Pool.Rent<Mesh>();
+        private readonly ColorMesh _caretMesh = Pool.Rent<ColorMesh>();
         private readonly BBList<GpuTexTriangle> _textTriangles = new();
         private readonly TextEditor<Vector2I> _textEditor;
         private float _caretBlinkStart;
@@ -126,7 +126,7 @@ namespace Barebone.UI.Controls
             var cursor = topLeft;
             foreach (var line in linesInViewport)
             {
-                _font.AppendString(_textTriangles, line, TextColor, cursor);
+                _font.AppendString(true, _textTriangles, line, TextColor, cursor);
                 cursor.Y += _font.LineHeight;
             }
         }

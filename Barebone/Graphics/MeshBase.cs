@@ -35,13 +35,17 @@ public abstract class MeshBase<TMesh, TTriangle, TVertex> : Poolable
         return (TMesh)this;
     }
 
+    protected abstract TTriangle ToTriangle(in TVertex a, in TVertex b, in TVertex c);
+
+    protected abstract TTriangle ToTriangle(Vector3 a, Vector3 b, Vector3 c, GpuColor gpuColor);
+
+    protected abstract TVertex ToVertex(Vector3 a, GpuColor gpuColor);
+
     public TMesh FillTriangle(in TVertex a, in TVertex b, in TVertex c)
     {
         Triangles.Add(ToTriangle(a,b,c));
         return (TMesh)this;
     }
-
-    protected abstract TTriangle ToTriangle(in TVertex a, in TVertex b, in TVertex c);
 
     public TMesh FillTriangle(in Vector3 a, in Vector3 b, in Vector3 c, in Color color)
     {
@@ -49,8 +53,6 @@ public abstract class MeshBase<TMesh, TTriangle, TVertex> : Poolable
         Triangles.Add(ToTriangle(a, b, c, gpuColor));
         return (TMesh)this;
     }
-
-    protected abstract TTriangle ToTriangle(Vector3 a, Vector3 b, Vector3 c, GpuColor gpuColor);
 
     public TMesh FillTriangle(in Triangle3 t, in Color color)
     {
@@ -73,8 +75,6 @@ public abstract class MeshBase<TMesh, TTriangle, TVertex> : Poolable
         Triangles.Add(ToTriangle(aGpu, cGpu, dGpu));
         return (TMesh)this;
     }
-
-    protected abstract TVertex ToVertex(Vector3 a, GpuColor gpuColor);
 
     public TMesh FillQuadInZ(in Vector2 a, in Vector2 b, in Vector2 c, in Vector2 d, in float z, in Color color)
     {

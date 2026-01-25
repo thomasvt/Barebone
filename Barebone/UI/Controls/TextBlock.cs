@@ -53,7 +53,7 @@ namespace Barebone.UI.Controls
             if (maxLinesVisible <= 0)
                 return;
 
-            _font.AppendString(_textTriangles, Text, TextColor, topLeft);
+            _font.AppendString(true, _textTriangles, Text, TextColor, topLeft);
         }
 
         protected override void Render(IImmediateRenderer renderer)
