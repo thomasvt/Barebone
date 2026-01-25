@@ -12,6 +12,7 @@ namespace Barebone.AI.AStar
         private record struct Connection(Vector2I Direction, float Cost);
 
         private readonly PriorityQueue<Vector2I, float> _openList = new(1000);
+        private readonly bool[] _closedList = new bool[gridSize.X * gridSize.Y];
         private readonly Node[] _nodes = new Node[gridSize.X * gridSize.Y];
 
         public void FindPath(in bool[] obstacle, in Vector2I start, in Vector2I goal, in BBList<Vector2I> solutionBuffer)
@@ -20,6 +21,7 @@ namespace Barebone.AI.AStar
                 throw new ArgumentException("Obstacle array size does not match grid size.");
 
             Array.Clear(_nodes);
+            Array.Clear(_closedList);
             _openList.Clear();
 
             _nodes[PosToIdx(start)] = new(0f, start, true);
@@ -49,12 +51,14 @@ namespace Barebone.AI.AStar
                     return;
                 }
 
+                _closedList[currentLinearIdx] = true;
+
                 foreach (ref readonly var connection in connections)
                 {
                     var neighbourPos = currentPos + connection.Direction;
                     var neighbourIdx = PosToIdx(neighbourPos);
 
-                    if (obstacle[neighbourIdx])
+                    if (_closedList[neighbourIdx] || obstacle[neighbourIdx])
                         continue;
 
                     ref var neighbourNode = ref _nodes[neighbourIdx];
