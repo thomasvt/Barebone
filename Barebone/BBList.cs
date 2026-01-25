@@ -332,5 +332,10 @@ namespace Barebone
             if (oldCount < Count)
                 AsSpan()[oldCount..].Clear();
         }
+
+        public void Reverse()
+        {
+            Array.Reverse(_items, 0, Count);
+        }
     }
 }
