@@ -4,7 +4,7 @@ namespace Barebone.Assets
 {
     public class TextureStore(string path, ITextureLoader textureLoader) : AssetStore<ITexture>
     {
-        public override ITexture Load(string filename)
+        public override ITexture GetInstance(string filename)
         {
             return textureLoader.LoadTexture(Path.Combine(path, filename));
         }

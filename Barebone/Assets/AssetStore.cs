@@ -8,30 +8,30 @@
         private readonly Dictionary<string, T> _cache = new();
 
         /// <summary>
-        /// Loads or reuses the previously loaded asset with the given name.
+        /// Gets an asset by filename. The asset is loaded only once into a shared instance that is returned for each request.
         /// </summary>
-        public T Get(string name)
+        public T GetShared(string filename)
         {
-            if (!_cache.TryGetValue(name, out var resource))
+            if (!_cache.TryGetValue(filename, out var resource))
             {
-                resource = Load(name);
-                _cache[name] = resource;
+                resource = GetInstance(filename);
+                _cache[filename] = resource;
             }
             return resource;
         }
 
         /// <summary>
-        /// Gets multiple assets by name. Reuses already loaded assets when available.
+        /// Gets multiple assets by name. Each asset is loaded only once into a shared instance that is returned for each request.
         /// </summary>
-        public T[] GetMany(params string[] names)
+        public T[] GetSharedMany(params string[] filenames)
         {
-            return names.Select(Get).ToArray();
+            return filenames.Select(GetShared).ToArray();
         }
 
         /// <summary>
-        /// Loads the asset from file.
+        /// Loads the asset from file into a new instance.
         /// </summary>
-        public abstract T Load(string filename);
+        public abstract T GetInstance(string filename);
 
         public void Dispose()
         {

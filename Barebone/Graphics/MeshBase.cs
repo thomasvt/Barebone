@@ -41,7 +41,7 @@ public abstract class MeshBase<TMesh, TTriangle, TVertex> : Poolable
 
     protected abstract TVertex ToVertex(Vector3 a, GpuColor gpuColor);
 
-    public TMesh FillTriangle(in TVertex a, in TVertex b, in TVertex c)
+    public TMesh AddTriangle(in TVertex a, in TVertex b, in TVertex c)
     {
         Triangles.Add(ToTriangle(a,b,c));
         return (TMesh)this;
@@ -62,6 +62,13 @@ public abstract class MeshBase<TMesh, TTriangle, TVertex> : Poolable
     public TMesh FillTriangleInZ(in Triangle2 t, in float z, in Color color)
     {
         return FillTriangle(t.A.ToVector3(z), t.B.ToVector3(z), t.C.ToVector3(z), color);
+    }
+
+    public TMesh AddQuad(in TVertex a, in TVertex b, in TVertex c, in TVertex d)
+    {
+        Triangles.Add(ToTriangle(a, b, c));
+        Triangles.Add(ToTriangle(a, c, d));
+        return (TMesh)this;
     }
 
     public TMesh FillQuad(in Vector3 a, in Vector3 b, in Vector3 c, in Vector3 d, in Color color)
@@ -152,7 +159,7 @@ public abstract class MeshBase<TMesh, TTriangle, TVertex> : Poolable
             var a1 = angleOffset + i * angleStep;
             var p1 = new Vector2(MathF.Cos(a1), MathF.Sin(a1)) * radius;
 
-            FillTriangle(c, ToVertex((center + p1).ToVector3(z), colorOutGpu), ToVertex((center + p0).ToVector3(z), colorOutGpu));
+            AddTriangle(c, ToVertex((center + p1).ToVector3(z), colorOutGpu), ToVertex((center + p0).ToVector3(z), colorOutGpu));
 
             p0 = p1;
         }
@@ -174,7 +181,7 @@ public abstract class MeshBase<TMesh, TTriangle, TVertex> : Poolable
             var sin = MathF.Sin(a1);
             var p1 = new Vector2(cos, sin) * radius;
 
-            FillTriangle(c, ToVertex((center + p1).ToVector3(z), gpuColor), ToVertex((center + p0).ToVector3(z), gpuColor));
+            AddTriangle(c, ToVertex((center + p1).ToVector3(z), gpuColor), ToVertex((center + p0).ToVector3(z), gpuColor));
 
             p0 = p1;
         }

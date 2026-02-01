@@ -1,9 +1,11 @@
 ﻿using System.Drawing;
 using System.Numerics;
 using Barebone.Geometry;
+using BareBone.Graphics;
 using Barebone.Pools;
 using Barebone.UI.Text;
 using Barebone.Graphics.Gpu;
+using Barebone.Graphics.Sprites;
 using Barebone.UI.Controls;
 
 namespace Barebone.Graphics
@@ -57,7 +59,7 @@ namespace Barebone.Graphics
         /// <summary>
         /// Prints text onto the TexMesh using the specified Font.
         /// </summary>
-        public Mesh Print(Vector2 position, string text, Color color, Font font, float scale = 1f, float z = 0f)
+        public Mesh Print(in Vector2 position, in string text, in Color color, in Font font, float scale = 1f, float z = 0f)
         {
             var subMesh = GetSubMeshFor(font.Texture);
             font.AppendString(false, subMesh.Triangles, text, color, position, scale, z);
@@ -67,7 +69,7 @@ namespace Barebone.Graphics
         /// <summary>
         /// Prints text onto the TexMesh using the specified Font.
         /// </summary>
-        public Mesh Print(Aabb area, HorizontalAlignment horizontalAlignment, VerticalAlignment verticalAlignment, string text, Color color, Font font, float scale = 1f, float z = 0f)
+        public Mesh Print(in Aabb area, in HorizontalAlignment horizontalAlignment, in VerticalAlignment verticalAlignment, in string text, in Color color, in Font font, float scale = 1f, float z = 0f)
         {
             var subMesh = GetSubMeshFor(font.Texture);
             var measure = font.MeasureBase(text, scale);
@@ -93,7 +95,7 @@ namespace Barebone.Graphics
         public Mesh FillTriangle(in GpuTexVertex a, in GpuTexVertex b, in GpuTexVertex c)
         {
             var subMesh = GetSubMeshFor(null);
-            subMesh.FillTriangle(a, b, c);
+            subMesh.AddTriangle(a, b, c);
             return this;
         }
 
@@ -193,11 +195,28 @@ namespace Barebone.Graphics
             return this;
         }
 
-        public Mesh LineInZ(Vector2 a, Vector2 b, float halfWidth, float z, Color color)
+        public Mesh LineInZ(in Vector2 a, in Vector2 b, in float halfWidth, in float z, in Color color)
         {
             var subMesh = GetSubMeshFor(null);
             subMesh.LineInZ(a, b, halfWidth, z, color);
             return this;
+        }
+
+        public void DrawSprite(in Vector2 position, in Sprite sprite, in float z, Color? tint = null)
+        {
+            var gpuTint = tint?.ToGpuColor() ?? GpuColor.White;
+
+            var subMesh = GetSubMeshFor(sprite.Texture);
+
+            var aabbWorld = position + sprite.AabbPx;
+            var uv = sprite.UvCoords;
+
+            var a = new GpuTexVertex(aabbWorld.BottomLeft.ToVector3(z), gpuTint, uv.BottomLeft);
+            var b = new GpuTexVertex(aabbWorld.TopLeft.ToVector3(z), gpuTint, uv.TopLeft);
+            var c = new GpuTexVertex(aabbWorld.TopRight.ToVector3(z), gpuTint, uv.TopRight);
+            var d = new GpuTexVertex(aabbWorld.BottomRight.ToVector3(z), gpuTint, uv.BottomRight);
+
+            subMesh.AddQuad(a, b, c, d);
         }
     }
 }
