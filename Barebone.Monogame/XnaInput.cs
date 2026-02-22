@@ -135,15 +135,20 @@ namespace Barebone.Monogame
                 Button.MouseRight => _mousePrevious.RightButton != state && _mouse.RightButton == state,
                 Button.MouseMiddle => _mousePrevious.MiddleButton != state && _mouse.MiddleButton == state,
 
-                Button.PadA => _gamePadPrevious.Buttons.A != state && _gamePad.Buttons.A == state,
-                Button.PadB => _gamePadPrevious.Buttons.B != state && _gamePad.Buttons.B == state,
-                Button.PadX => _gamePadPrevious.Buttons.X != state && _gamePad.Buttons.X == state,
-                Button.PadY => _gamePadPrevious.Buttons.Y != state && _gamePad.Buttons.Y == state,
-                Button.PadShoulderL => _gamePadPrevious.Buttons.LeftShoulder != state && _gamePad.Buttons.LeftShoulder == state,
-                Button.PadShoulderR => _gamePadPrevious.Buttons.RightShoulder != state && _gamePad.Buttons.RightShoulder == state,
-                Button.PadTriggerL => state == ButtonState.Pressed ? _gamePadPrevious.Triggers.Left == 0 && _gamePad.Triggers.Left > 0 : _gamePadPrevious.Triggers.Left > 0 && _gamePad.Triggers.Left == 0,
-                Button.PadTriggerR => state == ButtonState.Pressed ? _gamePadPrevious.Triggers.Right == 0 && _gamePad.Triggers.Right > 0 : _gamePadPrevious.Triggers.Right > 0 && _gamePad.Triggers.Right == 0,
-               
+                Button.GamePadA => _gamePadPrevious.Buttons.A != state && _gamePad.Buttons.A == state,
+                Button.GamePadB => _gamePadPrevious.Buttons.B != state && _gamePad.Buttons.B == state,
+                Button.GamePadX => _gamePadPrevious.Buttons.X != state && _gamePad.Buttons.X == state,
+                Button.GamePadY => _gamePadPrevious.Buttons.Y != state && _gamePad.Buttons.Y == state,
+                Button.GamePadShoulderL => _gamePadPrevious.Buttons.LeftShoulder != state && _gamePad.Buttons.LeftShoulder == state,
+                Button.GamePadShoulderR => _gamePadPrevious.Buttons.RightShoulder != state && _gamePad.Buttons.RightShoulder == state,
+                Button.GamePadTriggerL => state == ButtonState.Pressed ? _gamePadPrevious.Triggers.Left == 0 && _gamePad.Triggers.Left > 0 : _gamePadPrevious.Triggers.Left > 0 && _gamePad.Triggers.Left == 0,
+                Button.GamePadTriggerR => state == ButtonState.Pressed ? _gamePadPrevious.Triggers.Right == 0 && _gamePad.Triggers.Right > 0 : _gamePadPrevious.Triggers.Right > 0 && _gamePad.Triggers.Right == 0,
+
+                Button.GamePadDPadLeft => _gamePadPrevious.DPad.Left != state && _gamePad.DPad.Left == state,
+                Button.GamePadDPadRight => _gamePadPrevious.DPad.Right != state && _gamePad.DPad.Right == state,
+                Button.GamePadDPadUp => _gamePadPrevious.DPad.Up != state && _gamePad.DPad.Up == state,
+                Button.GamePadDPadDown => _gamePadPrevious.DPad.Down != state && _gamePad.DPad.Down == state,
+
                 _ => throw new ArgumentOutOfRangeException(nameof(button))
             };
         }
@@ -167,14 +172,19 @@ namespace Barebone.Monogame
                 Button.MouseRight => _mouse.RightButton == state,
                 Button.MouseMiddle => _mouse.MiddleButton == state,
 
-                Button.PadA => _gamePad.Buttons.A == state,
-                Button.PadB => _gamePad.Buttons.B == state,
-                Button.PadX => _gamePad.Buttons.X == state,
-                Button.PadY => _gamePad.Buttons.Y == state,
-                Button.PadShoulderL => _gamePad.Buttons.LeftShoulder == state,
-                Button.PadShoulderR => _gamePad.Buttons.RightShoulder == state,
-                Button.PadTriggerL => state == ButtonState.Pressed ? _gamePad.Triggers.Left > 0 : _gamePad.Triggers.Left == 0,
-                Button.PadTriggerR => state == ButtonState.Pressed ? _gamePad.Triggers.Right > 0 : _gamePad.Triggers.Right == 0,
+                Button.GamePadA => _gamePad.Buttons.A == state,
+                Button.GamePadB => _gamePad.Buttons.B == state,
+                Button.GamePadX => _gamePad.Buttons.X == state,
+                Button.GamePadY => _gamePad.Buttons.Y == state,
+                Button.GamePadShoulderL => _gamePad.Buttons.LeftShoulder == state,
+                Button.GamePadShoulderR => _gamePad.Buttons.RightShoulder == state,
+                Button.GamePadTriggerL => state == ButtonState.Pressed ? _gamePad.Triggers.Left > 0 : _gamePad.Triggers.Left == 0,
+                Button.GamePadTriggerR => state == ButtonState.Pressed ? _gamePad.Triggers.Right > 0 : _gamePad.Triggers.Right == 0,
+
+                Button.GamePadDPadLeft => _gamePad.DPad.Left == state,
+                Button.GamePadDPadRight => _gamePad.DPad.Right == state,
+                Button.GamePadDPadUp => _gamePad.DPad.Up == state,
+                Button.GamePadDPadDown => _gamePad.DPad.Down == state,
 
                 _ => throw new ArgumentOutOfRangeException(nameof(button))
             };
@@ -198,14 +208,19 @@ namespace Barebone.Monogame
                 Button.MouseRight => _mousePrevious.RightButton == state,
                 Button.MouseMiddle => _mousePrevious.MiddleButton == state,
 
-                Button.PadA => _gamePadPrevious.Buttons.A == state,
-                Button.PadB => _gamePadPrevious.Buttons.B == state,
-                Button.PadX => _gamePadPrevious.Buttons.X == state,
-                Button.PadY => _gamePadPrevious.Buttons.Y == state,
-                Button.PadShoulderL => _gamePadPrevious.Buttons.LeftShoulder == state,
-                Button.PadShoulderR => _gamePadPrevious.Buttons.RightShoulder == state,
-                Button.PadTriggerL => state == ButtonState.Pressed ? _gamePadPrevious.Triggers.Left > 0 : _gamePadPrevious.Triggers.Left == 0,
-                Button.PadTriggerR => state == ButtonState.Pressed ? _gamePadPrevious.Triggers.Right > 0 : _gamePadPrevious.Triggers.Right == 0,
+                Button.GamePadA => _gamePadPrevious.Buttons.A == state,
+                Button.GamePadB => _gamePadPrevious.Buttons.B == state,
+                Button.GamePadX => _gamePadPrevious.Buttons.X == state,
+                Button.GamePadY => _gamePadPrevious.Buttons.Y == state,
+                Button.GamePadShoulderL => _gamePadPrevious.Buttons.LeftShoulder == state,
+                Button.GamePadShoulderR => _gamePadPrevious.Buttons.RightShoulder == state,
+                Button.GamePadTriggerL => state == ButtonState.Pressed ? _gamePadPrevious.Triggers.Left > 0 : _gamePadPrevious.Triggers.Left == 0,
+                Button.GamePadTriggerR => state == ButtonState.Pressed ? _gamePadPrevious.Triggers.Right > 0 : _gamePadPrevious.Triggers.Right == 0,
+
+                Button.GamePadDPadLeft => _gamePadPrevious.DPad.Left == state,
+                Button.GamePadDPadRight => _gamePadPrevious.DPad.Right == state,
+                Button.GamePadDPadUp => _gamePadPrevious.DPad.Up == state,
+                Button.GamePadDPadDown => _gamePadPrevious.DPad.Down == state,
 
                 _ => throw new ArgumentOutOfRangeException(nameof(button))
             };
@@ -280,6 +295,11 @@ namespace Barebone.Monogame
             if (Is(decrease, ButtonState.Pressed)) return -1;
             if (Is(increase, ButtonState.Pressed)) return 1;
             return 0;
+        }
+
+        public Vector2 GetKeyAxis2(Button decreaseX, Button increaseX, Button decreaseY, Button increaseY)
+        {
+            return new Vector2(GetKeyAxis(decreaseX, increaseX), GetKeyAxis(decreaseY, increaseY));
         }
 
         public event Action<char, Button>? TextInput;

@@ -5,58 +5,6 @@ namespace Barebone.Geometry;
 
 public static class GeometryExtensions
 {
-
-    /// <summary>
-    /// Normalises the vector but also outputs its Length., or returns Vector2.Zero if the vector has no length. And also outputs its Length.
-    /// </summary>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static Vector2 NormalizeOrZero(this Vector2 v, out float length)
-    {
-        if (v == Vector2.Zero)
-        {
-            length = 0f;
-            return Vector2.Zero;
-        }
-
-        length = v.Length();
-        return v / length;
-    }
-
-    /// <summary>
-    /// Normalises the vector but also outputs its Length., or returns Vector2.Zero if the vector has no length. And also outputs its Length.
-    /// </summary>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static Vector2 Normalize(this Vector2 v, out float length)
-    {
-        length = v.Length();
-        var norm = v / length;
-#if DEBUG
-        if (float.IsNaN(norm.X) || float.IsNaN(norm.Y)) throw new Exception("Normalized vector contains NaN");
-#endif
-        return norm;
-    }
-
-    /// <summary>
-    /// Normalises the vector, or returns Vector2.Zero if the vector has no length.
-    /// </summary>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static Vector2 NormalizeOrZero(this Vector2 v)
-    {
-        return v == Vector2.Zero ? Vector2.Zero : Vector2.Normalize(v);
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static Vector2 ReverseY(this Vector2 v)
-    {
-        return v with { Y = -v.Y };
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static Vector3 ToVector3(this Vector2 v, float z = 0)
-    {
-        return new Vector3(v.X, v.Y, z);
-    }
-
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Aabb ToAabb(this AabbI aabb)
     {
@@ -75,62 +23,6 @@ public static class GeometryExtensions
         return new Vector2(v.X, v.Y);
     }
 
-    /// <summary>
-    /// Gets a perpendicular vector pointing to the left from the original vector and with the same length. (when X+ is right, Y+ is up)
-    /// </summary>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static Vector2 CrossLeft(this Vector2 v)
-    {
-        return new Vector2(-v.Y, v.X);
-    }
-
-    /// <summary>
-    /// Gets a perpendicular vector pointing to the right from the original vector and with the same length. (when X+ is right, Y+ is up)
-    /// </summary>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static Vector2 CrossRight(this Vector2 v)
-    {
-        return new Vector2(v.Y, -v.X);
-    }
-
-    /// <summary>
-    /// Adds y to the vector's Y value.
-    /// </summary>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static Vector2 TranslateY(this Vector2 v, float y)
-    {
-        return v with { Y = v.Y + y };
-    }
-
-    /// <summary>
-    /// Adds x to the vector's X value.
-    /// </summary>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static Vector2 TranslateX(this Vector2 v, float x)
-    {
-        return v with { X = v.X + x };
-    }
-
-    /// <summary>
-    /// Calculates the cross product ("a×b"). Interpretable as the surface area of the parallelogram formed by the two vectors.
-    /// </summary>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static float Cross(this Vector2 a, Vector2 b)
-    {
-        return a.X * b.Y - a.Y * b.X;
-    }
-
-    /// <summary>
-    /// Returns the vector capped to maxLength. If it's shorter, the original vector is returned.
-    /// </summary>
-    public static Vector2 CapVectorLength(this Vector2 v, float maxLength)
-    {
-        var length = v.Length();
-        if (length > maxLength)
-            return v / length * maxLength;
-        return v;
-    }
-
     public static Matrix4x4 To4x4(this Matrix3x2 m, float z = 0f)
     {
         return new Matrix4x4(
@@ -140,134 +32,256 @@ public static class GeometryExtensions
             m.M31, m.M32, z, 1);
     }
 
-    /// <summary>
-    /// Returns a <see cref="Vector2I"/> by rounding X and Y down to the next integer.
-    /// </summary>
-    public static Vector2I Floor(this Vector2 v)
+    extension(Vector2 vector)
     {
-        return new ((int)MathF.Floor(v.X), (int)MathF.Floor(v.Y));
-    }
-
-    /// <summary>
-    /// Returns a <see cref="Vector2I"/> by rounding X and Y up to the next integer.
-    /// </summary>
-    public static Vector2I Ceiling(this Vector2 v)
-    {
-        return new ((int)MathF.Ceiling(v.X), (int)MathF.Ceiling(v.Y));
-    }
-
-    public static Vector2 AngleToVector2(this float angle, float length = 1f)
-    {
-        return new Vector2(MathF.Cos(angle), MathF.Sin(angle)) * length;
-    }
-
-    public static float GetAngle(this Vector2 v)
-    {
-        return MathF.Atan2(v.Y, v.X);
-    }
-
-    public static float? GetAngleOrDefault(this Vector2 v, float? @default = null)
-    {
-        return v is { X: 0, Y: 0 } ? @default : MathF.Atan2(v.Y, v.X);
-    }
-
-    /// <summary>
-    /// Returns the signed difference between two angles in radians within (-180, 180). It always returns the shortest path.
-    /// </summary>
-    public static float GetShortestAngleTo(this float fromAngle, float toAngle)
-    {
-        fromAngle = NormalizeAngle(fromAngle);
-        toAngle = NormalizeAngle(toAngle);
-
-        var diff = toAngle - fromAngle;
-        var diffAbs = MathF.Abs(diff);
-        if (diffAbs > MathF.PI)
+        /// <summary>
+        /// Returns a <see cref="Vector2I"/> by rounding X and Y down to the next integer.
+        /// </summary>
+        public Vector2I Floor()
         {
-            // pick the other, shorter way around the circle:
-            diff = -MathF.Sign(diff) * (MathF.Tau - diff);
+            return new ((int)MathF.Floor(vector.X), (int)MathF.Floor(vector.Y));
         }
 
-        return diff;
-    }
-
-    /// <summary>
-    /// Normalizes an angle in radians to [0, tau) (=2*pi)
-    /// </summary>
-    public static float NormalizeAngle(this float angle)
-    {
-        angle %= MathF.Tau;
-        if (angle < 0)
-            return angle + MathF.Tau;
-        return angle;
-    }
-
-    /// <summary>
-    /// Similar to interpolating from 'vector' to 'target' but with a fixed step-distance, instead of a percentage.
-    /// Adds to 'vector' a step-vector pointing from 'vector' to 'target'. Does not overshoot.
-    /// </summary>
-    /// <param name="isTargetReached">True if 'step' was large enough to reach 'target', or false if not.</param>
-    public static Vector2 StepTowards(this Vector2 vector, Vector2 target, float stepDistance, out bool isTargetReached)
-    {
-        var inc2 = stepDistance * stepDistance;
-        var toTarget = target - vector;
-        if (toTarget.LengthSquared() <= inc2)
+        /// <summary>
+        /// Returns a <see cref="Vector2I"/> by rounding X and Y to the closest integer.
+        /// </summary>
+        public Vector2I Round()
         {
-            isTargetReached = true;
-            return target;
+            return new((int)MathF.Round(vector.X, MidpointRounding.AwayFromZero), (int)MathF.Round(vector.Y, MidpointRounding.AwayFromZero));
         }
 
-        isTargetReached = false;
-        return vector + Vector2.Normalize(toTarget) * stepDistance;
-    }
-
-    /// <summary>
-    /// Rotates the angle one step towards the targetAngle along the shortest side of the circle. Guarantees the final step returns 'targetAngle' exactly.
-    /// </summary>
-    public static float RotateTowards(this float angle, float targetAngle, float absoluteStep, out bool isTargetReached)
-    {
-        var shortestAngleChange = angle.GetShortestAngleTo(targetAngle);
-
-        if (MathF.Abs(shortestAngleChange) <= absoluteStep)
+        /// <summary>
+        /// Returns a <see cref="Vector2I"/> by rounding X and Y up to the next integer.
+        /// </summary>
+        public Vector2I Ceiling()
         {
-            isTargetReached = true;
-            return targetAngle;
+            return new ((int)MathF.Ceiling(vector.X), (int)MathF.Ceiling(vector.Y));
         }
 
-        isTargetReached = false;
-        return angle + MathF.Sign(shortestAngleChange) * absoluteStep;
-    }
-
-    /// <summary>
-    /// Steps the value one step towards 'target'. If the step is larger than the remaining distance to 'target', the result is set to the exact target and true is returned. Else false is returned.
-    /// </summary>
-    /// <param name="isTargetReached">True if 'step' was large enough to reach 'target', or false if not.</param>
-    public static float StepTowards(this float value, float target, float absoluteStep, out bool isTargetReached)
-    {
-        var toTarget = target - value;
-        if (MathF.Abs(toTarget) <= absoluteStep)
+        public float GetAngle()
         {
-            isTargetReached = true;
-            return target;
+            return MathF.Atan2(vector.Y, vector.X);
         }
 
-        isTargetReached = false;
-        return value + MathF.Sign(toTarget) * absoluteStep;
-    }
+        public float? GetAngleOrDefault(float? @default = null)
+        {
+            return vector is { X: 0, Y: 0 } ? @default : MathF.Atan2(vector.Y, vector.X);
+        }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static float ManhattanLength(this Vector2 v)
-    {
-        return MathF.Abs(v.X) + MathF.Abs(v.Y);
-    }
+        /// <summary>
+        /// Similar to interpolating from 'vector' to 'target' but with a fixed step-distance, instead of a percentage.
+        /// Adds to 'vector' a step-vector pointing from 'vector' to 'target'. Does not overshoot.
+        /// </summary>
+        /// <param name="isTargetReached">True if 'step' was large enough to reach 'target', or false if not.</param>
+        public Vector2 StepTowards(Vector2 target, float stepDistance, out bool isTargetReached)
+        {
+            var inc2 = stepDistance * stepDistance;
+            var toTarget = target - vector;
+            if (toTarget.LengthSquared() <= inc2)
+            {
+                isTargetReached = true;
+                return target;
+            }
 
-    /// <summary>
-    /// Returns the velocity vector bounced off of a flat surface.
-    /// </summary>
-    public static Vector2 Bounce(this Vector2 v, Vector2 surfaceNormal)
+            isTargetReached = false;
+            return vector + Vector2.Normalize(toTarget) * stepDistance;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public float ManhattanLength()
+        {
+            return MathF.Abs(vector.X) + MathF.Abs(vector.Y);
+        }
+
+        /// <summary>
+        /// Returns the velocity vector bounced off of a flat surface.
+        /// </summary>
+        public Vector2 Bounce(Vector2 surfaceNormal)
+        {
+            var tangent = surfaceNormal.CrossRight();
+            var x = Vector2.Dot(vector, tangent);
+            var y = Vector2.Dot(vector, surfaceNormal);
+            return x * tangent - y * surfaceNormal;
+        }
+
+        /// <summary>
+        /// Gets a perpendicular vector pointing to the left from the original vector and with the same length. (when X+ is right, Y+ is up)
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public Vector2 CrossLeft()
+        {
+            return new Vector2(-vector.Y, vector.X);
+        }
+
+        /// <summary>
+        /// Gets a perpendicular vector pointing to the right from the original vector and with the same length. (when X+ is right, Y+ is up)
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public Vector2 CrossRight()
+        {
+            return new Vector2(vector.Y, -vector.X);
+        }
+
+        /// <summary>
+        /// Adds y to the vector's Y value.
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public Vector2 TranslateY(float y)
+        {
+            return vector with { Y = vector.Y + y };
+        }
+
+        /// <summary>
+        /// Adds x to the vector's X value.
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public Vector2 TranslateX(float x)
+        {
+            return vector with { X = vector.X + x };
+        }
+
+        /// <summary>
+        /// Calculates the cross product ("a×b"). Interpretable as the surface area of the parallelogram formed by the two vectors.
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public float Cross(Vector2 b)
+        {
+            return vector.X * b.Y - vector.Y * b.X;
+        }
+
+        /// <summary>
+        /// Returns the vector capped to maxLength. If it's shorter, the original vector is returned.
+        /// </summary>
+        public Vector2 CapVectorLength(float maxLength)
+        {
+            var length = vector.Length();
+            if (length > maxLength)
+                return vector / length * maxLength;
+            return vector;
+        }
+
+        /// <summary>
+        /// Normalises the vector, or returns Vector2.Zero if the vector has no length.
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public Vector2 NormalizeOrZero()
+        {
+            return vector == Vector2.Zero ? Vector2.Zero : Vector2.Normalize(vector);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public Vector2 ReverseY()
+        {
+            return vector with { Y = -vector.Y };
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public Vector3 ToVector3(float z = 0)
+        {
+            return new Vector3(vector.X, vector.Y, z);
+        }
+
+        /// <summary>
+        /// Normalises the vector but also outputs its Length., or returns Vector2.Zero if the vector has no length. And also outputs its Length.
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public Vector2 NormalizeOrZero(out float length)
+        {
+            if (vector == Vector2.Zero)
+            {
+                length = 0f;
+                return Vector2.Zero;
+            }
+
+            length = vector.Length();
+            return vector / length;
+        }
+
+        /// <summary>
+        /// Normalises the vector but also outputs its Length., or returns Vector2.Zero if the vector has no length. And also outputs its Length.
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public Vector2 Normalize(out float length)
+        {
+            length = vector.Length();
+            var norm = vector / length;
+#if DEBUG
+            if (float.IsNaN(norm.X) || float.IsNaN(norm.Y)) throw new Exception("Normalized vector contains NaN");
+#endif
+            return norm;
+        }
+    }
+    
+
+    extension(float angle)
     {
-        var tangent = surfaceNormal.CrossRight();
-        var x = Vector2.Dot(v, tangent);
-        var y = Vector2.Dot(v, surfaceNormal);
-        return x * tangent - y * surfaceNormal;
+        /// <summary>
+        /// Rotates the angle one step towards the targetAngle along the shortest side of the circle. Guarantees the final step returns 'targetAngle' exactly.
+        /// </summary>
+        public float RotateTowards(float targetAngle, float absoluteStep, out bool isTargetReached)
+        {
+            var shortestAngleChange = angle.GetShortestAngleTo(targetAngle);
+
+            if (MathF.Abs(shortestAngleChange) <= absoluteStep)
+            {
+                isTargetReached = true;
+                return targetAngle;
+            }
+
+            isTargetReached = false;
+            return angle + MathF.Sign(shortestAngleChange) * absoluteStep;
+        }
+
+        /// <summary>
+        /// Steps the value one step towards 'target'. If the step is larger than the remaining distance to 'target', the result is set to the exact target and true is returned. Else false is returned.
+        /// </summary>
+        /// <param name="isTargetReached">True if 'step' was large enough to reach 'target', or false if not.</param>
+        public float StepTowards(float target, float absoluteStep, out bool isTargetReached)
+        {
+            var toTarget = target - angle;
+            if (MathF.Abs(toTarget) <= absoluteStep)
+            {
+                isTargetReached = true;
+                return target;
+            }
+
+            isTargetReached = false;
+            return angle + MathF.Sign(toTarget) * absoluteStep;
+        }
+
+        /// <summary>
+        /// Returns the signed difference between two angles in radians within (-180, 180). It always returns the shortest path.
+        /// </summary>
+        public float GetShortestAngleTo(float toAngle)
+        {
+            angle = NormalizeAngle(angle);
+            toAngle = NormalizeAngle(toAngle);
+
+            var diff = toAngle - angle;
+            var diffAbs = MathF.Abs(diff);
+            if (diffAbs > MathF.PI)
+            {
+                // pick the other, shorter way around the circle:
+                diff = -MathF.Sign(diff) * (MathF.Tau - diff);
+            }
+
+            return diff;
+        }
+
+        /// <summary>
+        /// Normalizes an angle in radians to [0, tau) (=2*pi)
+        /// </summary>
+        public float NormalizeAngle()
+        {
+            angle %= MathF.Tau;
+            if (angle < 0)
+                return angle + MathF.Tau;
+            return angle;
+        }
+
+        public Vector2 AngleToVector2(float length = 1f)
+        {
+            return new Vector2(MathF.Cos(angle), MathF.Sin(angle)) * length;
+        }
     }
 }

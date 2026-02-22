@@ -297,13 +297,13 @@ namespace Barebone.Geometry
 
         public static Aabb Zero = new(Vector2.Zero, Vector2.Zero);
 
-        public static Aabb FromSizeAroundCenter(Vector2 center, Vector2 size)
+        public static Aabb FromSizeAroundCenter(in Vector2 center, in Vector2 size)
         {
             var halfSize = size * 0.5f;
             return new Aabb(center-halfSize, center + halfSize);
         }
 
-        public static Aabb FromSizeAroundCenter(Vector2 size)
+        public static Aabb FromSizeAroundCenter(in Vector2 size)
         {
             var halfSize = size * 0.5f;
             return new Aabb(-halfSize, halfSize);
@@ -320,7 +320,7 @@ namespace Barebone.Geometry
         /// <summary>
         /// Finds the axis aligned bounding box of a set of points.
         /// </summary>
-        public static Aabb FromPoints(Vector2 a, Vector2 b)
+        public static Aabb FromPoints(in Vector2 a, in Vector2 b)
         {
             return new Aabb(new(MathF.Min(a.X, b.X), MathF.Min(a.Y, b.Y)), new(MathF.Max(a.X, b.X), MathF.Max(a.Y, b.Y)));
         }
@@ -351,7 +351,7 @@ namespace Barebone.Geometry
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public Aabb Scale(Vector2 scale)
+        public Aabb Scale(in Vector2 scale)
         {
             return new Aabb(MinCorner * scale, MaxCorner * scale);
         }
