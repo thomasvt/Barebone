@@ -6,39 +6,30 @@ namespace Barebone.Graphics.Sprites
     /// <summary>
     /// Horizontal-only sheet of sprites. With Spacing between each sprite.
     /// </summary>
-    public class XnaSpriteSheet
+    public class SpriteSheet
         : IDisposable
     {
         private readonly ITexture _texture;
 
-        public XnaSpriteSheet(ITexture texture, SpriteSheetMeta meta)
+        public SpriteSheet(ITexture texture, SpriteSheetMap map, float scale)
         {
             _texture = texture;
-            MetaData = meta;
-            SpriteCount = (texture.Size.X + meta.Spacing) / (meta.SpriteSize.X + meta.Spacing);
-
-            var spriteSizeUv =new Vector2(meta.SpriteSize.X / (float)texture.Size.X, 1f);
-            var spriteStrideUv = new Vector2((meta.SpriteSize.X + meta.Spacing) / (float)texture.Size.X, 1f);
+            MapData = map;
 
             var sprites = new List<Sprite>();
             Sprites = sprites;
             for (var i = 0; i < SpriteCount; i++)
             {
-                // convert bitmap coords (Y+ is down) to world coords (Y+ is up)
-                var originWorldCoords = new Vector2(meta.SpriteOrigin.X, meta.SpriteSize.Y - meta.SpriteOrigin.Y);
-                var quad = new Aabb(Vector2.Zero, meta.SpriteSize) - originWorldCoords;
+                var spriteMap = Sprites[i];
+                var spriteUv = spriteMap.AabbPx / texture.Size;
 
-                var bottomLeftUV = new Vector2(spriteStrideUv.X * i, spriteSizeUv.Y);
-                var topRightUV = new Vector2(bottomLeftUV.X + spriteSizeUv.X, 0);
-                var quadUV = new Aabb(bottomLeftUV, topRightUV);
-
-                sprites.Add(new Sprite(texture, quadUV, quad, false));
+                sprites.Add(new Sprite(texture, spriteUv, Aabb.FromSizeAroundCenter(spriteMap.AabbPx.Size * scale), false));
             }
         }
 
         public IReadOnlyList<Sprite> Sprites { get; }
         public int SpriteCount { get; }
-        public SpriteSheetMeta MetaData { get; }
+        public SpriteSheetMap MapData { get; }
         public Sprite this[int idx] => Sprites[idx];
 
         public void Dispose()
