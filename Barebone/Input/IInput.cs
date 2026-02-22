@@ -51,6 +51,8 @@ public interface IInput
 
     float GetKeyAxis(Button decrease, Button increase);
 
+    Vector2 GetKeyAxis2(Button decreaseX, Button increaseX, Button decreaseY, Button increaseY);
+
     /// <summary>
     /// OS managed auto-repeated text input according to keyboard locale and text-input mechanics.
     /// </summary>
@@ -63,4 +65,5 @@ public interface IInput
 
     event Action<Button>? KeyDown;
     event Action<Button>? KeyUp;
+    
 }

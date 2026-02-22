@@ -55,7 +55,7 @@ namespace Barebone.Geometry
                     action(new Vector2I(x, y));
         }
 
-        public AabbI GetIntersection(AabbI b)
+        public AabbI GetIntersection(in AabbI b)
         {
             var minX = Math.Max(MinCorner.X, b.MinCorner.X);
             var minY = Math.Max(MinCorner.Y, b.MinCorner.Y);
@@ -67,18 +67,18 @@ namespace Barebone.Geometry
             return new(new(minX, minY), new(maxX, maxY));
         }
 
-        public readonly bool Contains(Vector2I position)
+        public readonly bool Contains(in Vector2I position)
         {
             return position.X >= MinCorner.X && position.Y >= MinCorner.Y && position.X < MaxCornerExcl.X && position.Y < MaxCornerExcl.Y;
         }
 
-        public static AabbI FromSizeAroundCenter(Vector2I size)
+        public static AabbI FromSizeAroundCenter(in Vector2I size)
         {
             var halfSize = size / 2;
             return new AabbI(-halfSize, size - halfSize);
         }
 
-        public static AabbI FromSizeAroundCenter(Vector2I center, Vector2I size)
+        public static AabbI FromSizeAroundCenter(in Vector2I center, in Vector2I size)
         {
             var halfSize = size / 2;
             return new AabbI(center - halfSize, center + size - halfSize);
@@ -87,7 +87,7 @@ namespace Barebone.Geometry
         /// <summary>
         /// Returns an <see cref="AabbI"/> guaranteed to fit the original <see cref="Aabb"/> by rounding MinCorner down and MaxCorner up to the nearest integer values.
         /// </summary>
-        public static AabbI FromAabb(Aabb aabb)
+        public static AabbI FromAabb(in Aabb aabb)
         {
             return new AabbI(aabb.MinCorner.Floor(), aabb.MaxCorner.Ceiling());
         }
@@ -95,7 +95,7 @@ namespace Barebone.Geometry
         /// <summary>
         /// Returns an <see cref="AabbI"/> with MinCorner (0,0) and the given size as MaxCornerExcl.
         /// </summary>
-        public static AabbI FromSize(Vector2I size)
+        public static AabbI FromSize(in Vector2I size)
         {
             return new AabbI(Vector2I.Zero, size);
         }
@@ -103,9 +103,17 @@ namespace Barebone.Geometry
         /// <summary>
         /// Returns an <see cref="AabbI"/> with given minCorner and size.
         /// </summary>
-        public static AabbI FromSize(Vector2I minCorner, Vector2I size)
+        public static AabbI FromSize(in Vector2I minCorner, in Vector2I size)
         {
             return new AabbI(minCorner, minCorner + size);
+        }
+
+        /// <summary>
+        /// Returns the AAbbI that includes both a and b
+        /// </summary>
+        public static AabbI FromPointsIncl(in Vector2I a, in Vector2I b)
+        {
+            return new AabbI(new(Math.Min(a.X, b.X), Math.Min(a.Y, b.Y)), new(Math.Max(a.X, b.X)+1, Math.Max(a.Y, b.Y)+1));
         }
 
         public static AabbI FromPoints(IEnumerable<Vector2I> points)
