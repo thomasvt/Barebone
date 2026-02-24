@@ -179,5 +179,10 @@ namespace Barebone.Geometry
             var maxY = Math.Max(MaxCornerExcl.Y + amount, minY);
             return new(minX, minY, maxX, maxY);
         }
+
+        public override string ToString()
+        {
+            return $"[{MinCorner.X}.{MinCorner.Y} : {MaxCornerExcl.X}.{MaxCornerExcl.Y})"; ;
+        }
     }
 }

@@ -1,36 +1,36 @@
-﻿using System.Numerics;
-using Barebone.Geometry;
+﻿using Barebone.Geometry;
 
 namespace Barebone.Graphics.Sprites
 {
-    public record struct SpriteSheetSprite(AabbI Aabb);
+    public record struct SpriteSheetSprite(AabbI Aabb, Aabb AabbUV);
 
     public record SpriteSheetMap(SpriteSheetSprite[] Sprites)
     {
-        public static SpriteSheetMap FromUniform(Vector2I sheetSize, Vector2I spriteSize, int spacing, int sheetBorder)
+        /// <param name="spacing">Empty texels between sprits</param>
+        /// <param name="borderPadding">Empty texels at the edges of the texture (no 'spacing' expected there)</param>
+        public static SpriteSheetMap FromUniform(in Vector2I sheetSize, in Vector2I spriteSize, in int spacing, in int borderPadding)
         {
             var spriteCountX = (sheetSize.X + spacing) / (spriteSize.X + spacing);
             var spriteCountY = (sheetSize.Y + spacing) / (spriteSize.Y + spacing);
             var spriteCount = spriteCountX * spriteCountY;
-            return FromUniform(spriteCount, spriteCountX, spriteSize, spacing, sheetBorder);
+            return FromUniform(sheetSize, spriteCount, spriteCountX, spriteSize, spacing, borderPadding);
         }
 
-        /// <param name="spriteOrigin">Origin (or pivot point) of each sprite in sprite-local coords.</param>
         /// <param name="spacing">Empty texels between sprits</param>
-        /// <param name="sheetBorder">Empty texels at the edges of the texture (no 'spacing' expected there)</param>
-        public static SpriteSheetMap FromUniform(int spriteCount, int columnCount, Vector2I spriteSize,
-            int spacing, int sheetBorder)
+        /// <param name="borderPadding">Empty texels at the edges of the texture (no 'spacing' expected there)</param>
+        public static SpriteSheetMap FromUniform(in Vector2I sheetSize, in int spriteCount, in int columnCount, in Vector2I spriteSize, in int spacing, in int borderPadding)
         {
             var sprites = new SpriteSheetSprite[spriteCount];
-            var pos = new Vector2I(sheetBorder);
+            var pos = new Vector2I(borderPadding);
             for (var i = 0; i < spriteCount; i++)
             {
                 var aabb = new AabbI(pos, pos + spriteSize);
-                sprites[i] = new SpriteSheetSprite(aabb);
+                var aabbUV = aabb.ToAabb() / sheetSize;
+                sprites[i] = new SpriteSheetSprite(aabb, aabbUV);
 
                 if (i % columnCount == columnCount - 1)
                 {
-                    pos.X = sheetBorder;
+                    pos.X = borderPadding;
                     pos.Y += spriteSize.Y + spacing;
                 }
                 else

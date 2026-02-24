@@ -247,7 +247,7 @@ namespace Barebone.Geometry
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Aabb operator /(Aabb a, Vector2 factor)
         {
-            return new(a.MinCorner / factor.X, a.MaxCorner / factor.Y);
+            return new(a.MinCorner / factor, a.MaxCorner / factor);
         }
 
         [JsonIgnore]
@@ -386,7 +386,7 @@ namespace Barebone.Geometry
 
         public override string ToString()
         {
-            return $"<{MinCorner.X}.{MinCorner.Y} : {MaxCorner.X}.{MaxCorner.Y}>";
+            return $"[{MinCorner.X}.{MinCorner.Y} : {MaxCorner.X}.{MaxCorner.Y})";
         }
 
         /// <summary>

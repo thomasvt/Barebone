@@ -15,15 +15,16 @@ namespace Barebone.Graphics.Sprites
         {
             _texture = texture;
             MapData = map;
-
-            var sprites = new List<Sprite>();
+            SpriteCount = map.Sprites.Length;
+            var sprites = new List<Sprite>(SpriteCount);
             Sprites = sprites;
             for (var i = 0; i < SpriteCount; i++)
             {
-                var spriteMap = Sprites[i];
-                var spriteUv = spriteMap.AabbPx / texture.Size;
+                var s = map.Sprites[i];
+                // reverse Y because UVs are Y+ = down, while world is Y+ = up.
+                var aabbUV = new Aabb(s.AabbUV.MinCorner.X, s.AabbUV.MaxCorner.Y, s.AabbUV.MaxCorner.X, s.AabbUV.MinCorner.Y);
 
-                sprites.Add(new Sprite(texture, spriteUv, Aabb.FromSizeAroundCenter(spriteMap.AabbPx.Size * scale), false));
+                sprites.Add(new Sprite(texture, aabbUV, Aabb.FromSizeAroundCenter(s.Aabb.Size * scale), false));
             }
         }
 
