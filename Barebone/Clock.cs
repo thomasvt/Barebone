@@ -3,7 +3,7 @@ namespace Barebone;
 /// <summary>
 /// Time service holding current game time, frame's delta time etc.
 /// </summary>
-public class Clock
+public class Clock : IClock
 {
     public float Now { get; private set; }
     public float DeltaT { get; private set; }

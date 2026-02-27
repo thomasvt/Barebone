@@ -3,7 +3,7 @@ using Barebone.Graphics.Sprites;
 
 namespace Barebone.Assets
 {
-    public class SpriteStore(float scale, TextureStore textureStore) : AssetStore<Sprite>
+    public class SpriteStore(float scale, ITextureStore textureStore) : AssetStore<Sprite>, ISpriteStore
     {
         public override Sprite GetInstance(string filename)
         {

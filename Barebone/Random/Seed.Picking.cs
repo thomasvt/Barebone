@@ -112,5 +112,13 @@ namespace BareBone.Random
         {
             return set.Pick(seed.PickFloat());
         }
+
+        /// <summary>
+        /// Returns true with a given chance [0,1]; or false.
+        /// </summary>
+        public static bool PickBool(this Seed seed, float chanceForTrue)
+        {
+            return seed.PickFloat() < chanceForTrue;
+        }
     }
 }

@@ -246,6 +246,27 @@ namespace Barebone
         }
 
         /// <summary>
+        /// Clears the collection after calling Return() on all items that are <see cref="IPoolable"/>. Optionally frees the allocated capacity memory.
+        /// </summary>
+        /// <param name="freeCapacity">free the memory allocated for the current capacity of this GrowArray</param>
+        public void ClearAndReturnPoolableItems(bool freeCapacity = false)
+        {
+            foreach (var item in AsReadOnlySpan())
+                (item as IPoolable)?.Return();
+
+            Clear(freeCapacity);
+        }
+
+        /// <summary>
+        /// Returns this BBList after returning all items that are <see cref="IPoolable"/>. 
+        /// </summary>
+        public void ReturnIncludingPoolableItems()
+        {
+            ClearAndReturnPoolableItems(false);
+            Return();
+        }
+
+        /// <summary>
         /// Returns a new array (copy) with the items in this GrowArray.
         /// </summary>
         public T[] ToArray()

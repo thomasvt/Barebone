@@ -7,7 +7,7 @@ namespace Barebone.Commands
     /// For instance in concurrency situations, or when altering the scene tree from within loops that would cause the looped collection to be modified.
     /// Commands also formalize game functionality.
     /// </summary>
-    public class CommandQueue
+    public class CommandQueue : ICommandQueue
     {
         private readonly Queue<Command> _commands = new ();
 

@@ -13,7 +13,7 @@ namespace Barebone.Graphics
     /// <summary>
     /// Renderable trianlge mesh with a submesh per texture. Also has a color-only submesh at index 0.
     /// </summary>
-    public class Mesh : Poolable
+    public class Mesh : Poolable, IMesh
     {
         private BBList<TexMesh> _subMeshes = null!;
 
@@ -59,7 +59,7 @@ namespace Barebone.Graphics
         /// <summary>
         /// Prints text onto the TexMesh using the specified Font.
         /// </summary>
-        public Mesh Print(in Vector2 position, in string text, in Color color, in Font font, float scale = 1f, float z = 0f)
+        public Mesh FillText(in Vector2 position, in string text, in Color color, in Font font, float scale = 1f, float z = 0f)
         {
             var subMesh = GetSubMeshFor(font.Texture);
             font.AppendString(false, subMesh.Triangles, text, color, position, scale, z);
@@ -69,7 +69,7 @@ namespace Barebone.Graphics
         /// <summary>
         /// Prints text onto the TexMesh using the specified Font.
         /// </summary>
-        public Mesh Print(in Aabb area, in HorizontalAlignment horizontalAlignment, in VerticalAlignment verticalAlignment, in string text, in Color color, in Font font, float scale = 1f, float z = 0f)
+        public Mesh FillText(in Aabb area, in HorizontalAlignment horizontalAlignment, in VerticalAlignment verticalAlignment, in string text, in Color color, in Font font, float scale = 1f, float z = 0f)
         {
             var subMesh = GetSubMeshFor(font.Texture);
             var measure = font.MeasureBase(text, scale);

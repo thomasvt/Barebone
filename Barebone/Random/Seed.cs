@@ -167,5 +167,7 @@ namespace BareBone.Random
         {
             return (int)Value;
         }
+
+        
     }
 }

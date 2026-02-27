@@ -3,7 +3,7 @@ using Barebone.Graphics.Sprites;
 
 namespace Barebone.Assets
 {
-    public class SpriteSheetStore(SpriteStore spriteStore)
+    public class SpriteSheetStore(ISpriteStore spriteStore) : ISpriteSheetStore
     {
         public SpriteSheet Load(string filename, Vector2I spriteSize, int spacing, int borderPadding, float scale)
         {

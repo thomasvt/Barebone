@@ -9,7 +9,7 @@ namespace Barebone.Geometry
     /// </summary>
     public struct AabbI(Vector2I minCorner, Vector2I maxCornerExcl) : IEquatable<AabbI>
     {
-        public AabbI(int minX, int minY, int maxX, int maxY) : this(new(minX, minY), new(maxX, maxY))
+        public AabbI(int minX, int minY, int maxXExcl, int maxYExcl) : this(new(minX, minY), new(maxXExcl, maxYExcl))
         {
         }
 
