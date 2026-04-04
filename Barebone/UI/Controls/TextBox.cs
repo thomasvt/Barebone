@@ -162,7 +162,7 @@ namespace Barebone.UI.Controls
             }
         }
 
-        public override void OnTypeInput(char ch, Barebone.Platform.Inputs.Button button)
+        public override void OnTypeInput(char ch, Input.KeyboardButton keyboardButton)
         {
             if (IsReadOnly) return;
 
@@ -178,17 +178,17 @@ namespace Barebone.UI.Controls
             ProcessNavigationStrokes(e);
         }
 
-        public override void OnKeyDown(Barebone.Platform.Inputs.Button button)
+        public override void OnKeyDown(Input.KeyboardButton keyboardButton)
         {
-            if (button == Barebone.Platform.Inputs.Button.LeftShift || button == Barebone.Platform.Inputs.Button.RightShift)
+            if (keyboardButton == Input.KeyboardButton.LeftShift || keyboardButton == Input.KeyboardButton.RightShift)
             {
                 _isShiftDown = true;
             }
         }
 
-        public override void OnKeyUp(Barebone.Platform.Inputs.Button button)
+        public override void OnKeyUp(Input.KeyboardButton keyboardButton)
         {
-            if (button == Barebone.Platform.Inputs.Button.LeftShift || button == Barebone.Platform.Inputs.Button.RightShift)
+            if (keyboardButton == Input.KeyboardButton.LeftShift || keyboardButton == Input.KeyboardButton.RightShift)
             {
                 _isShiftDown = false;
             }
@@ -198,9 +198,9 @@ namespace Barebone.UI.Controls
         {
             if (!e.Control)
             {
-                switch (e.Button)
+                switch (e.KeyboardButton)
                 {
-                    case Barebone.Platform.Inputs.Button.Enter:
+                    case Input.KeyboardButton.Enter:
                         {
                             if (!IsMultiLine) return;
                             TypeText("\n");
@@ -212,7 +212,7 @@ namespace Barebone.UI.Controls
                             }
                             break;
                         }
-                    case Barebone.Platform.Inputs.Button.Backspace:
+                    case Input.KeyboardButton.Backspace:
                         {
                             if (IsSelectionEmpty())
                             {
@@ -224,7 +224,7 @@ namespace Barebone.UI.Controls
                                 RemoveSelection();
                             break;
                         }
-                    case Barebone.Platform.Inputs.Button.Delete:
+                    case Input.KeyboardButton.Delete:
                         {
                             if (IsSelectionEmpty())
                             {
@@ -235,14 +235,14 @@ namespace Barebone.UI.Controls
                                 RemoveSelection();
                             break;
                         }
-                    case Barebone.Platform.Inputs.Button.Tab:
+                    case Input.KeyboardButton.Tab:
                         {
                             if (!AllowTabIndent) return;
                             var count = TabIndentSize - _caret.X % TabIndentSize;
                             TypeText(new(' ', count));
                             break;
                         }
-                    case Barebone.Platform.Inputs.Button.Escape:
+                    case Input.KeyboardButton.Escape:
                         {
                             ClearSelection();
                             break;
@@ -254,14 +254,14 @@ namespace Barebone.UI.Controls
                 // Ctrl + ... 
                 if (e.Control)
                 {
-                    switch (e.Button)
+                    switch (e.KeyboardButton)
                     {
-                        case Barebone.Platform.Inputs.Button.A: SelectAll(); break;
-                        case Barebone.Platform.Inputs.Button.X: CutSelectionToClipboard(); break;
-                        case Barebone.Platform.Inputs.Button.C: CopySelectionToClipboard(); break;
-                        case Barebone.Platform.Inputs.Button.V: PasteClipboard(); break;
-                        case Barebone.Platform.Inputs.Button.Z: Undo(); break;
-                        case Barebone.Platform.Inputs.Button.Y: Redo(); break;
+                        case Input.KeyboardButton.A: SelectAll(); break;
+                        case Input.KeyboardButton.X: CutSelectionToClipboard(); break;
+                        case Input.KeyboardButton.C: CopySelectionToClipboard(); break;
+                        case Input.KeyboardButton.V: PasteClipboard(); break;
+                        case Input.KeyboardButton.Z: Undo(); break;
+                        case Input.KeyboardButton.Y: Redo(); break;
                     }
                 }
             }
@@ -269,15 +269,15 @@ namespace Barebone.UI.Controls
 
         private void ProcessNavigationStrokes(KeyStrokeEvent e)
         {
-            switch (e.Button)
+            switch (e.KeyboardButton)
             {
-                case Barebone.Platform.Inputs.Button.Up:
+                case Input.KeyboardButton.Up:
                     MoveCaretTo(new(_caret.X, _caret.Y - 1));
                     break;
-                case Barebone.Platform.Inputs.Button.Down:
+                case Input.KeyboardButton.Down:
                     MoveCaretTo(new(_caret.X, _caret.Y + 1));
                     break;
-                case Barebone.Platform.Inputs.Button.Left:
+                case Input.KeyboardButton.Left:
                     if (!IsUserSelecting() && !IsSelectionEmpty())
                     {
                         GetSelectionRange(out var begin, out _);
@@ -288,7 +288,7 @@ namespace Barebone.UI.Controls
                         MoveCaretTo(_textEditor.StepBackwards(_caret, e.Control));
                     }
                     break;
-                case Barebone.Platform.Inputs.Button.Right:
+                case Input.KeyboardButton.Right:
                     if (!IsUserSelecting() && !IsSelectionEmpty())
                     {
                         GetSelectionRange(out _, out var end);
@@ -299,13 +299,13 @@ namespace Barebone.UI.Controls
                         MoveCaretTo(_textEditor.StepForwards(_caret, e.Control));
                     }
                     break;
-                case Barebone.Platform.Inputs.Button.End:
+                case Input.KeyboardButton.End:
                     if (e.Control)
                         MoveCaretTo(new(int.MaxValue, int.MaxValue));
                     else
                         MoveCaretTo(_caret with { X = int.MaxValue });
                     break;
-                case Barebone.Platform.Inputs.Button.Home:
+                case Input.KeyboardButton.Home:
                     if (e.Control)
                         MoveCaretTo(new(0, 0));
                     else

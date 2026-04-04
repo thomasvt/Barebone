@@ -36,9 +36,9 @@ namespace Barebone.UI.Controls
         public static void DockLeft(this AabbI area, int width, int gap, out AabbI dock, out AabbI remainder)
         {
             width = Math.Min(width, area.Width);
-            dock = new AabbI(area.MinCorner.X, area.MinCorner.Y, area.MinCorner.X + width, area.MaxCornerExcl.Y);
+            dock = new AabbI(area.MinCorner.X, area.MinCorner.Y, area.MinCorner.X + width, area.MaxCorner.Y);
             if (dock.Width < 0) dock = AabbI.Zero;
-            remainder = new AabbI(area.MinCorner.X + width + gap, area.MinCorner.Y, area.MaxCornerExcl.X, area.MaxCornerExcl.Y);
+            remainder = new AabbI(area.MinCorner.X + width + gap, area.MinCorner.Y, area.MaxCorner.X, area.MaxCorner.Y);
             if (remainder.Width < 0) remainder = AabbI.Zero;
         }
 
@@ -46,9 +46,9 @@ namespace Barebone.UI.Controls
         public static void DockTop(this AabbI area, int height, int gap, out AabbI dock, out AabbI remainder)
         {
             height = Math.Min(height, area.Height);
-            dock = new AabbI(area.MinCorner.X, area.MinCorner.Y, area.MaxCornerExcl.X, area.MinCorner.Y + height);
+            dock = new AabbI(area.MinCorner.X, area.MinCorner.Y, area.MaxCorner.X, area.MinCorner.Y + height);
             if (dock.Height < 0) dock = AabbI.Zero;
-            remainder = new AabbI(area.MinCorner.X, area.MinCorner.Y + height + gap, area.MaxCornerExcl.X, area.MaxCornerExcl.Y);
+            remainder = new AabbI(area.MinCorner.X, area.MinCorner.Y + height + gap, area.MaxCorner.X, area.MaxCorner.Y);
             if (remainder.Height < 0) remainder = AabbI.Zero;
         }
 
@@ -56,9 +56,9 @@ namespace Barebone.UI.Controls
         public static void DockRight(this AabbI area, int width, int gap, out AabbI dock, out AabbI remainder)
         {
             width = Math.Min(width, area.Width);
-            dock = new AabbI(area.MaxCornerExcl.X - width, area.MinCorner.Y, area.MaxCornerExcl.X, area.MaxCornerExcl.Y);
+            dock = new AabbI(area.MaxCorner.X - width, area.MinCorner.Y, area.MaxCorner.X, area.MaxCorner.Y);
             if (dock.Height < 0) dock = AabbI.Zero;
-            remainder = new AabbI(area.MinCorner.X, area.MinCorner.Y, area.MaxCornerExcl.X - width - gap, area.MaxCornerExcl.Y);
+            remainder = new AabbI(area.MinCorner.X, area.MinCorner.Y, area.MaxCorner.X - width - gap, area.MaxCorner.Y);
             if (remainder.Width < 0) remainder = AabbI.Zero;
         }
 
@@ -66,9 +66,9 @@ namespace Barebone.UI.Controls
         public static void DockBottom(this AabbI area, int height, int gap, out AabbI dock, out AabbI remainder)
         {
             height = Math.Min(height, area.Height);
-            dock = new AabbI(area.MinCorner.X, area.MaxCornerExcl.Y - height, area.MaxCornerExcl.X, area.MaxCornerExcl.Y);
+            dock = new AabbI(area.MinCorner.X, area.MaxCorner.Y - height, area.MaxCorner.X, area.MaxCorner.Y);
             if (dock.Height < 0) dock = AabbI.Zero;
-            remainder = new AabbI(area.MinCorner.X, area.MinCorner.Y, area.MaxCornerExcl.X, area.MaxCornerExcl.Y - height - gap);
+            remainder = new AabbI(area.MinCorner.X, area.MinCorner.Y, area.MaxCorner.X, area.MaxCorner.Y - height - gap);
             if (remainder.Height < 0) remainder = AabbI.Zero;
         }
     }

@@ -139,10 +139,10 @@ namespace Barebone.UI.Controls
         protected virtual void OnMouseEnter() {}
         protected virtual void OnMouseLeave() {}
         public virtual void OnMouseMove(Vector2I previousPosition, Vector2I position) {}
-        public virtual void OnTypeInput(char ch, Barebone.Platform.Inputs.Button button) { }
+        public virtual void OnTypeInput(char ch, Input.KeyboardButton keyboardButton) { }
         public virtual void OnKeyStroke(KeyStrokeEvent e) { }
-        public virtual void OnKeyDown(Barebone.Platform.Inputs.Button button) { }
-        public virtual void OnKeyUp(Barebone.Platform.Inputs.Button button) { }
+        public virtual void OnKeyDown(Input.KeyboardButton keyboardButton) { }
+        public virtual void OnKeyUp(Input.KeyboardButton keyboardButton) { }
 
         protected virtual void OnFocusChanged(bool isFocussed)
         {
@@ -274,8 +274,8 @@ namespace Barebone.UI.Controls
             {
                 if (field == value) return;
 
-                if (value.Width < 0) value.MaxCornerExcl = value.MaxCornerExcl with { X = value.MinCorner.X };
-                if (value.Height < 0) value.MaxCornerExcl = value.MaxCornerExcl with { Y = value.MinCorner.Y };
+                if (value.Width < 0) value.MaxCorner = value.MaxCorner with { X = value.MinCorner.X };
+                if (value.Height < 0) value.MaxCorner = value.MaxCorner with { Y = value.MinCorner.Y };
 
                 field = value;
                 InvalidateArrange();

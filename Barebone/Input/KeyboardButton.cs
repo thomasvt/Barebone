@@ -1,9 +1,6 @@
-﻿namespace Barebone.Platform.Inputs
+﻿namespace Barebone.Input
 {
-    /// <summary>
-    /// cross-device buttons (mouse, keyboard, gamepad)
-    /// </summary>
-    public enum Button
+    public enum KeyboardButton
     {
         /// <summary>Reserved.</summary>
         None = 0,
@@ -353,22 +350,5 @@
         OemClear = 254, // 0x000000FE
 
         KeyboardEnd = 255,
-
-        MouseLeft,
-        MouseMiddle,
-        MouseRight,
-
-        GamePadA,
-        GamePadB,
-        GamePadX,
-        GamePadY,
-        GamePadShoulderR,
-        GamePadShoulderL,
-        GamePadTriggerR,
-        GamePadTriggerL,
-        GamePadDPadLeft,
-        GamePadDPadRight,
-        GamePadDPadUp,
-        GamePadDPadDown,
     }
 }

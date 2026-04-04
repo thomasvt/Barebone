@@ -7,29 +7,29 @@ namespace Barebone.Geometry
     /// <summary>
     /// Axis Aligned Bounding Box. The positional properties (eg. Top, Bottom) all are in context of X+ is Right, and Y+ is Up.
     /// </summary>
-    public struct AabbI(Vector2I minCorner, Vector2I maxCornerExcl) : IEquatable<AabbI>
+    public struct AabbI(Vector2I minCorner, Vector2I maxCorner) : IEquatable<AabbI>
     {
-        public AabbI(int minX, int minY, int maxXExcl, int maxYExcl) : this(new(minX, minY), new(maxXExcl, maxYExcl))
+        public AabbI(int minX, int minY, int maxXIncl, int maxYIncl) : this(new(minX, minY), new(maxXIncl, maxYIncl))
         {
         }
 
         public Vector2I MinCorner = minCorner;
-        public Vector2I MaxCornerExcl = maxCornerExcl;
+        public Vector2I MaxCorner = maxCorner;
 
-        [JsonIgnore] public Vector2I Size => MaxCornerExcl - MinCorner;
-        [JsonIgnore] public int Width => MaxCornerExcl.X - MinCorner.X;
-        [JsonIgnore] public int Height => MaxCornerExcl.Y - MinCorner.Y;
-        [JsonIgnore] public Vector2 Center => (MaxCornerExcl + MinCorner) * 0.5f;
+        [JsonIgnore] public Vector2I Size => MaxCorner - MinCorner + Vector2I.One;
+        [JsonIgnore] public int Width => MaxCorner.X - MinCorner.X + 1;
+        [JsonIgnore] public int Height => MaxCorner.Y - MinCorner.Y + 1;
+        [JsonIgnore] public Vector2 Center => (MaxCorner + MinCorner) * 0.5f;
         [JsonIgnore] public Vector2I CenterI => MinCorner + Size / 2;
         /// <summary>
         /// Topleft corner of the aabb when X+ is right and Y+ is up.
         /// </summary>
-        [JsonIgnore] public Vector2I TopLeftExcl => new(MinCorner.X, MaxCornerExcl.Y);
+        [JsonIgnore] public Vector2I TopLeft => new(MinCorner.X, MaxCorner.Y);
 
         /// <summary>
         /// TopRight corner of the aabb when X+ is right and Y+ is up.
         /// </summary>
-        [JsonIgnore] public Vector2I TopRightExcl => MaxCornerExcl;
+        [JsonIgnore] public Vector2I TopRight => MaxCorner;
 
         /// <summary>
         /// BottomLeft corner of the aabb when X+ is right and Y+ is up.
@@ -39,19 +39,18 @@ namespace Barebone.Geometry
         /// <summary>
         /// BottomRight corner of the aabb when X+ is right and Y+ is up.
         /// </summary>
-        [JsonIgnore] public Vector2I BottomRightExcl => new(MaxCornerExcl.X, MinCorner.Y);
-        [JsonIgnore] public int Top => MaxCornerExcl.Y - 1;
-        [JsonIgnore] public int Right => MaxCornerExcl.X - 1;
+        [JsonIgnore] public Vector2I BottomRight => new(MaxCorner.X, MinCorner.Y);
+        [JsonIgnore] public int Top => MaxCorner.Y;
+        [JsonIgnore] public int Right => MaxCorner.X;
         [JsonIgnore] public int Left => MinCorner.X;
         [JsonIgnore] public int Bottom => MinCorner.Y;
-        [JsonIgnore] public Vector2I MaxCorner => MaxCornerExcl - Vector2I.One;
 
         public static AabbI Zero = new(Vector2I.Zero, Vector2I.Zero);
 
         public void ForEach(Action<Vector2I> action)
         {
-            for (var y = MinCorner.Y; y < MaxCornerExcl.Y; y++)
-                for (var x = MinCorner.X; x < MaxCornerExcl.X; x++)
+            for (var y = MinCorner.Y; y < MaxCorner.Y; y++)
+                for (var x = MinCorner.X; x < MaxCorner.X; x++)
                     action(new Vector2I(x, y));
         }
 
@@ -59,8 +58,8 @@ namespace Barebone.Geometry
         {
             var minX = Math.Max(MinCorner.X, b.MinCorner.X);
             var minY = Math.Max(MinCorner.Y, b.MinCorner.Y);
-            var maxX = Math.Min(MaxCornerExcl.X, b.MaxCornerExcl.X);
-            var maxY = Math.Min(MaxCornerExcl.Y, b.MaxCornerExcl.Y);
+            var maxX = Math.Min(MaxCorner.X, b.MaxCorner.X);
+            var maxY = Math.Min(MaxCorner.Y, b.MaxCorner.Y);
 
             if (minX >= maxX || minY >= maxY) 
                 return AabbI.Zero;
@@ -69,7 +68,7 @@ namespace Barebone.Geometry
 
         public readonly bool Contains(in Vector2I position)
         {
-            return position.X >= MinCorner.X && position.Y >= MinCorner.Y && position.X < MaxCornerExcl.X && position.Y < MaxCornerExcl.Y;
+            return position.X >= MinCorner.X && position.Y >= MinCorner.Y && position.X < MaxCorner.X && position.Y < MaxCorner.Y;
         }
 
         public static AabbI FromSizeAroundCenter(in Vector2I size)
@@ -97,7 +96,7 @@ namespace Barebone.Geometry
         /// </summary>
         public static AabbI FromSize(in Vector2I size)
         {
-            return new AabbI(Vector2I.Zero, size);
+            return new AabbI(Vector2I.Zero, size - Vector2I.One);
         }
 
         /// <summary>
@@ -105,15 +104,15 @@ namespace Barebone.Geometry
         /// </summary>
         public static AabbI FromSize(in Vector2I minCorner, in Vector2I size)
         {
-            return new AabbI(minCorner, minCorner + size);
+            return new AabbI(minCorner, minCorner + size - Vector2I.One);
         }
 
         /// <summary>
         /// Returns the AAbbI that includes both a and b
         /// </summary>
-        public static AabbI FromPointsIncl(in Vector2I a, in Vector2I b)
+        public static AabbI FromPoints(in Vector2I a, in Vector2I b)
         {
-            return new AabbI(new(Math.Min(a.X, b.X), Math.Min(a.Y, b.Y)), new(Math.Max(a.X, b.X)+1, Math.Max(a.Y, b.Y)+1));
+            return new AabbI(new(Math.Min(a.X, b.X), Math.Min(a.Y, b.Y)), new(Math.Max(a.X, b.X), Math.Max(a.Y, b.Y)));
         }
 
         public static AabbI FromPoints(IEnumerable<Vector2I> points)
@@ -132,17 +131,17 @@ namespace Barebone.Geometry
 
             if (minX == null) throw new ArgumentException("Cannot create AabbI from 0 points.");
 
-            return new AabbI(new(minX.Value, minY!.Value), new(maxX!.Value + 1, maxY!.Value + 1));
+            return new AabbI(new(minX.Value, minY!.Value), new(maxX!.Value, maxY!.Value));
         }
 
         public static AabbI operator +(AabbI a, Vector2I b)
         {
-            return new(a.MinCorner + b, a.MaxCornerExcl + b);
+            return new(a.MinCorner + b, a.MaxCorner + b);
         }
 
         public static AabbI operator +(Vector2I b, AabbI a)
         {
-            return new(a.MinCorner + b, a.MaxCornerExcl + b);
+            return new(a.MinCorner + b, a.MaxCorner + b);
         }
 
         public static bool operator ==(AabbI a, AabbI b)
@@ -157,7 +156,7 @@ namespace Barebone.Geometry
 
         public bool Equals(AabbI other)
         {
-            return MinCorner.Equals(other.MinCorner) && MaxCornerExcl.Equals(other.MaxCornerExcl);
+            return MinCorner.Equals(other.MinCorner) && MaxCorner.Equals(other.MaxCorner);
         }
 
         public override bool Equals(object? obj)
@@ -167,7 +166,7 @@ namespace Barebone.Geometry
 
         public override int GetHashCode()
         {
-            return HashCode.Combine(MinCorner, MaxCornerExcl);
+            return HashCode.Combine(MinCorner, MaxCorner);
         }
 
         [Pure]
@@ -175,14 +174,14 @@ namespace Barebone.Geometry
         {
             var minX = MinCorner.X - amount;
             var minY = MinCorner.Y - amount;
-            var maxX = Math.Max(MaxCornerExcl.X + amount, minX);
-            var maxY = Math.Max(MaxCornerExcl.Y + amount, minY);
+            var maxX = Math.Max(MaxCorner.X + amount, minX);
+            var maxY = Math.Max(MaxCorner.Y + amount, minY);
             return new(minX, minY, maxX, maxY);
         }
 
         public override string ToString()
         {
-            return $"[{MinCorner.X}.{MinCorner.Y} : {MaxCornerExcl.X}.{MaxCornerExcl.Y})"; ;
+            return $"[{MinCorner.X}.{MinCorner.Y} : {MaxCorner.X}.{MaxCorner.Y})"; ;
         }
     }
 }

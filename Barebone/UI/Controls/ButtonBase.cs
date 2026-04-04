@@ -1,5 +1,6 @@
 ﻿using System.Drawing;
 using Barebone.Geometry;
+using Barebone.Input;
 
 namespace Barebone.UI.Controls
 {

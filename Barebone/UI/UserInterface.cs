@@ -6,6 +6,7 @@ using Barebone.Messaging;
 using Barebone.UI.Controls;
 using Barebone.UI.Text;
 using System.Drawing;
+using MouseButton = Barebone.Input.MouseButton;
 
 namespace Barebone.UI
 {
@@ -64,13 +65,13 @@ namespace Barebone.UI
                 _previousMousePosition = mousePosition;
             }
 
-            if (_input.IsJustPressed(Platform.Inputs.Button.MouseLeft))
+            if (_input.IsJustPressed(MouseButton.Left))
                 DispatchMouseButtonChange(mousePosition, MouseButton.Left, ButtonState.Pressed);
-            else if (_input.IsJustReleased(Platform.Inputs.Button.MouseLeft))
+            else if (_input.IsJustReleased(MouseButton.Left))
                 DispatchMouseButtonChange(mousePosition, MouseButton.Left, ButtonState.Released);
-            else if (_input.IsJustPressed(Platform.Inputs.Button.MouseRight))
+            else if (_input.IsJustPressed(MouseButton.Right))
                 DispatchMouseButtonChange(mousePosition, MouseButton.Right, ButtonState.Pressed);
-            else if (_input.IsJustReleased(Platform.Inputs.Button.MouseRight))
+            else if (_input.IsJustReleased(MouseButton.Right))
                 DispatchMouseButtonChange(mousePosition, MouseButton.Right, ButtonState.Released);
         }
 
@@ -121,9 +122,9 @@ namespace Barebone.UI
             }
         }
 
-        private void ProcessTypeInput(char ch, Platform.Inputs.Button button)
+        private void ProcessTypeInput(char ch, KeyboardButton keyboardButton)
         {
-            _focussedControl?.OnTypeInput(ch, button);
+            _focussedControl?.OnTypeInput(ch, keyboardButton);
         }
 
         private void ProcessKeyStroke(KeyStrokeEvent e)
@@ -131,12 +132,12 @@ namespace Barebone.UI
             _focussedControl?.OnKeyStroke(e);
         }
 
-        private void ProcessKeyDown(Platform.Inputs.Button e)
+        private void ProcessKeyDown(KeyboardButton e)
         {
             _focussedControl?.OnKeyDown(e);
         }
 
-        private void ProcessKeyUp(Platform.Inputs.Button e)
+        private void ProcessKeyUp(KeyboardButton e)
         {
             _focussedControl?.OnKeyUp(e);
         }

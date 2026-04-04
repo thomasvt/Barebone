@@ -1,7 +1,7 @@
-﻿using System.Diagnostics;
-using Barebone.Geometry;
+﻿using Barebone.Geometry;
 using Barebone.Input;
 using Barebone.Platform.Inputs;
+using Barebone.UI.Controls;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
 using ButtonState = Microsoft.Xna.Framework.Input.ButtonState;
@@ -32,7 +32,7 @@ namespace Barebone.Monogame
 
         private void WindowOnTextInput(object? sender, TextInputEventArgs e)
         {
-            TextInput?.Invoke(e.Character, (Button)e.Key);
+            TextInput?.Invoke(e.Character, (KeyboardButton)e.Key);
         }
 
         private void WindowOnKeyDown(object? sender, InputKeyEventArgs e)
@@ -41,13 +41,13 @@ namespace Barebone.Monogame
             var shift = _keyboard[Keys.LeftShift] == KeyState.Down || _keyboard[Keys.RightShift] == KeyState.Down;
             var alt = _keyboard[Keys.LeftAlt] == KeyState.Down || _keyboard[Keys.RightAlt] == KeyState.Down;
             var isRepeat = _keyboard[e.Key] == KeyState.Down;
-            if (!isRepeat) KeyDown?.Invoke((Button)e.Key);
-            KeyStroke?.Invoke(new(control, shift, alt, (Button)e.Key));
+            if (!isRepeat) KeyDown?.Invoke((KeyboardButton)e.Key);
+            KeyStroke?.Invoke(new(control, shift, alt, (KeyboardButton)e.Key));
         }
 
         private void WindowOnKeyUp(object? sender, InputKeyEventArgs e)
         {
-            KeyUp?.Invoke((Button)e.Key);
+            KeyUp?.Invoke((KeyboardButton)e.Key);
         }
 
         public void Update()
@@ -86,145 +86,237 @@ namespace Barebone.Monogame
             InputMode = mode;
         }
 
+        #region Keyboard
+
         /// <summary>
         /// Did the button just go from not pressed to pressed?
         /// </summary>
-        public bool IsJustPressed(Button button) => IsJust(ButtonState.Pressed, button);
+        public bool IsJustPressed(KeyboardButton keyboardButton) => IsJust(ButtonState.Pressed, keyboardButton);
 
         /// <summary>
         /// Did the button just go from pressed to not pressed?
         /// </summary>
-        public bool IsJustReleased(Button button) => IsJust(ButtonState.Released, button);
+        public bool IsJustReleased(KeyboardButton keyboardButton) => IsJust(ButtonState.Released, keyboardButton);
 
         /// <summary>
         /// Is the button being pressed in the current frame.
         /// </summary>
-        public bool IsDown(Button button) => Is(button, ButtonState.Pressed);
+        public bool IsDown(KeyboardButton keyboardButton) => Is(keyboardButton, ButtonState.Pressed);
 
         /// <summary>
         /// Is the button not being pressed in the current frame.
         /// </summary>
-        public bool IsUp(Button button) => Is(button, ButtonState.Released);
+        public bool IsUp(KeyboardButton keyboardButton) => Is(keyboardButton, ButtonState.Released);
 
         /// <summary>
         /// Was the button pressed in the previous frame?
         /// </summary>
-        public bool WasUp(Button button) => Was(button, ButtonState.Pressed);
+        public bool WasUp(KeyboardButton keyboardButton) => Was(keyboardButton, ButtonState.Pressed);
 
         /// <summary>
         /// Was the button released in the previous frame?
         /// </summary>
-        public bool WasDown(Button button) => Was(button, ButtonState.Released);
+        public bool WasDown(KeyboardButton keyboardButton) => Was(keyboardButton, ButtonState.Released);
 
 
-        private bool IsJust(ButtonState state, Button button)
-        {
-            var keyState = state == ButtonState.Pressed ? KeyState.Down : KeyState.Up;
-
-            if ((int)button < (int)Button.KeyboardEnd)
-            {
-                // Barebone uses the same standardised Key values as XNA, so we can map by casting.
-                var xnaKey = (Keys)(int)button;
-                return _keyboardPrevious[xnaKey] != keyState && _keyboard[xnaKey] == keyState;
-            }
-
-            // ... and for mouse and gamepad we use a switch:
-            return button switch
-            {
-                Button.MouseLeft => _mousePrevious.LeftButton != state && _mouse.LeftButton == state,
-                Button.MouseRight => _mousePrevious.RightButton != state && _mouse.RightButton == state,
-                Button.MouseMiddle => _mousePrevious.MiddleButton != state && _mouse.MiddleButton == state,
-
-                Button.GamePadA => _gamePadPrevious.Buttons.A != state && _gamePad.Buttons.A == state,
-                Button.GamePadB => _gamePadPrevious.Buttons.B != state && _gamePad.Buttons.B == state,
-                Button.GamePadX => _gamePadPrevious.Buttons.X != state && _gamePad.Buttons.X == state,
-                Button.GamePadY => _gamePadPrevious.Buttons.Y != state && _gamePad.Buttons.Y == state,
-                Button.GamePadShoulderL => _gamePadPrevious.Buttons.LeftShoulder != state && _gamePad.Buttons.LeftShoulder == state,
-                Button.GamePadShoulderR => _gamePadPrevious.Buttons.RightShoulder != state && _gamePad.Buttons.RightShoulder == state,
-                Button.GamePadTriggerL => state == ButtonState.Pressed ? _gamePadPrevious.Triggers.Left == 0 && _gamePad.Triggers.Left > 0 : _gamePadPrevious.Triggers.Left > 0 && _gamePad.Triggers.Left == 0,
-                Button.GamePadTriggerR => state == ButtonState.Pressed ? _gamePadPrevious.Triggers.Right == 0 && _gamePad.Triggers.Right > 0 : _gamePadPrevious.Triggers.Right > 0 && _gamePad.Triggers.Right == 0,
-
-                Button.GamePadDPadLeft => _gamePadPrevious.DPad.Left != state && _gamePad.DPad.Left == state,
-                Button.GamePadDPadRight => _gamePadPrevious.DPad.Right != state && _gamePad.DPad.Right == state,
-                Button.GamePadDPadUp => _gamePadPrevious.DPad.Up != state && _gamePad.DPad.Up == state,
-                Button.GamePadDPadDown => _gamePadPrevious.DPad.Down != state && _gamePad.DPad.Down == state,
-
-                _ => throw new ArgumentOutOfRangeException(nameof(button))
-            };
-        }
-
-        private bool Is(Button button, ButtonState state)
-        {
-            var keyState = state == ButtonState.Pressed ? KeyState.Down : KeyState.Up;
-
-
-            // Barebone uses the same standardised Key values as XNA, so we can map by casting.
-            if ((int)button < (int)Button.KeyboardEnd)
-            {
-                var xnaKey = (Keys)(int)button;
-                return _keyboard[xnaKey] == keyState;
-            }
-
-            // ... and for mouse and gamepad we use a switch:
-            return button switch
-            {
-                Button.MouseLeft => _mouse.LeftButton == state,
-                Button.MouseRight => _mouse.RightButton == state,
-                Button.MouseMiddle => _mouse.MiddleButton == state,
-
-                Button.GamePadA => _gamePad.Buttons.A == state,
-                Button.GamePadB => _gamePad.Buttons.B == state,
-                Button.GamePadX => _gamePad.Buttons.X == state,
-                Button.GamePadY => _gamePad.Buttons.Y == state,
-                Button.GamePadShoulderL => _gamePad.Buttons.LeftShoulder == state,
-                Button.GamePadShoulderR => _gamePad.Buttons.RightShoulder == state,
-                Button.GamePadTriggerL => state == ButtonState.Pressed ? _gamePad.Triggers.Left > 0 : _gamePad.Triggers.Left == 0,
-                Button.GamePadTriggerR => state == ButtonState.Pressed ? _gamePad.Triggers.Right > 0 : _gamePad.Triggers.Right == 0,
-
-                Button.GamePadDPadLeft => _gamePad.DPad.Left == state,
-                Button.GamePadDPadRight => _gamePad.DPad.Right == state,
-                Button.GamePadDPadUp => _gamePad.DPad.Up == state,
-                Button.GamePadDPadDown => _gamePad.DPad.Down == state,
-
-                _ => throw new ArgumentOutOfRangeException(nameof(button))
-            };
-        }
-
-        private bool Was(Button button, ButtonState state)
+        private bool IsJust(ButtonState state, KeyboardButton keyboardButton)
         {
             var keyState = state == ButtonState.Pressed ? KeyState.Down : KeyState.Up;
 
             // Barebone uses the same standardised Key values as XNA, so we can map by casting.
-            if ((int)button < (int)Button.KeyboardEnd)
-            {
-                var xnaKey = (Keys)(int)button;
-                return _keyboardPrevious[xnaKey] == keyState;
-            }
+            var xnaKey = (Keys)(int)keyboardButton;
+            return _keyboardPrevious[xnaKey] != keyState && _keyboard[xnaKey] == keyState;
+        }
 
-            // ... and for mouse and gamepad we use a switch:
+        private bool Is(KeyboardButton keyboardButton, ButtonState state)
+        {
+            var keyState = state == ButtonState.Pressed ? KeyState.Down : KeyState.Up;
+
+            // Barebone uses the same standardised Key values as XNA, so we can map by casting.
+            var xnaKey = (Keys)(int)keyboardButton;
+            return _keyboard[xnaKey] == keyState;
+        }
+
+        private bool Was(KeyboardButton keyboardButton, ButtonState state)
+        {
+            var keyState = state == ButtonState.Pressed ? KeyState.Down : KeyState.Up;
+
+            // Barebone uses the same standardised Key values as XNA, so we can map by casting.
+            var xnaKey = (Keys)(int)keyboardButton;
+            return _keyboardPrevious[xnaKey] == keyState;
+        }
+
+        #endregion
+
+        #region Mouse
+
+        /// <summary>
+        /// Did the button just go from not pressed to pressed?
+        /// </summary>
+        public bool IsJustPressed(MouseButton button) => IsJust(ButtonState.Pressed, button);
+
+        /// <summary>
+        /// Did the button just go from pressed to not pressed?
+        /// </summary>
+        public bool IsJustReleased(MouseButton button) => IsJust(ButtonState.Released, button);
+
+        /// <summary>
+        /// Is the button being pressed in the current frame.
+        /// </summary>
+        public bool IsDown(MouseButton button) => Is(button, ButtonState.Pressed);
+
+        /// <summary>
+        /// Is the button not being pressed in the current frame.
+        /// </summary>
+        public bool IsUp(MouseButton button) => Is(button, ButtonState.Released);
+
+        /// <summary>
+        /// Was the button pressed in the previous frame?
+        /// </summary>
+        public bool WasUp(MouseButton button) => Was(button, ButtonState.Pressed);
+
+        /// <summary>
+        /// Was the button released in the previous frame?
+        /// </summary>
+        public bool WasDown(MouseButton button) => Was(button, ButtonState.Released);
+
+
+        private bool IsJust(ButtonState state, MouseButton button)
+        {
             return button switch
             {
-                Button.MouseLeft => _mousePrevious.LeftButton == state,
-                Button.MouseRight => _mousePrevious.RightButton == state,
-                Button.MouseMiddle => _mousePrevious.MiddleButton == state,
-
-                Button.GamePadA => _gamePadPrevious.Buttons.A == state,
-                Button.GamePadB => _gamePadPrevious.Buttons.B == state,
-                Button.GamePadX => _gamePadPrevious.Buttons.X == state,
-                Button.GamePadY => _gamePadPrevious.Buttons.Y == state,
-                Button.GamePadShoulderL => _gamePadPrevious.Buttons.LeftShoulder == state,
-                Button.GamePadShoulderR => _gamePadPrevious.Buttons.RightShoulder == state,
-                Button.GamePadTriggerL => state == ButtonState.Pressed ? _gamePadPrevious.Triggers.Left > 0 : _gamePadPrevious.Triggers.Left == 0,
-                Button.GamePadTriggerR => state == ButtonState.Pressed ? _gamePadPrevious.Triggers.Right > 0 : _gamePadPrevious.Triggers.Right == 0,
-
-                Button.GamePadDPadLeft => _gamePadPrevious.DPad.Left == state,
-                Button.GamePadDPadRight => _gamePadPrevious.DPad.Right == state,
-                Button.GamePadDPadUp => _gamePadPrevious.DPad.Up == state,
-                Button.GamePadDPadDown => _gamePadPrevious.DPad.Down == state,
+                MouseButton.Left => _mousePrevious.LeftButton != state && _mouse.LeftButton == state,
+                MouseButton.Right => _mousePrevious.RightButton != state && _mouse.RightButton == state,
+                MouseButton.Middle => _mousePrevious.MiddleButton != state && _mouse.MiddleButton == state,
 
                 _ => throw new ArgumentOutOfRangeException(nameof(button))
             };
         }
+
+        private bool Is(MouseButton button, ButtonState state)
+        {
+            return button switch
+            {
+                MouseButton.Left => _mouse.LeftButton == state,
+                MouseButton.Right => _mouse.RightButton == state,
+                MouseButton.Middle => _mouse.MiddleButton == state,
+
+                _ => throw new ArgumentOutOfRangeException(nameof(button))
+            };
+        }
+
+        private bool Was(MouseButton button, ButtonState state)
+        {
+            return button switch
+            {
+                MouseButton.Left => _mousePrevious.LeftButton == state,
+                MouseButton.Right => _mousePrevious.RightButton == state,
+                MouseButton.Middle => _mousePrevious.MiddleButton == state,
+
+                _ => throw new ArgumentOutOfRangeException(nameof(button))
+            };
+        }
+
+        #endregion
+
+        #region GamePad
+
+        /// <summary>
+        /// Did the button just go from not pressed to pressed?
+        /// </summary>
+        public bool IsJustPressed(GamePadButton button) => IsJust(ButtonState.Pressed, button);
+
+        /// <summary>
+        /// Did the button just go from pressed to not pressed?
+        /// </summary>
+        public bool IsJustReleased(GamePadButton button) => IsJust(ButtonState.Released, button);
+
+        /// <summary>
+        /// Is the button being pressed in the current frame.
+        /// </summary>
+        public bool IsDown(GamePadButton button) => Is(button, ButtonState.Pressed);
+
+        /// <summary>
+        /// Is the button not being pressed in the current frame.
+        /// </summary>
+        public bool IsUp(GamePadButton button) => Is(button, ButtonState.Released);
+
+        /// <summary>
+        /// Was the button pressed in the previous frame?
+        /// </summary>
+        public bool WasUp(GamePadButton button) => Was(button, ButtonState.Pressed);
+
+        /// <summary>
+        /// Was the button released in the previous frame?
+        /// </summary>
+        public bool WasDown(GamePadButton button) => Was(button, ButtonState.Released);
+
+
+        private bool IsJust(ButtonState state, GamePadButton button)
+        {
+            return button switch
+            {
+                GamePadButton.A => _gamePadPrevious.Buttons.A != state && _gamePad.Buttons.A == state,
+                GamePadButton.B => _gamePadPrevious.Buttons.B != state && _gamePad.Buttons.B == state,
+                GamePadButton.X => _gamePadPrevious.Buttons.X != state && _gamePad.Buttons.X == state,
+                GamePadButton.Y => _gamePadPrevious.Buttons.Y != state && _gamePad.Buttons.Y == state,
+                GamePadButton.ShoulderL => _gamePadPrevious.Buttons.LeftShoulder != state && _gamePad.Buttons.LeftShoulder == state,
+                GamePadButton.ShoulderR => _gamePadPrevious.Buttons.RightShoulder != state && _gamePad.Buttons.RightShoulder == state,
+                GamePadButton.TriggerL => state == ButtonState.Pressed ? _gamePadPrevious.Triggers.Left == 0 && _gamePad.Triggers.Left > 0 : _gamePadPrevious.Triggers.Left > 0 && _gamePad.Triggers.Left == 0,
+                GamePadButton.TriggerR => state == ButtonState.Pressed ? _gamePadPrevious.Triggers.Right == 0 && _gamePad.Triggers.Right > 0 : _gamePadPrevious.Triggers.Right > 0 && _gamePad.Triggers.Right == 0,
+                GamePadButton.DPadLeft => _gamePadPrevious.DPad.Left != state && _gamePad.DPad.Left == state,
+                GamePadButton.DPadRight => _gamePadPrevious.DPad.Right != state && _gamePad.DPad.Right == state,
+                GamePadButton.DPadUp => _gamePadPrevious.DPad.Up != state && _gamePad.DPad.Up == state,
+                GamePadButton.DPadDown => _gamePadPrevious.DPad.Down != state && _gamePad.DPad.Down == state,
+
+                _ => throw new ArgumentOutOfRangeException(nameof(button))
+            };
+        }
+
+        private bool Is(GamePadButton button, ButtonState state)
+        {
+            return button switch
+            {
+                GamePadButton.A => _gamePad.Buttons.A == state,
+                GamePadButton.B => _gamePad.Buttons.B == state,
+                GamePadButton.X => _gamePad.Buttons.X == state,
+                GamePadButton.Y => _gamePad.Buttons.Y == state,
+                GamePadButton.ShoulderL => _gamePad.Buttons.LeftShoulder == state,
+                GamePadButton.ShoulderR => _gamePad.Buttons.RightShoulder == state,
+                GamePadButton.TriggerL => state == ButtonState.Pressed ? _gamePad.Triggers.Left > 0 : _gamePad.Triggers.Left == 0,
+                GamePadButton.TriggerR => state == ButtonState.Pressed ? _gamePad.Triggers.Right > 0 : _gamePad.Triggers.Right == 0,
+
+                GamePadButton.DPadLeft => _gamePad.DPad.Left == state,
+                GamePadButton.DPadRight => _gamePad.DPad.Right == state,
+                GamePadButton.DPadUp => _gamePad.DPad.Up == state,
+                GamePadButton.DPadDown => _gamePad.DPad.Down == state,
+
+                _ => throw new ArgumentOutOfRangeException(nameof(button))
+            };
+        }
+
+        private bool Was(GamePadButton button, ButtonState state)
+        {
+            return button switch
+            {
+                GamePadButton.A => _gamePadPrevious.Buttons.A == state,
+                GamePadButton.B => _gamePadPrevious.Buttons.B == state,
+                GamePadButton.X => _gamePadPrevious.Buttons.X == state,
+                GamePadButton.Y => _gamePadPrevious.Buttons.Y == state,
+                GamePadButton.ShoulderL => _gamePadPrevious.Buttons.LeftShoulder == state,
+                GamePadButton.ShoulderR => _gamePadPrevious.Buttons.RightShoulder == state,
+                GamePadButton.TriggerL => state == ButtonState.Pressed ? _gamePadPrevious.Triggers.Left > 0 : _gamePadPrevious.Triggers.Left == 0,
+                GamePadButton.TriggerR => state == ButtonState.Pressed ? _gamePadPrevious.Triggers.Right > 0 : _gamePadPrevious.Triggers.Right == 0,
+                GamePadButton.DPadLeft => _gamePadPrevious.DPad.Left == state,
+                GamePadButton.DPadRight => _gamePadPrevious.DPad.Right == state,
+                GamePadButton.DPadUp => _gamePadPrevious.DPad.Up == state,
+                GamePadButton.DPadDown => _gamePadPrevious.DPad.Down == state,
+
+                _ => throw new ArgumentOutOfRangeException(nameof(button))
+            };
+        }
+
+        #endregion
 
         public bool DidMouseScrollUp()
         {
@@ -273,7 +365,7 @@ namespace Barebone.Monogame
         /// </summary>
         public Vector2 GetKeyboardWasd()
         {
-            var keyboardInput = new Vector2(GetKeyAxis(Button.A, Button.D), GetKeyAxis(Button.S, Button.W));
+            var keyboardInput = new Vector2(GetKeyAxis(KeyboardButton.A, KeyboardButton.D), GetKeyAxis(KeyboardButton.S, KeyboardButton.W));
             if (keyboardInput.X != 0 && keyboardInput.Y != 0)
                 return Vector2.Normalize(keyboardInput);
             return keyboardInput;
@@ -284,27 +376,27 @@ namespace Barebone.Monogame
         /// </summary>
         public Vector2 GetKeyboardArrows()
         {
-            var keyboardInput = new Vector2(GetKeyAxis(Button.Left, Button.Right), GetKeyAxis(Button.Down, Button.Up));
+            var keyboardInput = new Vector2(GetKeyAxis(KeyboardButton.Left, KeyboardButton.Right), GetKeyAxis(KeyboardButton.Down, KeyboardButton.Up));
             if (keyboardInput.X != 0 && keyboardInput.Y != 0)
                 return Vector2.Normalize(keyboardInput);
             return keyboardInput;
         }
 
-        public float GetKeyAxis(Button decrease, Button increase)
+        public float GetKeyAxis(KeyboardButton decrease, KeyboardButton increase)
         {
             if (Is(decrease, ButtonState.Pressed)) return -1;
             if (Is(increase, ButtonState.Pressed)) return 1;
             return 0;
         }
 
-        public Vector2 GetKeyAxis2(Button decreaseX, Button increaseX, Button decreaseY, Button increaseY)
+        public Vector2 GetKeyAxis2(KeyboardButton decreaseX, KeyboardButton increaseX, KeyboardButton decreaseY, KeyboardButton increaseY)
         {
             return new Vector2(GetKeyAxis(decreaseX, increaseX), GetKeyAxis(decreaseY, increaseY));
         }
 
-        public event Action<char, Button>? TextInput;
+        public event Action<char, KeyboardButton>? TextInput;
         public event Action<KeyStrokeEvent>? KeyStroke;
-        public event Action<Button>? KeyDown;
-        public event Action<Button>? KeyUp;
+        public event Action<KeyboardButton>? KeyDown;
+        public event Action<KeyboardButton>? KeyUp;
     }
 }
