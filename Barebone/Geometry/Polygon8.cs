@@ -10,6 +10,13 @@ namespace Barebone.Geometry
         private Vector2 P0;
     }
 
+    public enum LineCap
+    {
+        Butt,
+        Square,
+        Round
+    }
+
     /// <summary>
     /// Polygib with up to 8 corners as a value-type (inlined in this struct, no array on the heap)
     /// Note that most algorithms that use this expect the polygon to be convex.
@@ -147,7 +154,7 @@ namespace Barebone.Geometry
         {
             if (span.Length < Count) throw new ArgumentException($"Array is too small to contain all {Count} corners of this polygon.");
             for (var i = 0; i < Count; i++)
-                span[i] = _vertices[i]; 
+                span[i] = _vertices[i];
         }
 
         public override string ToString()
@@ -195,7 +202,7 @@ namespace Barebone.Geometry
             p.Count++;
 
             for (var i = Count; i > index; i--)
-                p._vertices[i] = p._vertices[i-1];
+                p._vertices[i] = p._vertices[i - 1];
 
             p._vertices[index] = vertex;
 
@@ -228,6 +235,29 @@ namespace Barebone.Geometry
             var maxX = aabb.MaxCorner.X;
             var maxY = aabb.MaxCorner.Y;
             return new Polygon8(new(minX, minY), new(minX, maxY), new(maxX, maxY), new(maxX, minY));
+        }
+
+        public static Polygon8 Line(Vector2 a, Vector2 b, float width, LineCap lineCap)
+        {
+            var ab = b - a;
+
+            var longi = (a == b ? new Vector2(1, 0) : Vector2.Normalize(ab)) * (width * 0.5f);
+            var latti = longi.CrossLeft();
+
+            switch (lineCap)
+            {
+                case LineCap.Square: return new(a - longi - latti, a - longi + latti, b + longi + latti, b + longi - latti);
+                case LineCap.Butt: return new(a - latti, a + latti, b + latti, b - latti);
+                case LineCap.Round:
+                    {
+                        // this adds a few more points to have somewhat of a rounded cap.
+                        var lattiHalf = latti * 0.5f;
+                        var longiHalf = longi * 0.5f;
+                        return new(a - latti - longiHalf, a - longi - lattiHalf, a - longi + lattiHalf, a + latti - longiHalf, b + latti + longiHalf, b + longi + lattiHalf, b + longi - lattiHalf, b - latti + longiHalf);
+                    }
+                default: throw new ArgumentOutOfRangeException(nameof(lineCap), lineCap, null);
+            }
+            ;
         }
 
         [Pure]
