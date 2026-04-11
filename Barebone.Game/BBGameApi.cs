@@ -1,4 +1,5 @@
 ﻿using Barebone.Game.Graphics;
+using Barebone.Game.Input;
 
 namespace Barebone.Game
 {
@@ -6,6 +7,7 @@ namespace Barebone.Game
     {
         IClock Clock { get; }
         IGraphics Graphics { get; }
+        IInput Input { get; }
         void Quit();
     }
 }

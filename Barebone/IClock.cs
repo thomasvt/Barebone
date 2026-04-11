@@ -5,7 +5,7 @@ namespace Barebone
         float Now { get; }
         float DeltaT { get; }
         long FrameNumber { get; }
-        void StartNextFrame(float time, float deltaT);
+        void BeginFrame(float time, float deltaT);
 
         /// <summary>
         /// Call this every frame to get a `true` only every so many frames, but with a varying offset based on 'seed'.

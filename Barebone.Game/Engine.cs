@@ -20,28 +20,29 @@ namespace Barebone.Game
             var clock = new Clock();
             scene.Add(rootActor);
 
-            var bbApi = new BBApi(clock, graphics);
+            var bbApi = new BBApi(clock, graphics, input);
 
             var timer = Stopwatch.StartNew();
             var timePreviousFrame = -fixedDeltaT; // start with a normal deltaT for the first frame
             var gameTime = 0.0;
 
-            while (!platform.ShouldQuit && !bbApi.QuitRequested)
+            while (!platform.IsQuitRequested && !bbApi.QuitRequested)
             {
-                platform.ProcessEvents();
-                input.Update();
-
                 var time = timer.Elapsed.TotalSeconds;
                 var timeElapsed = time - timePreviousFrame;
                 accumulatedTime += timeElapsed;
 
+                platform.ProcessEvents(input);
+
                 while (accumulatedTime >= fixedDeltaT)
                 {
                     gameTime += fixedDeltaT;
-                    clock.StartNextFrame((float)gameTime, (float)fixedDeltaT);
-                    physics.Step(fixedDeltaT);
+                    clock.BeginFrame((float)gameTime, (float)fixedDeltaT);
+                    physics.Update(fixedDeltaT);
+
                     scene.Update(bbApi);
 
+                    input.EndFrame();
                     accumulatedTime -= fixedDeltaT;
                 }
 
