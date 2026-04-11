@@ -1,4 +1,4 @@
-﻿namespace Barebone.Game.Debug
+﻿namespace Barebone.Game.Debugging
 {
     public interface IDebug
     {

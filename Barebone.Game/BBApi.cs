@@ -1,4 +1,4 @@
-﻿using Barebone.Game.Debug;
+﻿using Barebone.Game.Debugging;
 using Barebone.Game.Graphics;
 using Barebone.Game.Input;
 
