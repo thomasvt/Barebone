@@ -2,6 +2,8 @@
 {
     public interface IScene
     {
-        void Update(in IBBApi bb);
+        void Add(Actor actor);
+        void Remove(Actor actor);
+        void Clear();
     }
 }

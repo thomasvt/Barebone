@@ -7,55 +7,71 @@ using Barebone.Game.Scene;
 
 namespace Barebone.Game
 {
-    public class Engine(IPlatform platform)
+    public class Engine : IDisposable
     {
-        public void Run(IActor rootActor)
+        private readonly IPlatform _platform;
+        private readonly Camera _camera;
+        private readonly DrawSubSystem _draw;
+        private readonly InputSubSystem _input;
+        private readonly PhysicsSubSystem _physics;
+        private readonly SceneSubSystem _scene;
+        private readonly Clock _clock;
+        private readonly BBApi _bbApi;
+        private readonly DebugSubSystem _debug;
+
+        public Engine(IPlatform platform)
+        {
+            _platform = platform;
+
+            _camera = new Camera();
+            _draw = new DrawSubSystem(platform.Graphics, _camera);
+            _input = new InputSubSystem();
+            _physics = new PhysicsSubSystem();
+            _scene = new SceneSubSystem(_physics);
+            _clock = new Clock();
+
+#if DEBUG
+            _debug = new DebugSubSystem(this);
+#endif
+            _bbApi = new BBApi(_clock, _draw, _camera, _input, _debug, _scene, _physics);
+        }
+
+        public void Run(Actor rootActor)
         {
             const double fixedDeltaT = 1 / 60.0;
             var virtualTimeAccu = 0.0;
 
-            var camera = new Camera();
-            var draw = new DrawSubSystem(platform.Graphics, camera);
-            var input = new InputSubSystem();
-            var physics = new PhysicsSubSystem();
-            var scene = new SceneSubSystem();
-            var clock = new Clock();
-#if DEBUG
-            var debug = new DebugSubSystem(this);
-#endif
-            scene.Add(rootActor);
-
-            var bbApi = new BBApi(clock, draw, camera, input, debug);
+            _scene.Add(rootActor);
 
             var timer = Stopwatch.StartNew();
             var realTimePreviousFrame = -fixedDeltaT; // start with a normal deltaT for the first frame
             var gameTime = 0.0;
 
-            while (!platform.IsQuitRequested && !bbApi.QuitRequested)
+            while (!_platform.IsQuitRequested && !_bbApi.QuitRequested)
             {
                 var realTime = timer.Elapsed.TotalSeconds;
                 var realTimeElapsed = realTime - realTimePreviousFrame;
                 var virtualTimeElapsed = realTimeElapsed * Speed;
                 virtualTimeAccu += virtualTimeElapsed;
 
-                platform.ProcessEvents(input);
+                _platform.ProcessEvents(_input);
 
-                camera.SetViewportSize(platform.GetWindowSize()); // calculate transforms etc, after processing OS events that may have altered the window
+                _camera.SetViewportSize(_platform.GetWindowSize()); // calculate transforms etc, after processing OS events that may have altered the window
 
                 while (virtualTimeAccu >= fixedDeltaT)
                 {
                     gameTime += fixedDeltaT;
-                    clock.BeginFrame((float)gameTime, (float)fixedDeltaT);
-                    physics.Update(fixedDeltaT);
+                    _clock.BeginFrame((float)gameTime, (float)fixedDeltaT);
+                    _physics.Update(fixedDeltaT, 4);
 
                     var swUpdate = Stopwatch.StartNew();
-                    scene.Update(bbApi);
+                    _scene.Update(_bbApi);
                     UpdateTime = swUpdate.Elapsed.TotalSeconds;
 #if DEBUG
-                    debug.Update(bbApi);
+                    _debug.Update(_bbApi);
 #endif
 
-                    input.EndFrame();
+                    _input.EndFrame();
                     if (UpdateTime > fixedDeltaT && virtualTimeAccu > fixedDeltaT * 3)
                         virtualTimeAccu = 0f; // if performance is problematic, we swallow update-frames to not escallate iteration-count of this inner while loop..
                     else
@@ -63,12 +79,12 @@ namespace Barebone.Game
                 }
 
                 var swDraw = Stopwatch.StartNew();
-                draw.BeginFrame();
-                rootActor.Draw(bbApi);
-                draw.EndFrame();
+                _draw.BeginFrame();
+                _scene.Draw(_bbApi);
+                _draw.EndFrame();
                 DrawTime = swDraw.Elapsed.TotalSeconds;
 
-                platform.Present();
+                _platform.Present();
                 realTimePreviousFrame = realTime;
             }
         }
@@ -76,5 +92,10 @@ namespace Barebone.Game
         public float Speed { get; set; } = 1f;
         public double UpdateTime { get; set; }
         public double DrawTime { get; set; }
+
+        public void Dispose()
+        {
+            _physics.Dispose();
+        }
     }
 }

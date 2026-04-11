@@ -1,39 +1,83 @@
-﻿namespace Barebone.Game.Scene
+﻿using Barebone.Game.Physics;
+
+namespace Barebone.Game.Scene
 {
-    internal class SceneSubSystem : IScene
+    internal enum SceneCommandType
     {
-        private readonly List<IActor> _actors = new();
-        private readonly List<IActor> _actorsToAdd = new();
-        private readonly List<IActor> _actorsToRemove = new();
+        AddActor,
+        RemoveActor,
+        Clear
+    }
+
+    internal record struct SceneCommand(SceneCommandType Type, Actor? Actor);
+
+    internal class SceneSubSystem(PhysicsSubSystem physics) : IScene
+    {
+        private uint _nextActorId;
+
+        private readonly List<Actor> _actors = new();
+        private readonly Queue<SceneCommand> _commandQueue = new();
 
         public void Update(in IBBApi bb)
         {
-            foreach (var actor in _actorsToRemove)
+            while (_commandQueue.Any())
             {
-                actor.OnDespawn(bb);
-                _actors.Remove(actor);
+                {
+                    var command = _commandQueue.Dequeue();
+                    switch (command.Type)
+                    {
+                        case SceneCommandType.AddActor:
+                            _actors.Add(command.Actor!);
+                            SpawnInternal(bb, command);
+                            break;
+                        case SceneCommandType.RemoveActor:
+                            DespawnInternal(bb, command.Actor!);
+                            _actors.Remove(command.Actor!);
+                            break;
+                        case SceneCommandType.Clear:
+                            foreach (var actor in _actors) DespawnInternal(bb, actor);
+                            _actors.Clear();
+                            break;
+                        default: throw new ArgumentOutOfRangeException();
+                    }
+                }
             }
-            _actorsToRemove.Clear();
-
-            foreach (var actor in _actorsToAdd)
-            {
-                _actors.Add(actor);
-                actor.OnSpawn(bb);
-            }
-            _actorsToAdd.Clear();
 
             foreach (var actor in _actors)
                 actor.Update(bb);
         }
 
-        public void Add(IActor actor)
+        public void Draw(BBApi bb)
         {
-            _actorsToAdd.Add(actor);
+            foreach (var actor in _actors)
+                actor.Draw(bb);
         }
 
-        public void Remove(IActor actor)
+        public void Add(Actor actor)
         {
-            _actorsToRemove.Add(actor);
+            _commandQueue.Enqueue(new SceneCommand(SceneCommandType.AddActor, actor));
+        }
+
+        public void Remove(Actor actor)
+        {
+            _commandQueue.Enqueue(new SceneCommand(SceneCommandType.RemoveActor, actor));
+        }
+
+        public void Clear()
+        {
+            _commandQueue.Enqueue(new SceneCommand(SceneCommandType.Clear, null));
+        }
+
+        private void SpawnInternal(IBBApi bb, SceneCommand command)
+        {
+            command.Actor!.ActorId = new(++_nextActorId);
+            command.Actor!.OnSpawn(bb);
+        }
+
+        private void DespawnInternal(IBBApi bb, Actor actor)
+        {
+            actor.OnDespawn(bb);
+            physics.DestroyIfExists(actor.ActorId);
         }
     }
 }
