@@ -6,7 +6,7 @@ namespace Barebone.Game
     public interface IBBApi
     {
         IClock Clock { get; }
-        IGraphics Graphics { get; }
+        IDraw Draw { get; }
         IInput Input { get; }
         void Quit();
     }

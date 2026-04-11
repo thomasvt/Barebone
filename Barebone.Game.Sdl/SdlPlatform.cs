@@ -67,7 +67,8 @@ namespace Barebone.Game.Sdl
 
         public void Present()
         {
-            SDL3.SDL_RenderPresent(_rendererPtr);
+            if (!SDL3.SDL_RenderPresent(_rendererPtr))
+                throw new SdlException("SDL_RenderPresent failed: " + SDL3.SDL_GetError());
         }
 
         public IPlatformGraphics Graphics { get; }

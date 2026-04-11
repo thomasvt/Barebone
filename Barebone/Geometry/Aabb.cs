@@ -309,6 +309,11 @@ namespace Barebone.Geometry
             return new Aabb(-halfSize, halfSize);
         }
 
+        public static Aabb FromPositionAndSize(in Vector2 position, in Vector2 size)
+        {
+            return new(position, position + size);
+        }
+
         /// <summary>
         /// Finds the axis aligned bounding box of a set of points.
         /// </summary>
@@ -387,15 +392,6 @@ namespace Barebone.Geometry
         public override string ToString()
         {
             return $"[{MinCorner.X}.{MinCorner.Y} : {MaxCorner.X}.{MaxCorner.Y})";
-        }
-
-        /// <summary>
-        /// Grows this AABB by extending its sides with the opposite-side extents of 'other'. Typically used for Continuous Collision Detection.
-        /// </summary>
-        public Aabb MinkowskiSum(Aabb other)
-        {
-            return new(new(MinCorner.X - other.MaxCorner.X, MinCorner.Y - other.MaxCorner.Y),
-                new(MaxCorner.X - other.MinCorner.X, MaxCorner.Y - other.MinCorner.Y));
         }
 
         /// <summary>

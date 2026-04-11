@@ -4,15 +4,15 @@ using System.Runtime.CompilerServices;
 
 namespace Barebone.Geometry
 {
-    [InlineArray(8)]
+    [InlineArray(Polygon8.MaxVertexCount)]
     public struct PointArray8
     {
         private Vector2 P0;
     }
 
-
     /// <summary>
-    /// DrawPolygon with up to 8 corners as a value-type (inlined in this struct, no array on the heap)
+    /// Polygib with up to 8 corners as a value-type (inlined in this struct, no array on the heap)
+    /// Note that most algorithms that use this expect the polygon to be convex.
     /// </summary>
     public unsafe partial struct Polygon8
     {
@@ -189,38 +189,6 @@ namespace Barebone.Geometry
         }
 
         [Pure]
-        public readonly Polygon8 BevelVertex(int index, in float distanceAlongEdges)
-        {
-            if (Count == MaxVertexCount) throw new InvalidOperationException($"Cannot exceed {MaxVertexCount} corners.");
-
-            index = (index % Count + Count) % Count;
-            var indexPrev = (index - 1 + Count) % Count;
-            var indexNext = (index + 1) % Count;
-
-            var p = _vertices[index];
-            var prev = _vertices[indexPrev];
-            var next = _vertices[indexNext];
-
-            var p0 = p + (prev - p).NormalizeOrZero() * distanceAlongEdges;
-            var p1 = p + (next - p).NormalizeOrZero() * distanceAlongEdges;
-
-            var result = InsertAt(index+1, p1);
-            result._vertices[index] = p0;
-
-            return result;
-        }
-
-        public Polygon8 Bevel(float distance)
-        {
-            var poly = this;
-            for (var i = Count-1; i >= 0; i--)
-            {
-                poly = poly.BevelVertex(i, distance);
-            }
-            return poly;
-        }
-
-        [Pure]
         public readonly Polygon8 InsertAt(int index, Vector2 vertex)
         {
             var p = this;
@@ -240,15 +208,6 @@ namespace Barebone.Geometry
             return new Polygon8(new(-hs, -hs), new(-hs, hs), new(hs, hs), new(hs, -hs));
         }
 
-        public static Polygon8 Aabb(in Vector2 minCorner, in Vector2 maxCorner)
-        {
-            var minX = minCorner.X;
-            var minY = minCorner.Y;
-            var maxX = maxCorner.X;
-            var maxY = maxCorner.Y;
-            return new Polygon8(new(minX, minY), new(minX, maxY), new(maxX, maxY), new(maxX, minY));
-        }
-
         public float GetCircumpherence()
         {
             if (Count < 2) return 0f;
@@ -264,7 +223,11 @@ namespace Barebone.Geometry
 
         public static Polygon8 FromAabb(Aabb aabb)
         {
-            return Aabb(aabb.MinCorner, aabb.MaxCorner);
+            var minX = aabb.MinCorner.X;
+            var minY = aabb.MinCorner.Y;
+            var maxX = aabb.MaxCorner.X;
+            var maxY = aabb.MaxCorner.Y;
+            return new Polygon8(new(minX, minY), new(minX, maxY), new(maxX, maxY), new(maxX, minY));
         }
 
         [Pure]
