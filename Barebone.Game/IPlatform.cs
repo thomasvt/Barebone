@@ -11,7 +11,6 @@ namespace Barebone.Game
         void Present();
 
         IPlatformGraphics Graphics { get; }
-        // ViewportSettings GetViewSettings();
         Vector2I GetWindowSize();
     }
 }

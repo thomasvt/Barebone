@@ -2,12 +2,12 @@
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using Barebone.Game.Graphics;
-using Barebone.Geometry;
-using Barebone.Graphics;
 using SDL;
 
 namespace Barebone.Game.Sdl
 {
+
+
     public unsafe class SdlGraphics(SDL_Renderer* rendererPtr) : IPlatformGraphics
     {
         public void ClearScreen(in Color color)
@@ -16,31 +16,19 @@ namespace Barebone.Game.Sdl
             SDL3.SDL_RenderClear(rendererPtr);
         }
 
-        public void FillPolygon(in Polygon8 polygon, in Color color)
+        public void FillTriangles(in Span<Vertex> vertices)
         {
-            var pA = polygon[0];
-            var sdlA = Unsafe.As<Vector2, SDL_FPoint>(ref pA);
-            var vertices = stackalloc SDL_Vertex[(polygon.Count - 2) * 3];
-            var cf = ColorF.FromColor(color);
-            var sdlColor = Unsafe.As<ColorF, SDL_FColor>(ref cf);
-            var i = 0;
+            var sdlVertices = stackalloc SDL_Vertex[vertices.Length];
 
-            var pB = polygon[1];
-            var sdlB = Unsafe.As<Vector2, SDL_FPoint>(ref pB);
-
-            for (var c = 2; c < polygon.Count; c++)
+            for (var i = 0; i < vertices.Length; i++)
             {
-                var pC = polygon[c]; // Polygon indexer supports wrap-around
-                var sdlC = Unsafe.As<Vector2, SDL_FPoint>(ref pC);
+                ref readonly var v = ref vertices[i];
 
-                vertices[i++] = new SDL_Vertex { color = sdlColor, position = sdlA };
-                vertices[i++] = new SDL_Vertex { color = sdlColor, position = sdlB };
-                vertices[i++] = new SDL_Vertex { color = sdlColor, position = sdlC };
-
-                sdlB = sdlC;
+                sdlVertices[i].position = new() { x = v.Position.X, y = v.Position.Y };
+                sdlVertices[i].color = new() { a = v.Color.A, b = v.Color.B, g = v.Color.G, r = v.Color.R };
             }
 
-            if (!SDL3.SDL_RenderGeometry(rendererPtr, null, vertices, i, null, 0))
+            if (!SDL3.SDL_RenderGeometry(rendererPtr, null, sdlVertices, vertices.Length, null, 0))
                 throw new SdlException("SDL_RenderGeometry failed: " + SDL3.SDL_GetError());
         }
     }

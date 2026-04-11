@@ -9,11 +9,17 @@
         public void Update(in IBBApi bb)
         {
             foreach (var actor in _actorsToRemove)
+            {
+                actor.OnDespawn(bb);
                 _actors.Remove(actor);
+            }
             _actorsToRemove.Clear();
 
             foreach (var actor in _actorsToAdd)
+            {
                 _actors.Add(actor);
+                actor.OnSpawn(bb);
+            }
             _actorsToAdd.Clear();
 
             foreach (var actor in _actors)

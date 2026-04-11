@@ -1,11 +1,10 @@
 ﻿using System.Drawing;
-using Barebone.Geometry;
 
 namespace Barebone.Game.Graphics
 {
     public interface IPlatformGraphics
     {
         void ClearScreen(in Color color);
-        void FillPolygon(in Polygon8 polygon, in Color color);
+        void FillTriangles(in Span<Vertex> vertices);
     }
 }

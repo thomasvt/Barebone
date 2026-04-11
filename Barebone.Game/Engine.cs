@@ -14,7 +14,7 @@ namespace Barebone.Game
             var accumulatedTime = 0.0;
 
             var camera = new Camera();
-            var draw = new DrawSubSystem(platform.Graphics);
+            var draw = new DrawSubSystem(platform.Graphics, camera);
             var input = new InputSubSystem();
             var physics = new PhysicsSubSystem();
             var scene = new SceneSubSystem();
@@ -35,7 +35,7 @@ namespace Barebone.Game
 
                 platform.ProcessEvents(input);
 
-                camera.PrepareFrame(platform.GetWindowSize()); // calculate transforms etc, after processing OS events that may have altered the window
+                camera.SetViewportSize(platform.GetWindowSize()); // calculate transforms etc, after processing OS events that may have altered the window
 
                 while (accumulatedTime >= fixedDeltaT)
                 {
@@ -49,7 +49,7 @@ namespace Barebone.Game
                     accumulatedTime -= fixedDeltaT;
                 }
 
-                draw.BeginFrame(camera);
+                draw.BeginFrame();
                 rootActor.Draw(bbApi);
                 draw.EndFrame();
 
