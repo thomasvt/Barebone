@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using Barebone.Game.Debug;
 using Barebone.Game.Graphics;
 using Barebone.Game.Input;
 using Barebone.Game.Physics;
@@ -11,7 +12,7 @@ namespace Barebone.Game
         public void Run(IActor rootActor)
         {
             const double fixedDeltaT = 1 / 60.0;
-            var accumulatedTime = 0.0;
+            var virtualTimeAccu = 0.0;
 
             var camera = new Camera();
             var draw = new DrawSubSystem(platform.Graphics, camera);
@@ -19,34 +20,41 @@ namespace Barebone.Game
             var physics = new PhysicsSubSystem();
             var scene = new SceneSubSystem();
             var clock = new Clock();
+#if DEBUG
+            var debug = new DebugSubSystem(this);
+#endif
             scene.Add(rootActor);
 
-            var bbApi = new BBApi(clock, draw, camera, input);
+            var bbApi = new BBApi(clock, draw, camera, input, debug);
 
             var timer = Stopwatch.StartNew();
-            var timePreviousFrame = -fixedDeltaT; // start with a normal deltaT for the first frame
+            var realTimePreviousFrame = -fixedDeltaT; // start with a normal deltaT for the first frame
             var gameTime = 0.0;
 
             while (!platform.IsQuitRequested && !bbApi.QuitRequested)
             {
-                var time = timer.Elapsed.TotalSeconds;
-                var timeElapsed = time - timePreviousFrame;
-                accumulatedTime += timeElapsed;
+                var realTime = timer.Elapsed.TotalSeconds;
+                var realTimeElapsed = realTime - realTimePreviousFrame;
+                var virtualTimeElapsed = realTimeElapsed * Speed;
+                virtualTimeAccu += virtualTimeElapsed;
 
                 platform.ProcessEvents(input);
 
                 camera.SetViewportSize(platform.GetWindowSize()); // calculate transforms etc, after processing OS events that may have altered the window
 
-                while (accumulatedTime >= fixedDeltaT)
+                while (virtualTimeAccu >= fixedDeltaT)
                 {
                     gameTime += fixedDeltaT;
                     clock.BeginFrame((float)gameTime, (float)fixedDeltaT);
                     physics.Update(fixedDeltaT);
 
                     scene.Update(bbApi);
+#if DEBUG
+                    debug.Update(bbApi);
+#endif
 
                     input.EndFrame();
-                    accumulatedTime -= fixedDeltaT;
+                    virtualTimeAccu -= fixedDeltaT;
                 }
 
                 draw.BeginFrame();
@@ -54,8 +62,10 @@ namespace Barebone.Game
                 draw.EndFrame();
 
                 platform.Present();
-                timePreviousFrame = time;
+                realTimePreviousFrame = realTime;
             }
         }
+
+        public float Speed { get; set; } = 1f;
     }
 }

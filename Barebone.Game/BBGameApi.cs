@@ -1,4 +1,5 @@
-﻿using Barebone.Game.Graphics;
+﻿using Barebone.Game.Debug;
+using Barebone.Game.Graphics;
 using Barebone.Game.Input;
 
 namespace Barebone.Game
@@ -9,6 +10,7 @@ namespace Barebone.Game
         IDraw Draw { get; }
         ICamera Camera { get; }
         IInput Input { get; }
+        IDebug Debug { get; }
         void Quit();
     }
 }
