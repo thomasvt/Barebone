@@ -1,5 +1,4 @@
 ﻿using System.Drawing;
-using System.Numerics;
 using Barebone.Geometry;
 
 namespace Barebone.Game.Graphics
@@ -15,10 +14,11 @@ namespace Barebone.Game.Graphics
     internal class DrawSubSystem(IPlatformGraphics pg) : IDraw
     {
         private readonly List<DrawCommand> _commands = new();
+        private Camera _camera;
 
-        public void BeginFrame()
+        public void BeginFrame(Camera camera)
         {
-           
+            _camera = camera;
         }
 
         public void ClearScreen(in Color color)
@@ -28,12 +28,12 @@ namespace Barebone.Game.Graphics
 
         public void FillAabb(in Aabb box, in Color color)
         {
-            _commands.Add(new(DrawCommandType.FillPolygon, Polygon8.FromAabb(box), color));
+            _commands.Add(new(DrawCommandType.FillPolygon, Polygon8.FromAabb(box).Transform(_camera.WorldToScreenTransform), color));
         }
 
         public void FillPolygon(in Polygon8 polygon, in Color color)
         {
-            _commands.Add(new(DrawCommandType.FillPolygon, polygon, color));
+            _commands.Add(new(DrawCommandType.FillPolygon, polygon.Transform(_camera.WorldToScreenTransform), color));
         }
 
         public void EndFrame()

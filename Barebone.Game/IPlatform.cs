@@ -1,5 +1,6 @@
 ﻿using Barebone.Game.Graphics;
 using Barebone.Game.Input;
+using Barebone.Geometry;
 
 namespace Barebone.Game
 {
@@ -10,5 +11,7 @@ namespace Barebone.Game
         void Present();
 
         IPlatformGraphics Graphics { get; }
+        // ViewportSettings GetViewSettings();
+        Vector2I GetWindowSize();
     }
 }

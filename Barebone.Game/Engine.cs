@@ -13,6 +13,7 @@ namespace Barebone.Game
             const double fixedDeltaT = 1 / 60.0;
             var accumulatedTime = 0.0;
 
+            var camera = new Camera();
             var draw = new DrawSubSystem(platform.Graphics);
             var input = new InputSubSystem();
             var physics = new PhysicsSubSystem();
@@ -20,7 +21,7 @@ namespace Barebone.Game
             var clock = new Clock();
             scene.Add(rootActor);
 
-            var bbApi = new BBApi(clock, draw, input);
+            var bbApi = new BBApi(clock, draw, camera, input);
 
             var timer = Stopwatch.StartNew();
             var timePreviousFrame = -fixedDeltaT; // start with a normal deltaT for the first frame
@@ -34,6 +35,8 @@ namespace Barebone.Game
 
                 platform.ProcessEvents(input);
 
+                camera.PrepareFrame(platform.GetWindowSize()); // calculate transforms etc, after processing OS events that may have altered the window
+
                 while (accumulatedTime >= fixedDeltaT)
                 {
                     gameTime += fixedDeltaT;
@@ -46,7 +49,7 @@ namespace Barebone.Game
                     accumulatedTime -= fixedDeltaT;
                 }
 
-                draw.BeginFrame();
+                draw.BeginFrame(camera);
                 rootActor.Draw(bbApi);
                 draw.EndFrame();
 
