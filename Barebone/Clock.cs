@@ -10,7 +10,7 @@ public class Clock : IClock
 
     public long FrameNumber { get; private set; }
 
-    public void Update(float time, float deltaT)
+    public void StartNextFrame(float time, float deltaT)
     {
         Now = time;
         DeltaT = deltaT;
