@@ -23,12 +23,14 @@ namespace Barebone.Game.Physics
     }
 
     public record struct ShapeId(uint Value);
+    public record struct BodyId(uint Value);
 
     internal class PhysicsSubSystem : IPhysics, IDisposable
     {
         private uint _nextShapeId;
+        private uint _nextBodyId;
         private b2WorldId _b2WorldId;
-        private readonly Dictionary<ActorId, b2BodyId> _bodyIdsByActorId = new();
+        private readonly Dictionary<BodyId, b2BodyId> _b2BodyIdsByBodyId = new();
 
         public PhysicsSubSystem()
         {
@@ -52,11 +54,8 @@ namespace Barebone.Game.Physics
             B2Api.b2World_SetGravity(_b2WorldId, gravity);
         }
 
-        public void MakePhysical(in Actor actor, in BodyType bodyType, in Vector2 position, in Vector2? velocity = null, in float angle = 0f)
+        public BodyId CreateBody(in BodyType bodyType, in Vector2 position, in Vector2? velocity = null, in float angle = 0f)
         {
-            if (_bodyIdsByActorId.ContainsKey(actor.ActorId))
-                throw new Exception("That actor already is physical.");
-
             var def = B2Api.b2DefaultBodyDef();
             def.type = bodyType switch
             {
@@ -68,16 +67,18 @@ namespace Barebone.Game.Physics
             def.position = position;
             def.linearVelocity = velocity ?? Vector2.Zero;
             def.rotation = b2Rot.FromAngle(angle);
-            def.userData = (nint)actor.ActorId.Value;
 
-            var bodyId = B2Api.b2CreateBody(_b2WorldId, def);
-            _bodyIdsByActorId.Add(actor.ActorId, bodyId);
+            var bodyId = new BodyId(++_nextBodyId);
+            var b2BodyId = B2Api.b2CreateBody(_b2WorldId, def);
+            _b2BodyIdsByBodyId.Add(bodyId, b2BodyId);
+
+            return bodyId;
         }
 
-        public ShapeId AttachCircle(in Actor actor, in float radius, in Vector2? center = null)
+        public ShapeId AttachCircle(in BodyId bodyId, in float radius, in Vector2? center = null)
         {
-            if (!_bodyIdsByActorId.TryGetValue(actor.ActorId, out var b2BodyId))
-                throw new InvalidOperationException($"Actor {actor} is not physical. Call MakePhysical first.");
+            if (!_b2BodyIdsByBodyId.TryGetValue(bodyId, out var b2BodyId))
+                throw new InvalidOperationException($"Unknown BodyId: {bodyId}.");
 
             var shapeId = new ShapeId(++_nextShapeId);
 
@@ -89,10 +90,10 @@ namespace Barebone.Game.Physics
             return shapeId;
         }
 
-        public ShapeId AttachPolygon(in Actor actor, in Polygon8 polygon)
+        public ShapeId AttachPolygon(in BodyId bodyId, in Polygon8 polygon)
         {
-            if (!_bodyIdsByActorId.TryGetValue(actor.ActorId, out var b2BodyId))
-                throw new InvalidOperationException($"Actor {actor} is not physical. Call MakePhysical first.");
+            if (!_b2BodyIdsByBodyId.TryGetValue(bodyId, out var b2BodyId))
+                throw new InvalidOperationException($"Unknown BodyId: {bodyId}.");
 
             var shapeId = new ShapeId(++_nextShapeId);
 
@@ -109,10 +110,10 @@ namespace Barebone.Game.Physics
             return shapeId;
         }
 
-        public ShapeId AttachCapsule(in Actor actor, in Vector2 center1, in Vector2 center2, in float radius)
+        public ShapeId AttachCapsule(in BodyId bodyId, in Vector2 center1, in Vector2 center2, in float radius)
         {
-            if (!_bodyIdsByActorId.TryGetValue(actor.ActorId, out var b2BodyId))
-                throw new InvalidOperationException($"Actor {actor} is not physical. Call MakePhysical first.");
+            if (!_b2BodyIdsByBodyId.TryGetValue(bodyId, out var b2BodyId))
+                throw new InvalidOperationException($"Unknown BodyId: {bodyId}.");
 
             var shapeId = new ShapeId(++_nextShapeId);
 
@@ -124,10 +125,10 @@ namespace Barebone.Game.Physics
             return shapeId;
         }
 
-        public void GetTransform(in Actor actor, out Vector2 position, out float angle)
+        public void GetTransform(in BodyId bodyId, out Vector2 position, out float angle)
         {
-            if (!_bodyIdsByActorId.TryGetValue(actor.ActorId, out var b2BodyId))
-                throw new InvalidOperationException($"Actor {actor} is not physical. Call MakePhysical first.");
+            if (!_b2BodyIdsByBodyId.TryGetValue(bodyId, out var b2BodyId))
+                throw new InvalidOperationException($"Unknown BodyId: {bodyId}.");
 
             var transform = B2Api.b2Body_GetTransform(b2BodyId);
             position = transform.p;
@@ -145,9 +146,9 @@ namespace Barebone.Game.Physics
             B2Api.b2DestroyWorld(_b2WorldId);
         }
 
-        public void DestroyIfExists(ActorId actorId)
+        public void DestroyBody(BodyId bodyId)
         {
-            if (_bodyIdsByActorId.TryGetValue(actorId, out var b2BodyId))
+            if (_b2BodyIdsByBodyId.TryGetValue(bodyId, out var b2BodyId))
                 B2Api.b2DestroyBody(b2BodyId);
         }
     }

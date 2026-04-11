@@ -5,15 +5,15 @@ namespace Barebone.Game.Debugging
 {
     internal class DebugSubSystem(Engine engine) : IDebug
     {
-        public void Update(IBBApi bb)
+        public void Update()
         {
-            if (bb.Input.JustPressed(KeyboardKey.Grave)) WriteDebugScreen();
-            if (bb.Input.JustPressed(KeyboardKey.NumPadPlus)) { IncreaseGameSpeed(); WriteDebugScreen(); } 
-            if (bb.Input.JustPressed(KeyboardKey.NumPadMinus)) { DecreaseGameSpeed(); WriteDebugScreen(); }
-            if (bb.Input.JustPressed(KeyboardKey.NumPadEnter)) { WriteDebugScreen(); Debugger.Break(); }
+            if (BB.Input.JustPressed(KeyboardKey.Grave)) WriteDebugScreen();
+            if (BB.Input.JustPressed(KeyboardKey.NumPadPlus)) { IncreaseGameSpeed(); WriteDebugScreen(); } 
+            if (BB.Input.JustPressed(KeyboardKey.NumPadMinus)) { DecreaseGameSpeed(); WriteDebugScreen(); }
+            if (BB.Input.JustPressed(KeyboardKey.NumPadEnter)) { WriteDebugScreen(); Debugger.Break(); }
 
             if (engine.UpdateTime > 0.016f)
-                WriteLine($"Frame {bb.Clock.FrameNumber}: UPDATE IS SLOW: {engine.UpdateTime*1000:0.0}ms");
+                WriteLine($"Frame {BB.Clock.FrameNumber}: UPDATE IS SLOW: {engine.UpdateTime*1000:0.0}ms");
             if (engine.DrawTime > 0.016f)
                 WriteLine($"DRAW IS SLOW: {engine.DrawTime * 1000:0.0}ms");
         }

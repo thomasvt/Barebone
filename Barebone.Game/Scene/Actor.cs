@@ -6,11 +6,8 @@
     {
         public ActorId ActorId { get; internal set; }
 
-        public virtual void OnSpawn(in IBBApi bb) { }
-
-        public virtual void Update(in IBBApi bb) { }
-        public virtual void OnDespawn(in IBBApi bb) { }
-        public virtual void Draw(in IBBApi bb) { }
+        public virtual void Update() { }
+        public virtual void Draw() { }
 
         public override string ToString()
         {
