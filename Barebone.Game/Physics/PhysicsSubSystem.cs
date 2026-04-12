@@ -1,5 +1,4 @@
 ﻿using System.Numerics;
-using Barebone.Game.Scene;
 using Barebone.Geometry;
 using Barebone.Pools;
 using Box2dNet.Interop;

@@ -75,7 +75,7 @@ namespace Barebone.AI.Goap
         /// </summary>
         private void StartIdlePlan()
         {
-            _planBuffer.Clear();
+            _planBuffer.Clear(false, false);
             _planBuffer.Add(_idleAction);
             _planStepResult = GoapActionResult.InProgress;
             _planStepIdx = 0;
@@ -95,7 +95,7 @@ namespace Barebone.AI.Goap
             // If no perfect goal match is found, the highest Scoring one is chosen.
             
             _openList.Clear();
-            _planBuffer.Clear(); 
+            _planBuffer.Clear(false, false); 
             _existingNodes.Clear();
 
             var actions = _actions.AsReadOnlySpan();

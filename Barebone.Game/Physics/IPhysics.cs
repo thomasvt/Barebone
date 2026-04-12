@@ -1,5 +1,4 @@
 ﻿using System.Numerics;
-using Barebone.Game.Scene;
 using Barebone.Geometry;
 
 namespace Barebone.Game.Physics

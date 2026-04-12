@@ -78,7 +78,7 @@ namespace Barebone.AI.AStar
 
         private void ConstructPath(in Vector2I goalPosition, in BBList<Vector2I> solutionBuffer)
         {
-            solutionBuffer.Clear();
+            solutionBuffer.Clear(false, false);
             var currentPos = goalPosition;
             while (true)
             {

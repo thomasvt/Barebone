@@ -61,7 +61,7 @@ namespace Barebone.Graphics
                 ref var item = ref span[i];
                 item.FramesToLive--;
                 if (item.FramesToLive <= 0)
-                    _items.SwapRemoveRange(i);
+                    _items.SwapRemoveRange(i, 1, false);
             }
 
             var textItemSpan = _textItems.AsSpan();
@@ -70,7 +70,7 @@ namespace Barebone.Graphics
                 ref var item = ref textItemSpan[i];
                 item.FramesToLive--;
                 if (item.FramesToLive <= 0)
-                    _textItems.SwapRemoveRange(i);
+                    _textItems.SwapRemoveRange(i, 1, false);
             }
         }
 
@@ -89,7 +89,7 @@ namespace Barebone.Graphics
 
         private void RenderTexts(IImmediateRenderer renderer)
         {
-            _texTriangles.Clear();
+            _texTriangles.Clear(false, false);
             foreach (var item in _textItems.AsReadOnlySpan())
             {
                 _font!.AppendString(false, _texTriangles, item.Text, item.Color ?? DefaultColor, item.Position);

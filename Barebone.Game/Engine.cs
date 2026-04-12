@@ -3,7 +3,6 @@ using Barebone.Game.Debugging;
 using Barebone.Game.Graphics;
 using Barebone.Game.Input;
 using Barebone.Game.Physics;
-using Barebone.Game.Scene;
 
 namespace Barebone.Game
 {
@@ -35,63 +34,56 @@ namespace Barebone.Game
             BB.Init(_clock, _draw, _camera, _input, _debug, _physics);
         }
 
-        public void Run<TRootActor>() where TRootActor : Actor, new()
+        public void Run(Func<IGame> gameFactory)
         {
             const double fixedDeltaT = 1 / 60.0;
             var virtualTimeAccu = 0.0;
 
-            var rootActor = new TRootActor();
+            var timer = Stopwatch.StartNew();
+            var realTimePreviousFrame = -fixedDeltaT; // start with a normal deltaT for the first frame
+            var gameTime = 0.0;
 
-            try
+            var game = gameFactory.Invoke();
+
+            while (!_platform.IsQuitRequested && !BB.QuitRequested)
             {
-                var timer = Stopwatch.StartNew();
-                var realTimePreviousFrame = -fixedDeltaT; // start with a normal deltaT for the first frame
-                var gameTime = 0.0;
+                var realTime = timer.Elapsed.TotalSeconds;
+                var realTimeElapsed = realTime - realTimePreviousFrame;
+                var virtualTimeElapsed = realTimeElapsed * Speed;
+                virtualTimeAccu += virtualTimeElapsed;
 
-                while (!_platform.IsQuitRequested && !BB.QuitRequested)
+                _platform.ProcessEvents(_input);
+
+                _camera.SetViewportSize(_platform.GetWindowSize()); // calculate transforms etc, after processing OS events that may have altered the window
+
+                while (virtualTimeAccu >= fixedDeltaT)
                 {
-                    var realTime = timer.Elapsed.TotalSeconds;
-                    var realTimeElapsed = realTime - realTimePreviousFrame;
-                    var virtualTimeElapsed = realTimeElapsed * Speed;
-                    virtualTimeAccu += virtualTimeElapsed;
+                    gameTime += fixedDeltaT;
+                    _clock.BeginFrame((float)gameTime, (float)fixedDeltaT);
+                    _physics.Update(fixedDeltaT, 4);
 
-                    _platform.ProcessEvents(_input);
-
-                    _camera.SetViewportSize(_platform.GetWindowSize()); // calculate transforms etc, after processing OS events that may have altered the window
-
-                    while (virtualTimeAccu >= fixedDeltaT)
-                    {
-                        gameTime += fixedDeltaT;
-                        _clock.BeginFrame((float)gameTime, (float)fixedDeltaT);
-                        _physics.Update(fixedDeltaT, 4);
-
-                        var swUpdate = Stopwatch.StartNew();
-                        rootActor.Update();
-                        UpdateTime = swUpdate.Elapsed.TotalSeconds;
+                    var swUpdate = Stopwatch.StartNew();
+                    game.Update();
+                    UpdateTime = swUpdate.Elapsed.TotalSeconds;
 #if DEBUG
-                        _debug.Update();
+                    _debug.Update();
 #endif
 
-                        _input.EndFrame();
-                        if (UpdateTime > fixedDeltaT && virtualTimeAccu > fixedDeltaT * 3)
-                            virtualTimeAccu = 0f; // if performance is problematic, we swallow update-frames to not escallate iteration-count of this inner while loop..
-                        else
-                            virtualTimeAccu -= fixedDeltaT;
-                    }
-
-                    var swDraw = Stopwatch.StartNew();
-                    _draw.BeginFrame();
-                    rootActor.Draw();
-                    _draw.EndFrame();
-                    DrawTime = swDraw.Elapsed.TotalSeconds;
-
-                    _platform.Present();
-                    realTimePreviousFrame = realTime;
+                    _input.EndFrame();
+                    if (UpdateTime > fixedDeltaT && virtualTimeAccu > fixedDeltaT * 3)
+                        virtualTimeAccu = 0f; // if performance is problematic, we swallow update-frames to not escallate iteration-count of this inner while loop..
+                    else
+                        virtualTimeAccu -= fixedDeltaT;
                 }
-            }
-            finally
-            {
-                (rootActor as IDisposable)?.Dispose();
+
+                var swDraw = Stopwatch.StartNew();
+                _draw.BeginFrame();
+                game.Draw();
+                _draw.EndFrame();
+                DrawTime = swDraw.Elapsed.TotalSeconds;
+
+                _platform.Present();
+                realTimePreviousFrame = realTime;
             }
         }
 

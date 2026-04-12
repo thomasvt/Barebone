@@ -39,7 +39,7 @@ namespace Barebone.Graphics
             {
                 var lastIdx = _subMeshes.Count - 1;
                 _subMeshes.InternalArray[lastIdx].Return();
-                _subMeshes.SwapRemoveAt(lastIdx);
+                _subMeshes.SwapRemoveAt(lastIdx, false);
             }
         }
 

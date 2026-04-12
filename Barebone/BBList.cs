@@ -1,4 +1,5 @@
 ﻿using System.Buffers;
+using System.Collections.Specialized;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using Barebone.Pools;
@@ -6,18 +7,19 @@ using Barebone.Pools;
 namespace Barebone
 {
     /// <summary>
-    /// List-like struct with zero GC pressure and several much faster alternatives than List by sacrificing the stable item-order and exposing the internal array.
+    /// List-like class with zero GC pressure and several faster alternatives than List by sacrificing the stable item-order and exposing the internal array.
+    /// Supports both Poolable and normal Disposable patterns.
     /// Fast alternatives are:
     /// * use as unordered but fast queue using Add() and Pop() for cases where the pop order is irrelevant.
     /// * SwapRemove: removes a range of items by moving items from the back of the list over the range to remove.
     /// * AddSpan: performs ranged memory-copy instead of items 1 by 1.
     /// </summary>
-    public class BBList<T> : Poolable
+    public class BBList<T> : Poolable, IBBQueue<T>, IBBStack<T>, IDisposable
     {
         private T[] _items = [];
-        public int Count { get; private set; }
+        public int Count { get; private set; } = 0;
 
-        protected internal override void Construct()
+        protected internal override sealed void Construct()
         {
             _items = [];
             Count = 0;
@@ -43,7 +45,35 @@ namespace Barebone
             return AddWithResize(item);
         }
 
+        /// <summary>
+        /// Inserts an item at the beginning of this BBList. Combine with Dequeue() to us this List as a queue.
+        /// Note that you can only use Enqueue and Dequeue if you don't want the items' order to change.
+        /// </summary>
+        public void Enqueue(T item)
+        {
+            if (Count == _items.Length)
+                GrowCapacity(Count + 1);
 
+            if (Count > 0)
+                Array.Copy(_items, 0, _items, 1, Count);
+            _items[0] = item;
+            Count++;
+        }
+
+        /// <summary>
+        /// Gets the last item on the list and removes it. Combine with Enqueue() to use this List as a queue.
+        /// Note that you can only use Enqueue and Dequeue if you don't want the items' order to change.
+        /// </summary>
+        public T Dequeue()
+        {
+            Count--;
+            return _items[Count];
+        }
+
+
+        /// <summary>
+        /// Inserts at the given index.
+        /// </summary>
         public void InsertAt(int idx, T item)
         {
             if (idx > Count) throw new ArgumentOutOfRangeException(nameof(idx));
@@ -55,10 +85,13 @@ namespace Barebone
             else
             {
                 if (Count == _items.Length)
-                    GrowCapacity(Count+1);
+                    GrowCapacity(Count + 1);
 
-                Array.Copy(_items, idx, _items, idx + 1, Count-idx);
+                var moveCount = Count - idx;
+                if (moveCount > 0)
+                    Array.Copy(_items, idx, _items, idx + 1, moveCount);
                 _items[idx] = item;
+                Count++;
             }
         }
 
@@ -160,12 +193,12 @@ namespace Barebone
         /// Fast remove of an item by overwriting it with the last item and shrinking the array by 1.
         /// This sacrifices the order of the items in the array but is faster because no parts of the array need to be copied around to close the gap.
         /// </summary>
-        public bool SwapRemove(T item)
+        public bool SwapRemove(T item, bool returnIfPoolable = false)
         {
             var idx = IndexOf(item);
             if (idx <= -1) return false;
 
-            SwapRemoveRange(idx);
+            SwapRemoveRange(idx, 1, returnIfPoolable);
             return true;
         }
 
@@ -185,10 +218,14 @@ namespace Barebone
         /// Fast remove of a range of items by copying over an equal amount of items from the back of the array (if applicable).
         /// This is faster than filling the gap by copying a larger part of the array to maintaining original item-order.
         /// </summary>
-        public void SwapRemoveRange(int idx, int count = 1)
+        public void SwapRemoveRange(int idx, int count = 1, bool returnIfPoolable = false)
         {
             if (idx + count > Count)
                 throw new ArgumentOutOfRangeException("The range to remove doesn't entirely fall within array bounds.");
+
+            if (returnIfPoolable)
+                foreach (var item in AsReadOnlySpan().Slice(idx, count))
+                    (item as IPoolable)?.Return();
 
             if (idx + count < Count)
             {
@@ -204,15 +241,26 @@ namespace Barebone
         /// Fast remove of a range of items by copying over an equal amount of items from the back of the array (if applicable).
         /// This is faster than filling the gap by copying a larger part of the array to maintaining original item-order.
         /// </summary>
-        public void SwapRemoveAt(int idx)
+        public void SwapRemoveAt(int idx, bool returnIfPoolable = false)
         {
             if (idx >= Count)
                 throw new ArgumentOutOfRangeException(nameof(idx), "Index out of range.");
+
+            if (returnIfPoolable)
+                (_items[idx] as IPoolable)?.Return();
 
             if (idx < Count - 1)
                 _items[idx] = _items[Count - 1];
 
             Count--;
+        }
+
+        /// <summary>
+        /// Adds an item to this BBList. Combine with Pop() and Peek() to use as a stack.
+        /// </summary>
+        public void Push(T item)
+        {
+            Add(item);
         }
 
         /// <summary>
@@ -233,9 +281,14 @@ namespace Barebone
         /// <summary>
         /// Clears the collection. Optionally frees the allocated capacity memory.
         /// </summary>
+        /// <param name="returnItems">Also returns all contained items to the pool when applicable.</param>
         /// <param name="freeCapacity">free the memory allocated for the current capacity of this GrowArray</param>
-        public void Clear(bool freeCapacity = false)
+        public void Clear(bool returnItems = false, bool freeCapacity = false)
         {
+            if (returnItems)
+                foreach (var item in AsReadOnlySpan())
+                    (item as IPoolable)?.Return();
+
             if (freeCapacity)
             {
                 ArrayPool<T>.Shared.Return(_items);
@@ -246,23 +299,13 @@ namespace Barebone
         }
 
         /// <summary>
-        /// Clears the collection after calling Return() on all items that are <see cref="IPoolable"/>. Optionally frees the allocated capacity memory.
-        /// </summary>
-        /// <param name="freeCapacity">free the memory allocated for the current capacity of this GrowArray</param>
-        public void ClearAndReturnPoolableItems(bool freeCapacity = false)
-        {
-            foreach (var item in AsReadOnlySpan())
-                (item as IPoolable)?.Return();
-
-            Clear(freeCapacity);
-        }
-
-        /// <summary>
         /// Returns this BBList after returning all items that are <see cref="IPoolable"/>. 
         /// </summary>
-        public void ReturnIncludingPoolableItems()
+        /// <param name="returnItems">Also returns all contained items to the pool when applicable.</param>
+        public void Return(bool returnItems)
         {
-            ClearAndReturnPoolableItems(false);
+            if (returnItems)
+                Clear(true, false);
             Return();
         }
 
@@ -335,6 +378,9 @@ namespace Barebone
             return false;
         }
 
+        /// <summary>
+        /// Returns the top item of the stack or queue when this BBList is used as such.
+        /// </summary>
         public T Peek()
         {
             if (Count == 0) throw new Exception("Cannot peek on an empty BBList");
@@ -357,6 +403,27 @@ namespace Barebone
         public void Reverse()
         {
             Array.Reverse(_items, 0, Count);
+        }
+
+        /// <summary>
+        /// Allows to use this BBList as a queue only. This prevents you from using queue-breaking features of BBList.
+        /// </summary>
+        public IBBQueue<T> AsQueue() => this;
+
+        /// <summary>
+        /// Allows to use this BBList as a stack only. This prevents you from using stack-breaking features of BBList.
+        /// </summary>
+        public IBBStack<T> AsStack() => this;
+
+        public void DisposeItems()
+        {
+            foreach (var item in AsReadOnlySpan())
+                (item as IDisposable)?.Dispose();
+        }
+
+        public void Dispose()
+        {
+            Destruct();
         }
     }
 }
