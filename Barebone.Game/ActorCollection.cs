@@ -34,6 +34,9 @@ namespace Barebone.Game
             _entities.Add(entity);
         }
 
+        /// <summary>
+        /// Schedules to remove the entity upon next UpdateAll() call. Note that this will call its Dispose or will return it to the Pool.
+        /// </summary>
         public void Remove(T entity)
         {
             _entities.Remove(entity);

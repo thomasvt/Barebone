@@ -7,11 +7,6 @@ namespace Barebone
         void OnAdded();
     }
 
-    public interface IOnRemoved
-    {
-        void OnRemoved();
-    }
-
     /// <summary>
     /// A BBList that defers all mutations to the controlled moment when ApplyChanges() is called. Can be used both in Poolable or classic IDisposable pattern.
     /// </summary>
@@ -67,7 +62,9 @@ namespace Barebone
         /// </summary>
         public void ClearImmediate(bool returnPoolableItems, bool freeCapacity)
         {
+            _list.DisposeItems();
             _list.Clear(returnPoolableItems, freeCapacity);
+            _queue.DisposeItems();
             _queue.Clear(returnPoolableItems, freeCapacity);
         }
 
@@ -87,7 +84,7 @@ namespace Barebone
                         break;
                     case MutationType.Remove:
                         _list.SwapRemove(command.Item!, returnPoolableItems);
-                        (command.Item as IOnRemoved)?.OnRemoved();
+                        (command.Item as IDisposable)?.Dispose();
                         break;
                     default: throw new ArgumentOutOfRangeException();
                 }

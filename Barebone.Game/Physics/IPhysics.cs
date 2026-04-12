@@ -12,12 +12,17 @@ namespace Barebone.Game.Physics
         /// <summary>
         /// Makes this Actor participate in the physics simulation of the game.
         /// </summary>
-        BodyId CreateBody(in BodyType bodyType, in Vector2 position, in Vector2? velocity = null, in float angle = 0f);
+        BodyId CreateDynamicBody(in Vector2 position, in Vector2? velocity = null, in float angle = 0f, in bool lockRotation = false);
+        BodyId CreateStaticBody(in Vector2? position = null, in float angle = 0f);
 
-        ShapeId AttachCircle(in BodyId bodyId, in float radius, in Vector2? center = null);
-        ShapeId AttachPolygon(in BodyId bodyId, in Polygon8 polygon);
-        ShapeId AttachCapsule(in BodyId bodyId, in Vector2 center1, in Vector2 center2, in float radius);
+        ShapeId AttachCircle(in BodyId bodyId, in Vector2? center, in float radius, in float friction);
+        ShapeId AttachPolygon(in BodyId bodyId, in Polygon8 polygon, in float friction);
+        ShapeId AttachCapsule(in BodyId bodyId, in Vector2 center1, in Vector2 center2, in float radius, in float friction);
         void GetTransform(in BodyId bodyId, out Vector2 position, out float angle);
+
+        /// <summary>
+        /// Destroys the given body and its attached shapes.
+        /// </summary>
         void DestroyBody(BodyId bodyId);
     }
 }

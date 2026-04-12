@@ -48,12 +48,14 @@ namespace Barebone.Game.Physics
             return B2Api.b2World_GetGravity(_b2WorldId);
         }
 
+        
+
         public void SetGravity(in Vector2 gravity)
         {
             B2Api.b2World_SetGravity(_b2WorldId, gravity);
         }
 
-        public BodyId CreateBody(in BodyType bodyType, in Vector2 position, in Vector2? velocity = null, in float angle = 0f)
+        private BodyId CreateBody(in BodyType bodyType, in Vector2 position, in Vector2? velocity, in float angle, in bool lockRotation)
         {
             var def = B2Api.b2DefaultBodyDef();
             def.type = bodyType switch
@@ -65,6 +67,7 @@ namespace Barebone.Game.Physics
             };
             def.position = position;
             def.linearVelocity = velocity ?? Vector2.Zero;
+            def.motionLocks.angularZ = lockRotation;
             def.rotation = b2Rot.FromAngle(angle);
 
             var bodyId = new BodyId(++_nextBodyId);
@@ -74,7 +77,17 @@ namespace Barebone.Game.Physics
             return bodyId;
         }
 
-        public ShapeId AttachCircle(in BodyId bodyId, in float radius, in Vector2? center = null)
+        public BodyId CreateDynamicBody(in Vector2 position, in Vector2? velocity, in float angle, in bool lockRotation)
+        {
+            return CreateBody(BodyType.Dynamic, position, velocity, angle, lockRotation);
+        }
+
+        public BodyId CreateStaticBody(in Vector2? position = null, in float angle = 0)
+        {
+            return CreateBody(BodyType.Static, position ?? Vector2.Zero, Vector2.Zero, angle, false);
+        }
+
+        public ShapeId AttachCircle(in BodyId bodyId, in Vector2? center, in float radius, in float friction)
         {
             if (!_b2BodyIdsByBodyId.TryGetValue(bodyId, out var b2BodyId))
                 throw new InvalidOperationException($"Unknown BodyId: {bodyId}.");
@@ -82,6 +95,7 @@ namespace Barebone.Game.Physics
             var shapeId = new ShapeId(++_nextShapeId);
 
             var def = B2Api.b2DefaultShapeDef();
+            def.material.friction = friction;
             def.userData = (nint)shapeId.Value;
 
             B2Api.b2CreateCircleShape(b2BodyId, def, new b2Circle(center ?? Vector2.Zero, radius));
@@ -89,7 +103,7 @@ namespace Barebone.Game.Physics
             return shapeId;
         }
 
-        public ShapeId AttachPolygon(in BodyId bodyId, in Polygon8 polygon)
+        public ShapeId AttachPolygon(in BodyId bodyId, in Polygon8 polygon, in float friction)
         {
             if (!_b2BodyIdsByBodyId.TryGetValue(bodyId, out var b2BodyId))
                 throw new InvalidOperationException($"Unknown BodyId: {bodyId}.");
@@ -97,6 +111,7 @@ namespace Barebone.Game.Physics
             var shapeId = new ShapeId(++_nextShapeId);
 
             var def = B2Api.b2DefaultShapeDef();
+            def.material.friction = friction;
             def.userData = (nint)shapeId.Value;
 
             var points = Pool.RentArray<Vector2>(polygon.Count);
@@ -109,7 +124,7 @@ namespace Barebone.Game.Physics
             return shapeId;
         }
 
-        public ShapeId AttachCapsule(in BodyId bodyId, in Vector2 center1, in Vector2 center2, in float radius)
+        public ShapeId AttachCapsule(in BodyId bodyId, in Vector2 center1, in Vector2 center2, in float radius, in float friction)
         {
             if (!_b2BodyIdsByBodyId.TryGetValue(bodyId, out var b2BodyId))
                 throw new InvalidOperationException($"Unknown BodyId: {bodyId}.");
@@ -117,6 +132,7 @@ namespace Barebone.Game.Physics
             var shapeId = new ShapeId(++_nextShapeId);
 
             var def = B2Api.b2DefaultShapeDef();
+            def.material.friction = friction;
             def.userData = (nint)shapeId.Value;
 
             B2Api.b2CreateCapsuleShape(b2BodyId, def, new b2Capsule(center1, center2, radius));
@@ -148,7 +164,15 @@ namespace Barebone.Game.Physics
         public void DestroyBody(BodyId bodyId)
         {
             if (_b2BodyIdsByBodyId.TryGetValue(bodyId, out var b2BodyId))
-                B2Api.b2DestroyBody(b2BodyId);
+            {
+                var b2ShapeIds = Pool.RentArray<b2ShapeId>(B2Api.b2Body_GetShapeCount(b2BodyId));
+                var count = B2Api.b2Body_GetShapes(b2BodyId, b2ShapeIds, b2ShapeIds.Length);
+                foreach (var b2ShapeId in b2ShapeIds.AsSpan(0, count))
+                {
+                    // we will track shape mapping data soon, so we will have to clean it up too. We can do that here.
+                }
+                B2Api.b2DestroyBody(b2BodyId); // also destroys attached b2Shapes.
+            }
         }
     }
 }
