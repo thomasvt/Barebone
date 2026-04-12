@@ -10,7 +10,7 @@ namespace Barebone.Game
     {
         private readonly IPlatform _platform;
         private readonly Camera _camera;
-        private readonly DrawSubSystem _draw;
+        private readonly GraphicsSubSystem _graphics;
         private readonly InputSubSystem _input;
         private readonly PhysicsSubSystem _physics;
         // private readonly SceneSubSystem _scene;
@@ -22,7 +22,7 @@ namespace Barebone.Game
             _platform = platform;
 
             _camera = new Camera();
-            _draw = new DrawSubSystem(platform.Graphics, _camera);
+            _graphics = new GraphicsSubSystem(platform.Graphics, _camera);
             _input = new InputSubSystem();
             _physics = new PhysicsSubSystem();
             // _scene = new SceneSubSystem(_physics);
@@ -31,7 +31,7 @@ namespace Barebone.Game
 #if DEBUG
             _debug = new DebugSubSystem(this);
 #endif
-            BB.Init(_clock, _draw, _camera, _input, _debug, _physics);
+            BB.Init(_clock, _graphics, _camera, _input, _debug, _physics);
         }
 
         public void Run(Func<IGame> gameFactory)
@@ -77,9 +77,9 @@ namespace Barebone.Game
                 }
 
                 var swDraw = Stopwatch.StartNew();
-                _draw.BeginFrame();
+                _graphics.BeginFrame();
                 game.Draw();
-                _draw.EndFrame();
+                _graphics.EndFrame();
                 DrawTime = swDraw.Elapsed.TotalSeconds;
 
                 _platform.Present();

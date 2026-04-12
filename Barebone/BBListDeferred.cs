@@ -2,10 +2,20 @@
 
 namespace Barebone
 {
+    public interface IOnAdded
+    {
+        void OnAdded();
+    }
+
+    public interface IOnRemoved
+    {
+        void OnRemoved();
+    }
+
     /// <summary>
     /// A BBList that defers all mutations to the controlled moment when ApplyChanges() is called. Can be used both in Poolable or classic IDisposable pattern.
     /// </summary>
-    public class BBListDeferred<T> : Poolable, IDisposable
+    public sealed class BBListDeferred<T> : Poolable, IDisposable
     {
         internal enum MutationType { Add, Remove }
 
@@ -19,7 +29,7 @@ namespace Barebone
             Construct();
         }
 
-        protected internal override sealed void Construct()
+        protected internal override void Construct()
         {
             _list?.Return();
             _list = Pool.Rent<BBList<T>>();
@@ -36,11 +46,17 @@ namespace Barebone
             _queue = null!;
         }
 
+        /// <summary>
+        /// Enqueues this item to be added the next time you call ApplyChanges(). If item is IOnAdded, its OnAdded() will be invoked when that happens.
+        /// </summary>
         public void Add(T item)
         {
             _queue.Enqueue(new(MutationType.Add, item));
         }
 
+        /// <summary>
+        /// Enqueues this item to be removed the next time you call ApplyChanges(). If item is IOnRemoved, its OnRemoved() will be invoked when that happens.
+        /// </summary>
         public void Remove(T item)
         {
             _queue.Enqueue(new(MutationType.Remove, item));
@@ -62,18 +78,18 @@ namespace Barebone
         {
             while (_queue.Count > 0)
             {
+                var command = _queue.Dequeue();
+                switch (command.Type)
                 {
-                    var command = _queue.Dequeue();
-                    switch (command.Type)
-                    {
-                        case MutationType.Add:
-                            _list.Add(command.Item);
-                            break;
-                        case MutationType.Remove:
-                            _list.SwapRemove(command.Item, returnPoolableItems);
-                            break;
-                        default: throw new ArgumentOutOfRangeException();
-                    }
+                    case MutationType.Add:
+                        _list.Add(command.Item!);
+                        (command.Item as IOnAdded)?.OnAdded();
+                        break;
+                    case MutationType.Remove:
+                        _list.SwapRemove(command.Item!, returnPoolableItems);
+                        (command.Item as IOnRemoved)?.OnRemoved();
+                        break;
+                    default: throw new ArgumentOutOfRangeException();
                 }
             }
         }
@@ -111,6 +127,9 @@ namespace Barebone
             _list.Return(returnItems);
         }
 
+        /// <summary>
+        /// Calls Dispose on all items that implement IDisposable.
+        /// </summary>
         public void DisposeItems()
         {
             _queue.DisposeItems();

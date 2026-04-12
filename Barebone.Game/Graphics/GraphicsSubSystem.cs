@@ -14,7 +14,7 @@ namespace Barebone.Game.Graphics
 
     internal record struct DrawCommand(DrawCommandType Type, in Vector2 Position, in float Radius, in int SegmentCount, in Polygon8 Polygon, in Color Color);
 
-    internal class DrawSubSystem(IPlatformGraphics pg, Camera camera) : IDraw
+    internal class GraphicsSubSystem(IPlatformGraphics pg, Camera camera) : IGraphics
     {
         private readonly List<DrawCommand> _commands = new();
 
@@ -25,21 +25,6 @@ namespace Barebone.Game.Graphics
         public void ClearScreen(in Color color)
         {
             _commands.Add(new(DrawCommandType.Clear, default, 0, 0, default, color));
-        }
-
-        public void FillAabb(in Aabb box, in Color color)
-        {
-            _commands.Add(new(DrawCommandType.FillPolygon, default, 0, 0, Polygon8.FromAabb(box).Transform(camera.WorldToScreenTransform), color));
-        }
-
-        public void Line(in Vector2 a, in Vector2 b, float width, LineCap lineCap, in Color color)
-        {
-            FillPolygon(Polygon8.Line(a, b, width, lineCap), color);
-        }
-
-        public void FillPolygon(in Vector2 position, in Polygon8 polygon, in Color color)
-        {
-            _commands.Add(new(DrawCommandType.FillPolygon, position, 0, 0, polygon.Transform(camera.WorldToScreenTransform), color));
         }
 
         public void FillPolygon(in Polygon8 polygon, in Color color)

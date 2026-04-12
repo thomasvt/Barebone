@@ -1,5 +1,4 @@
 ﻿using System.Buffers;
-using System.Collections.Specialized;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using Barebone.Pools;
@@ -14,12 +13,12 @@ namespace Barebone
     /// * SwapRemove: removes a range of items by moving items from the back of the list over the range to remove.
     /// * AddSpan: performs ranged memory-copy instead of items 1 by 1.
     /// </summary>
-    public class BBList<T> : Poolable, IBBQueue<T>, IBBStack<T>, IDisposable
+    public sealed class BBList<T> : Poolable, IBBQueue<T>, IBBStack<T>, IDisposable
     {
         private T[] _items = [];
         public int Count { get; private set; } = 0;
 
-        protected internal override sealed void Construct()
+        protected internal override void Construct()
         {
             _items = [];
             Count = 0;

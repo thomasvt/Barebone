@@ -132,4 +132,13 @@ namespace Barebone.Geometry
             return Math.Min(maxA, maxB) - Math.Max(minA, minB);
         }
     }
+
+    public struct PolygonIntersection
+    {
+        public bool IsOverlap;
+        /// <summary>
+        /// Minimum Translation Vector
+        /// </summary>
+        public Vector2 MTV;
+    }
 }

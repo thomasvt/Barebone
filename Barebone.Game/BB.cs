@@ -7,10 +7,10 @@ namespace Barebone.Game
 {
     public static class BB
     {
-        internal static void Init(IClock clock, IDraw draw, ICamera camera, IInput input, IDebug debug, IPhysics physics)
+        internal static void Init(IClock clock, IGraphics graphics, ICamera camera, IInput input, IDebug debug, IPhysics physics)
         {
             Clock = clock;
-            Draw = draw;
+            Graphics = graphics;
             Camera = camera;
             Input = input;
             Debug = debug;
@@ -18,7 +18,7 @@ namespace Barebone.Game
         }
 
         public static IClock Clock { get; private set; } = null!;
-        public static IDraw Draw { get; private set; } = null!;
+        public static IGraphics Graphics { get; private set; } = null!;
         public static ICamera Camera { get; private set; } = null!;
         public static IInput Input { get; private set; } = null!;
         public static IDebug Debug { get; private set; } = null!;

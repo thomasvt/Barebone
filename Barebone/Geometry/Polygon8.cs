@@ -209,12 +209,6 @@ namespace Barebone.Geometry
             return p;
         }
 
-        public static Polygon8 Square(float size)
-        {
-            var hs = size * 0.5f;
-            return new Polygon8(new(-hs, -hs), new(-hs, hs), new(hs, hs), new(hs, -hs));
-        }
-
         public float GetCircumpherence()
         {
             if (Count < 2) return 0f;
@@ -226,38 +220,6 @@ namespace Barebone.Geometry
                 circumpherence += Vector2.Distance(a, b);
             }
             return circumpherence;
-        }
-
-        public static Polygon8 FromAabb(Aabb aabb)
-        {
-            var minX = aabb.MinCorner.X;
-            var minY = aabb.MinCorner.Y;
-            var maxX = aabb.MaxCorner.X;
-            var maxY = aabb.MaxCorner.Y;
-            return new Polygon8(new(minX, minY), new(minX, maxY), new(maxX, maxY), new(maxX, minY));
-        }
-
-        public static Polygon8 Line(Vector2 a, Vector2 b, float width, LineCap lineCap)
-        {
-            var ab = b - a;
-
-            var longi = (a == b ? new Vector2(1, 0) : Vector2.Normalize(ab)) * (width * 0.5f);
-            var latti = longi.CrossLeft();
-
-            switch (lineCap)
-            {
-                case LineCap.Square: return new(a - longi - latti, a - longi + latti, b + longi + latti, b + longi - latti);
-                case LineCap.Butt: return new(a - latti, a + latti, b + latti, b - latti);
-                case LineCap.Round:
-                    {
-                        // this adds a few more points to have somewhat of a rounded cap.
-                        var lattiHalf = latti * 0.5f;
-                        var longiHalf = longi * 0.5f;
-                        return new(a - latti - longiHalf, a - longi - lattiHalf, a - longi + lattiHalf, a + latti - longiHalf, b + latti + longiHalf, b + longi + lattiHalf, b + longi - lattiHalf, b - latti + longiHalf);
-                    }
-                default: throw new ArgumentOutOfRangeException(nameof(lineCap), lineCap, null);
-            }
-            ;
         }
 
         [Pure]
@@ -279,12 +241,5 @@ namespace Barebone.Geometry
         }
     }
 
-    public struct PolygonIntersection
-    {
-        public bool IsOverlap;
-        /// <summary>
-        /// Minimum Translation Vector
-        /// </summary>
-        public Vector2 MTV;
-    }
+    
 }

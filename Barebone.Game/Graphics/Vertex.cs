@@ -7,5 +7,6 @@ namespace Barebone.Game.Graphics
     {
         public Vector2 Position;
         public ColorF Color;
+        public Vector2 UV;
     }
 }

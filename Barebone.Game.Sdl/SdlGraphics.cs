@@ -1,6 +1,4 @@
 ﻿using System.Drawing;
-using System.Numerics;
-using System.Runtime.CompilerServices;
 using Barebone.Game.Graphics;
 using SDL;
 
@@ -18,18 +16,22 @@ namespace Barebone.Game.Sdl
 
         public void FillTriangles(in Span<Vertex> vertices)
         {
-            var sdlVertices = stackalloc SDL_Vertex[vertices.Length];
+            //var sdlVertices = stackalloc SDL_Vertex[vertices.Length];
 
-            for (var i = 0; i < vertices.Length; i++)
+            //for (var i = 0; i < vertices.Length; i++)
+            //{
+            //    ref readonly var v = ref vertices[i];
+
+            //    sdlVertices[i].position = new() { x = v.Position.X, y = v.Position.Y };
+            //    sdlVertices[i].color = new() { a = v.Color.A, b = v.Color.B, g = v.Color.G, r = v.Color.R };
+            //}
+
+            fixed (Vertex* ptr = vertices)
             {
-                ref readonly var v = ref vertices[i];
-
-                sdlVertices[i].position = new() { x = v.Position.X, y = v.Position.Y };
-                sdlVertices[i].color = new() { a = v.Color.A, b = v.Color.B, g = v.Color.G, r = v.Color.R };
+                var sdlPtr = (SDL_Vertex*)ptr; // we matched our own Vertex to this. For other platforms, we may have to map instead.
+                if (!SDL3.SDL_RenderGeometry(rendererPtr, null, sdlPtr, vertices.Length, null, 0))
+                    throw new SdlException("SDL_RenderGeometry failed: " + SDL3.SDL_GetError());
             }
-
-            if (!SDL3.SDL_RenderGeometry(rendererPtr, null, sdlVertices, vertices.Length, null, 0))
-                throw new SdlException("SDL_RenderGeometry failed: " + SDL3.SDL_GetError());
         }
     }
 }
