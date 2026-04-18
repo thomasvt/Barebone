@@ -77,9 +77,7 @@ namespace Barebone.Game
                 }
 
                 var swDraw = Stopwatch.StartNew();
-                _graphics.BeginFrame();
                 game.Draw();
-                _graphics.EndFrame();
                 DrawTime = swDraw.Elapsed.TotalSeconds;
 
                 _platform.Present();

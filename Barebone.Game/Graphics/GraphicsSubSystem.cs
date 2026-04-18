@@ -5,52 +5,41 @@ using Barebone.Graphics;
 
 namespace Barebone.Game.Graphics
 {
-    internal enum DrawCommandType
-    {
-        Clear,
-        FillPolygon,
-        FillCircle,
-    }
-
-    internal record struct DrawCommand(DrawCommandType Type, in Vector2 Position, in float Radius, in int SegmentCount, in Polygon8 Polygon, in Color Color);
-
     internal class GraphicsSubSystem(IPlatformGraphics pg, Camera camera) : IGraphics
     {
-        private readonly List<DrawCommand> _commands = new();
-
-        public void BeginFrame()
-        {
-        }
+        private ITexture? _texture;
+        private Matrix3x2 _uvTransform;
 
         public void ClearScreen(in Color color)
         {
-            _commands.Add(new(DrawCommandType.Clear, default, 0, 0, default, color));
+            pg.ClearScreen(color);
         }
 
-        public void FillPolygon(in Polygon8 polygon, in Color color)
+        public void FillPolygon(in Polygon8 polygon, in Color? color = null)
         {
-            _commands.Add(new(DrawCommandType.FillPolygon, Vector2.Zero, 0, 0, polygon.Transform(camera.WorldToScreenTransform), color));
+            FillPolygonInternal(polygon, color ?? Color.White);
         }
 
         public void FillCircle(Vector2 center, float radius, in int segmentCount, in Color color)
         {
-            center = camera.WorldToScreen(center);
-            radius = camera.WorldLengthToScreen(radius);
-            _commands.Add(new(DrawCommandType.FillCircle, center, radius, segmentCount, default, color));
+            FillCircleInternal(center, radius, segmentCount, color);
         }
 
-        public void EndFrame()
+        public void UnsetTexture()
         {
-            foreach (var command in _commands)
-            {
-                switch (command.Type)
-                {
-                    case DrawCommandType.Clear: pg.ClearScreen(command.Color); break;
-                    case DrawCommandType.FillPolygon: FillPolygonInternal(command.Polygon.Translate(command.Position), command.Color); break;
-                    case DrawCommandType.FillCircle: FillCircleInternal(command.Position, command.Radius, command.SegmentCount, command.Color); break;
-                }
-            }
-            _commands.Clear();
+            _texture = null;
+            _uvTransform = Matrix3x2.Identity;
+        }
+
+        public void SetTexture(in ITexture texture, in Matrix3x2 uvTransform)
+        {
+            _texture = texture;
+            _uvTransform = uvTransform;
+        }
+
+        public ITexture GetTexture(string assetPath)
+        {
+            return pg.GetTexture(assetPath);
         }
 
         private void FillCircleInternal(in Vector2 center, in float radius, in int segmentCount, in Color color)
@@ -72,14 +61,14 @@ namespace Barebone.Game.Graphics
 
                 var b = center + angle.AngleToVector2(radius);
 
-                vertices[i++] = new() { Color = colorF, Position = center };
-                vertices[i++] = new() { Color = colorF, Position = a };
-                vertices[i++] = new() { Color = colorF, Position = b };
+                vertices[i++] = new() { Color = colorF, Position = Vector2.Transform(center, camera.WorldToScreenTransform), UV = Vector2.Transform(center, _uvTransform) };
+                vertices[i++] = new() { Color = colorF, Position = Vector2.Transform(a, camera.WorldToScreenTransform), UV = Vector2.Transform(a, _uvTransform) };
+                vertices[i++] = new() { Color = colorF, Position = Vector2.Transform(b, camera.WorldToScreenTransform), UV = Vector2.Transform(b, _uvTransform) };
 
                 a = b;
             }
 
-            pg.FillTriangles(vertices);
+            pg.FillTriangles(vertices, _texture);
         }
 
         private void FillPolygonInternal(in Polygon8 polygon, in Color color)
@@ -96,14 +85,14 @@ namespace Barebone.Game.Graphics
             {
                 var pC = polygon[c]; // Polygon indexer supports wrap-around
 
-                vertices[i++] = new() { Color = colorF, Position = pA };
-                vertices[i++] = new() { Color = colorF, Position = pB };
-                vertices[i++] = new() { Color = colorF, Position = pC };
+                vertices[i++] = new() { Color = colorF, Position = Vector2.Transform(pA, camera.WorldToScreenTransform), UV = Vector2.Transform(pA, _uvTransform) };
+                vertices[i++] = new() { Color = colorF, Position = Vector2.Transform(pB, camera.WorldToScreenTransform), UV = Vector2.Transform(pB, _uvTransform) };
+                vertices[i++] = new() { Color = colorF, Position = Vector2.Transform(pC, camera.WorldToScreenTransform), UV = Vector2.Transform(pC, _uvTransform) };
 
                 pB = pC;
             }
 
-            pg.FillTriangles(vertices);
+            pg.FillTriangles(vertices, _texture);
         }
     }
 }
