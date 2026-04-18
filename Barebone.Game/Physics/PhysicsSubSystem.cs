@@ -38,18 +38,11 @@ namespace Barebone.Game.Physics
             _b2WorldId = B2Api.b2CreateWorld(def);
         }
 
-        public void Update(double deltaT, int subStepCount)
-        {
-            B2Api.b2World_Step(_b2WorldId, (float)deltaT, subStepCount);
-        }
-
         public Vector2 GetGravity()
         {
             return B2Api.b2World_GetGravity(_b2WorldId);
         }
-
         
-
         public void SetGravity(in Vector2 gravity)
         {
             B2Api.b2World_SetGravity(_b2WorldId, gravity);
@@ -173,6 +166,11 @@ namespace Barebone.Game.Physics
                 }
                 B2Api.b2DestroyBody(b2BodyId); // also destroys attached b2Shapes.
             }
+        }
+
+        public void Step(float deltaT, int subStepCount)
+        {
+            B2Api.b2World_Step(_b2WorldId, deltaT, subStepCount);
         }
     }
 }

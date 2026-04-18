@@ -55,8 +55,7 @@ namespace Barebone.Game
                 {
                     gameTime += fixedDeltaT;
                     _clock.BeginFrame((float)gameTime, (float)fixedDeltaT);
-                    _physics.Update(fixedDeltaT, 4);
-
+                    
                     var swUpdate = Stopwatch.StartNew();
                     game.Update();
                     UpdateTime = swUpdate.Elapsed.TotalSeconds;

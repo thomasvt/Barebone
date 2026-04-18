@@ -28,7 +28,7 @@ namespace Barebone.Game.Sdl
             SDL3.SDL_UnlockSurface(Surface);
         }
 
-        public Vector2 GetPixelPerfectScale(float texelsPerWorldUnit)
+        public Vector2 GetScaleForTexelsPerUnit(float texelsPerWorldUnit)
         {
             var w = Surface->w;
             var h = Surface->h;

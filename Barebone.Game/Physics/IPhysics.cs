@@ -24,5 +24,11 @@ namespace Barebone.Game.Physics
         /// Destroys the given body and its attached shapes.
         /// </summary>
         void DestroyBody(BodyId bodyId);
+
+        /// <summary>
+        /// Lets the physical simulation take a step forward.
+        /// </summary>
+        /// <param name="subStepCount">Substeps to simulate, this increases quality of the simulation but also the calculation cost.</param>
+        void Step(float deltaT, int subStepCount);
     }
 }
