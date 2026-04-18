@@ -9,29 +9,24 @@ namespace Barebone.Game
     public class Engine : IDisposable
     {
         private readonly IPlatform _platform;
-        private readonly Camera _camera;
         private readonly GraphicsSubSystem _graphics;
         private readonly InputSubSystem _input;
         private readonly PhysicsSubSystem _physics;
-        // private readonly SceneSubSystem _scene;
         private readonly Clock _clock;
         private readonly DebugSubSystem _debug;
 
         public Engine(IPlatform platform)
         {
             _platform = platform;
-
-            _camera = new Camera();
-            _graphics = new GraphicsSubSystem(platform.Graphics, _camera);
+            _graphics = new GraphicsSubSystem(platform.Graphics);
             _input = new InputSubSystem();
             _physics = new PhysicsSubSystem();
-            // _scene = new SceneSubSystem(_physics);
             _clock = new Clock();
 
 #if DEBUG
             _debug = new DebugSubSystem(this);
 #endif
-            BB.Init(_clock, _graphics, _camera, _input, _debug, _physics);
+            BB.Init(_clock, _graphics, _input, _debug, _physics);
         }
 
         public void Run(Func<IGame> gameFactory)
@@ -54,7 +49,7 @@ namespace Barebone.Game
 
                 _platform.ProcessEvents(_input);
 
-                _camera.SetViewportSize(_platform.GetWindowSize()); // calculate transforms etc, after processing OS events that may have altered the window
+                _graphics.SetViewportSize(_platform.GetWindowSize()); // window may have changed after ProcessEvents.
 
                 while (virtualTimeAccu >= fixedDeltaT)
                 {
@@ -77,6 +72,7 @@ namespace Barebone.Game
                 }
 
                 var swDraw = Stopwatch.StartNew();
+                
                 game.Draw();
                 DrawTime = swDraw.Elapsed.TotalSeconds;
 
@@ -91,6 +87,7 @@ namespace Barebone.Game
 
         public void Dispose()
         {
+            _graphics.Dispose();
             _physics.Dispose();
         }
     }

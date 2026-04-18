@@ -2,6 +2,7 @@
 using System.Numerics;
 using Barebone.Graphics;
 using Barebone.Graphics.Gpu;
+using Barebone.Graphics.Text;
 using Barebone.UI.Text;
 
 namespace Barebone.UI.Controls

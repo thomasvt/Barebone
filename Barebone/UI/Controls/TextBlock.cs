@@ -2,14 +2,13 @@
 using System.Numerics;
 using Barebone.Geometry;
 using Barebone.Graphics;
-using Barebone.Graphics.Gpu;
-using Barebone.UI.Text;
+using Barebone.Graphics.Text;
 
 namespace Barebone.UI.Controls
 {
     public class TextBlock : UIControl
     {
-        private readonly BBList<GpuTexTriangle> _textTriangles = new();
+        private readonly BBList<Vertex> _textTriangles = new();
         private Font _font;
 
         public TextBlock(UserInterface ui) : base(ui)
@@ -53,13 +52,14 @@ namespace Barebone.UI.Controls
             if (maxLinesVisible <= 0)
                 return;
 
-            _font.AppendString(true, _textTriangles, Text, TextColor, topLeft);
+            _font.AppendString(true, _textTriangles, Text, ColorF.FromColor(TextColor), topLeft);
         }
 
         protected override void Render(IImmediateRenderer renderer)
         {
             base.Render(renderer);
-            renderer.Draw(Matrix4x4.Identity, _textTriangles.AsReadOnlySpan(), _font.Texture);
+            throw new Exception("Changed GpuTexTriangle to Vertex when migrated to SDL3");
+            // renderer.Draw(Matrix4x4.Identity, _textTriangles.AsReadOnlySpan(), _font.Texture);
         }
 
         public override void Dispose()

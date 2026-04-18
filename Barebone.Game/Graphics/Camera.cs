@@ -1,20 +1,28 @@
 ﻿using System.Numerics;
+using Barebone.Geometry;
 
 namespace Barebone.Game.Graphics
 {
-    public class Camera : ICamera
+    internal class Camera : ICamera
     {
-        private Vector2 _viewportSize;
         private Matrix3x2 _screenToWorld;
         private Matrix3x2 _worldToScreen;
+        private Vector2I _viewportSize;
+        private bool _isDirty;
+
+        internal Camera()
+        {
+            _isDirty = true;
+        }
 
         public Vector2 Position
         {
             get;
             set
             {
+                if (field == value) return;
                 field = value;
-                CalculateMatrices();
+                _isDirty = true;
             }
         }
         public float Zoom
@@ -22,19 +30,33 @@ namespace Barebone.Game.Graphics
             get;
             set
             {
+                if (field == value) return;
                 if (Zoom <= 0) throw new Exception($"Zoom must be > 0 (not {value})");
                 field = value;
-                CalculateMatrices();
+                _isDirty = true;
             }
         } = 1f;
 
 
-        public float? LogicalViewHeight { 
+        public float? LogicalViewHeight
+        {
             get;
             set
             {
+                if (field == value) return;
                 field = value;
-                CalculateMatrices();
+                _isDirty = true;
+            }
+        }
+
+        public ScreenOrigin ScreenOrigin
+        {
+            get;
+            set
+            {
+                if (field == value) return;
+                field = value;
+                _isDirty = true;
             }
         }
 
@@ -58,28 +80,42 @@ namespace Barebone.Game.Graphics
             return length * WorldToScreenTransform.M11;
         }
 
-        public void SetViewportSize(Vector2 viewportSize)
+        internal void SetViewportSize(Vector2I viewportSize)
         {
+            if (viewportSize == _viewportSize) return;
+
             _viewportSize = viewportSize;
-            CalculateMatrices();
+            _isDirty = true;
         }
 
-        private void CalculateMatrices()
+        private void EnsureMatrices()
         {
-            var viewportCenter = _viewportSize * 0.5f;
-            
+            if (!_isDirty) return;
+
+
             var combinedZoom = Zoom;
             if (LogicalViewHeight.HasValue) combinedZoom *= _viewportSize.Y / LogicalViewHeight.Value;
 
-            _screenToWorld = Matrix3x2.CreateTranslation(-viewportCenter) * Matrix3x2.CreateScale(1f/ combinedZoom) * Matrix3x2.CreateTranslation(Position);
-            _worldToScreen = Matrix3x2.CreateTranslation(-Position) * Matrix3x2.CreateScale(combinedZoom) * Matrix3x2.CreateTranslation(viewportCenter);
+            if (ScreenOrigin == ScreenOrigin.Center)
+            {
+                var viewportCenter = _viewportSize * 0.5f;
+                _screenToWorld = Matrix3x2.CreateTranslation(-viewportCenter) * Matrix3x2.CreateScale(1f / combinedZoom) * Matrix3x2.CreateTranslation(Position);
+                _worldToScreen = Matrix3x2.CreateTranslation(-Position) * Matrix3x2.CreateScale(combinedZoom) * Matrix3x2.CreateTranslation(viewportCenter);
+            }
+            else
+            {
+                _screenToWorld = Matrix3x2.CreateScale(1f / combinedZoom) * Matrix3x2.CreateTranslation(Position);
+                _worldToScreen = Matrix3x2.CreateTranslation(-Position) * Matrix3x2.CreateScale(combinedZoom);
+            }
+
+            _isDirty = false;
         }
 
         public Matrix3x2 WorldToScreenTransform
         {
             get
             {
-                CalculateMatrices();
+                EnsureMatrices();
                 return _worldToScreen;
             }
         }
@@ -88,7 +124,7 @@ namespace Barebone.Game.Graphics
         {
             get
             {
-                CalculateMatrices();
+                EnsureMatrices();
                 return _screenToWorld;
             }
         }

@@ -3,6 +3,7 @@ using System.Numerics;
 using Barebone.Geometry;
 using Barebone.Graphics.Gpu;
 using Barebone.Graphics.Sprites;
+using Barebone.Graphics.Text;
 using Barebone.UI.Controls;
 using Barebone.UI.Text;
 
@@ -11,16 +12,6 @@ namespace Barebone.Graphics
     public interface IMesh
     {
         void Clear();
-
-        /// <summary>
-        /// Prints text onto the TexMesh using the specified Font.
-        /// </summary>
-        Mesh FillText(in Vector2 position, in string text, in Color color, in Font font, float scale = 1f, float z = 0f);
-
-        /// <summary>
-        /// Prints text onto the TexMesh using the specified Font.
-        /// </summary>
-        Mesh FillText(in Aabb area, in HorizontalAlignment horizontalAlignment, in VerticalAlignment verticalAlignment, in string text, in Color color, in Font font, float scale = 1f, float z = 0f);
 
         Mesh FillTriangle(in GpuTexVertex a, in GpuTexVertex b, in GpuTexVertex c);
         Mesh FillTriangle(in Vector3 a, in Vector3 b, in Vector3 c, in Color color);

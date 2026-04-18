@@ -3,10 +3,8 @@ using System.Numerics;
 using Barebone.Geometry;
 using BareBone.Graphics;
 using Barebone.Pools;
-using Barebone.UI.Text;
 using Barebone.Graphics.Gpu;
 using Barebone.Graphics.Sprites;
-using Barebone.UI.Controls;
 
 namespace Barebone.Graphics
 {
@@ -55,43 +53,7 @@ namespace Barebone.Graphics
             _subMeshes.Add(newMesh);
             return newMesh;
         }
-
-        /// <summary>
-        /// Prints text onto the TexMesh using the specified Font.
-        /// </summary>
-        public Mesh FillText(in Vector2 position, in string text, in Color color, in Font font, float scale = 1f, float z = 0f)
-        {
-            var subMesh = GetSubMeshFor(font.Texture);
-            font.AppendString(false, subMesh.Triangles, text, color, position, scale, z);
-            return this;
-        }
-
-        /// <summary>
-        /// Prints text onto the TexMesh using the specified Font.
-        /// </summary>
-        public Mesh FillText(in Aabb area, in HorizontalAlignment horizontalAlignment, in VerticalAlignment verticalAlignment, in string text, in Color color, in Font font, float scale = 1f, float z = 0f)
-        {
-            var subMesh = GetSubMeshFor(font.Texture);
-            var measure = font.MeasureBase(text, scale);
-
-            var x = horizontalAlignment switch
-            {
-                HorizontalAlignment.Left => area.Left,
-                HorizontalAlignment.Right => area.Right - measure.X,
-                HorizontalAlignment.Center => area.Center.X - measure.X * 0.5f
-            };
-
-            var y = verticalAlignment switch
-            {
-                VerticalAlignment.Top => area.Top,
-                VerticalAlignment.Bottom => area.Bottom + measure.Y,
-                VerticalAlignment.Center => area.Center.Y + measure.Y * 0.5f
-            };
-
-            font.AppendString(false, subMesh.Triangles, text, color, new(x,y) , scale, z);
-            return this;
-        }
-
+        
         public Mesh FillTriangle(in GpuTexVertex a, in GpuTexVertex b, in GpuTexVertex c)
         {
             var subMesh = GetSubMeshFor(null);

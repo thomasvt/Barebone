@@ -16,4 +16,15 @@
     <ProjectReference Include="..\Barebone\Barebone.csproj" />
   </ItemGroup>
 
+ 
+
+  <ItemGroup>
+    <None Update="UbuntuMono32.fnt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="UbuntuMono32_0.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
 </Project>

@@ -39,6 +39,9 @@ namespace Barebone.Game.Debugging
             WriteLine($"[+] [-]  Speed: {engine.Speed*100:0}%");
             WriteLine( "[Enter]  Debug break");
             WriteLine();
+            WriteLine($"Update: {engine.UpdateTime*1000:0.00} ms");
+            WriteLine($"Draw: {engine.DrawTime * 1000:0.00} ms");
+            WriteLine();
         }
 
         public void Clear()

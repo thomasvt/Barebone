@@ -1,26 +1,13 @@
 ﻿using System.Drawing;
-using System.Numerics;
 using Barebone.Game.Graphics;
+using Barebone.Graphics;
 using SDL;
 
 namespace Barebone.Game.Sdl
 {
-    public unsafe class TextureInternal(SDL_Surface* surface, SDL_Texture* texture) : ITexture
-    {
-        public SDL_Surface* Surface = surface;
-        public SDL_Texture* Texture = texture;
-        public Vector2 GetPixelPerfectScale(float texelsPerWorldUnit)
-        {
-            var w = Surface->w;
-            var h = Surface->h;
-            return new(texelsPerWorldUnit / w, texelsPerWorldUnit / h);
-        }
-    }
-
     public unsafe class SdlGraphics(SDL_Renderer* rendererPtr) : IPlatformGraphics, IDisposable
     {
-        private readonly Dictionary<string, TextureInternal> _textureCache = new();
-        private Color _colorModulation = Color.White;
+        private readonly Dictionary<string, SdlTexture> _textureCache = new();
         
         public void ClearScreen(in Color color)
         {
@@ -28,19 +15,9 @@ namespace Barebone.Game.Sdl
             SDL3.SDL_RenderClear(rendererPtr);
         }
 
-        public void FillTriangles(in Span<Vertex> vertices, ITexture? texture)
+        public void FillTriangles(in ReadOnlySpan<Vertex> vertices, ITexture? texture)
         {
-            //var sdlVertices = stackalloc SDL_Vertex[vertices.Length];
-
-            //for (var i = 0; i < vertices.Length; i++)
-            //{
-            //    ref readonly var v = ref vertices[i];
-
-            //    sdlVertices[i].position = new() { x = v.Position.X, y = v.Position.Y };
-            //    sdlVertices[i].color = new() { a = v.Color.A, b = v.Color.B, g = v.Color.G, r = v.Color.R };
-            //}
-
-            var textureInternal = (TextureInternal?)texture;
+            var textureInternal = (SdlTexture?)texture;
             var texturePtr = textureInternal == null ? null : textureInternal.Texture;
 
             fixed (Vertex* ptr = vertices)
@@ -58,18 +35,19 @@ namespace Barebone.Game.Sdl
             return t;
         }
 
-        private TextureInternal LoadTexture(string assetPath)
+        private SdlTexture LoadTexture(string assetPath)
         {
             var surface = LoadSurface(assetPath);
             var texture = SDL3.SDL_CreateTextureFromSurface(rendererPtr, surface);
             if (texture == null)
                 throw new SdlException("SDL_CreateTextureFromSurface failed: " + SDL3.SDL_GetError());
 
+            SDL3.SDL_ConvertSurface(surface, SDL_PixelFormat.SDL_PIXELFORMAT_ABGR8888); // conpatible with struct RGBA because x86 is little-endian
             SDL3.SDL_SetTextureBlendMode(texture, SDL_BlendMode.SDL_BLENDMODE_BLEND);
             SDL3.SDL_SetTextureColorMod(texture, 255, 255, 255);
             SDL3.SDL_SetTextureAlphaMod(texture, 255);
 
-            return new TextureInternal(surface, texture);
+            return new SdlTexture(surface, texture);
         }
 
         private static SDL_Surface* LoadSurface(string assetPath)

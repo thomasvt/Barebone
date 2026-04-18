@@ -2,10 +2,9 @@
 using System.Numerics;
 using Barebone.Geometry;
 using Barebone.Graphics;
-using Barebone.Graphics.Gpu;
+using Barebone.Graphics.Text;
 using Barebone.Input;
 using Barebone.Pools;
-using Barebone.UI.Text;
 
 namespace Barebone.UI.Controls
 {
@@ -19,7 +18,7 @@ namespace Barebone.UI.Controls
         private Vector2I _caret = Vector2I.Zero;
 
         private readonly ColorMesh _caretMesh = Pool.Rent<ColorMesh>();
-        private readonly BBList<GpuTexTriangle> _textTriangles = new();
+        private readonly BBList<Vertex> _textTriangles = new();
         private readonly TextEditor<Vector2I> _textEditor;
         private float _caretBlinkStart;
         private Font _font;
@@ -123,10 +122,11 @@ namespace Barebone.UI.Controls
             TopIndexActual = topIndexActual;
             BottomIndexActual = topIndexActual + maxLinesVisible;
 
+            var color = ColorF.FromColor(TextColor);
             var cursor = topLeft;
             foreach (var line in linesInViewport)
             {
-                _font.AppendString(true, _textTriangles, line, TextColor, cursor);
+                _font.AppendString(true, _textTriangles, line, color, cursor);
                 cursor.Y += _font.LineHeight;
             }
         }
@@ -143,7 +143,10 @@ namespace Barebone.UI.Controls
             base.Render(renderer);
             if (HasFocus && (UI.Clock.Now - _caretBlinkStart) % 1f < 0.5f)
                 RenderCaret(renderer);
-            renderer.Draw(Matrix4x4.Identity, _textTriangles.AsReadOnlySpan(), _font.Texture);
+
+            throw new Exception("To fix :) Changed GpuTexVertex -> Vertex when migrating to SDL3");
+
+            // renderer.Draw(Matrix4x4.Identity, _textTriangles.AsReadOnlySpan(), _font.Texture);
         }
 
         private void RenderCaret(IImmediateRenderer renderer)

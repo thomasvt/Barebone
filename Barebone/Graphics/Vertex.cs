@@ -1,7 +1,6 @@
 ﻿using System.Numerics;
-using Barebone.Graphics;
 
-namespace Barebone.Game.Graphics
+namespace Barebone.Graphics
 {
     public struct Vertex
     {

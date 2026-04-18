@@ -1,15 +1,12 @@
 ﻿using System.Drawing;
-using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Xml.Serialization;
 using Barebone.Geometry;
-using Barebone.Graphics;
-using Barebone.Graphics.Gpu;
-using BareBone.Graphics;
+using Barebone.UI.Text;
 using Vector2 = System.Numerics.Vector2;
 
-namespace Barebone.UI.Text
+namespace Barebone.Graphics.Text
 {
     // how text is rendered: http://www.angelcode.com/products/bmfont/doc/render_text.html
 
@@ -91,22 +88,22 @@ namespace Barebone.UI.Text
             var glyphs = ParseGlyphs(fontDefinition, atlasWidth, atlasHeight);
             var kernings = ParseKernings(fontDefinition);
 
-            var texture = ConvertGraynessToOpacity(pngTexture);
+            //var texture = ConvertGraynessToOpacity(pngTexture);
 
-            return new Font(texture, lineHeight, @base, glyphs, kernings);
+            return new Font(pngTexture, lineHeight, @base, glyphs, kernings);
         }
 
-        private static ITexture ConvertGraynessToOpacity(ITexture texture)
+        private static unsafe ITexture ConvertGraynessToOpacity(ITexture texture)
         {
-            var pixels = new GpuColor[texture.Size.X * texture.Size.Y];
+            Span<ColorRgba> pixels = stackalloc ColorRgba[texture.Size.X * texture.Size.Y];
             texture.ReadPixels(pixels);
             for (var i = 0; i < pixels.Length; i++)
             {
-                // todo untested: had to add sidestep GpuColor -> Color -> GpuColor.
                 ref var c = ref pixels[i];
-                var color = c.ToColor();
-                color = Color.FromArgb(color.R, 255,255, 255);
-                c = color.ToGpuColor();
+                c.A = c.R;
+                c.R = 255;
+                c.G = 255;
+                c.B = 255;
             }
 
             texture.WritePixels(pixels);
@@ -241,14 +238,13 @@ namespace Barebone.UI.Text
         /// <summary>
         /// Appends the triangles representing the text to be rendered to your buffer without clearing it.
         /// </summary>
-        public void AppendString(bool yPointsDown, BBList<GpuTexTriangle> buffer, string text, Color color, in Vector2 position, float scale = 1f, in float z = 0)
+        public void AppendString(bool yPointsDown, BBList<Vertex> buffer, string text, ColorF color, in Vector2 position, float scale = 1f, in float z = 0)
         {
             if (buffer == null)
                 throw new ArgumentNullException(nameof(buffer));
 
             buffer.EnsureCapacity(buffer.Count + text.Length * 2);
 
-            var gpuColor = color.ToGpuColor();
 
             var x = 0f;
             var y = 0f;
@@ -270,7 +266,7 @@ namespace Barebone.UI.Text
 
                 var glyphQuad = new GlyphQuad(min, max, glyph.UVMin, glyph.UVMax);
                 
-                DrawGlyphQuad(yPointsDown, buffer, position, glyphQuad, scale, gpuColor, z);
+                DrawGlyphQuad(yPointsDown, buffer, position, glyphQuad, scale, color, z);
 
                 x += glyph.XAdvance;
 
@@ -282,7 +278,7 @@ namespace Barebone.UI.Text
         /// Appends a single character. Returns how much your cursor should advance in X to position for a subsequent character.
         /// </summary>
         /// <param name="unicodePrevious">The unicode of the previous character for kerning. Pass in 0 if there isn't a previous char or you don't want kerning.</param>
-        public float AppendUnicode(in bool yPointsDown, BBList<GpuTexTriangle> buffer, in ushort unicodePrevious, in ushort unicode, in GpuColor color, in Vector2 position, in float scale = 1, in float z = 0)
+        public float AppendUnicode(in bool yPointsDown, BBList<Vertex> buffer, in ushort unicodePrevious, in ushort unicode, in ColorF color, in Vector2 position, in float scale = 1, in float z = 0)
         {
             if (!Glyphs.TryGetValue(unicode, out var glyph))
             {
@@ -305,7 +301,7 @@ namespace Barebone.UI.Text
             return glyph.XAdvance;
         }
 
-        private static void DrawGlyphQuad(in bool yPointsDown, in BBList<GpuTexTriangle> buffer, in Vector2 position, in GlyphQuad glyphQuad, in float scale, in GpuColor color, in float z = 0)
+        private static void DrawGlyphQuad(in bool yPointsDown, in BBList<Vertex> buffer, in Vector2 position, in GlyphQuad glyphQuad, in float scale, in ColorF color, in float z = 0)
         {
             if (yPointsDown)
             {
@@ -319,13 +315,18 @@ namespace Barebone.UI.Text
                 var uMax = glyphQuad.UVMax.X;
                 var vMax = glyphQuad.UVMax.Y;
 
-                var a = new GpuTexVertex(new Vector3(left, top, z), color, new Vector2(uMin, vMin));
-                var b = new GpuTexVertex(new Vector3(right, top, z), color, new Vector2(uMax, vMin));
-                var c = new GpuTexVertex(new Vector3(right, bottom, z), color, new Vector2(uMax, vMax));
-                var d = new GpuTexVertex(new Vector3(left, bottom, z), color, new Vector2(uMin, vMax));
+                var a = new Vertex { Position = new Vector2(left, top), Color = color, UV = new Vector2(uMin, vMin) };
+                var b = new Vertex { Position = new Vector2(right, top), Color = color, UV = new Vector2(uMax, vMin) };
+                var c = new Vertex { Position = new Vector2(right, bottom), Color = color, UV = new Vector2(uMax, vMax) };
+                var d = new Vertex { Position = new Vector2(left, bottom), Color = color, UV = new Vector2(uMin, vMax) };
 
-                buffer.Add(new(a, b, c));
-                buffer.Add(new(a, c, d));
+                buffer.Add(a);
+                buffer.Add(b);
+                buffer.Add(c);
+
+                buffer.Add(a);
+                buffer.Add(c);
+                buffer.Add(d);
             }
             else
             {
@@ -339,13 +340,18 @@ namespace Barebone.UI.Text
                 var uMax = glyphQuad.UVMax.X;
                 var vMax = glyphQuad.UVMax.Y;
 
-                var a = new GpuTexVertex(new Vector3(left, top, z), color, new Vector2(uMin, vMin));
-                var b = new GpuTexVertex(new Vector3(right, top, z), color, new Vector2(uMax, vMin));
-                var c = new GpuTexVertex(new Vector3(right, bottom, z), color, new Vector2(uMax, vMax));
-                var d = new GpuTexVertex(new Vector3(left, bottom, z), color, new Vector2(uMin, vMax));
+                var a = new Vertex { Position = new Vector2(left, top), Color = color, UV = new Vector2(uMin, vMin) };
+                var b = new Vertex { Position = new Vector2(right, top), Color = color, UV = new Vector2(uMax, vMin) };
+                var c = new Vertex { Position = new Vector2(right, bottom), Color = color, UV = new Vector2(uMax, vMax) };
+                var d = new Vertex { Position = new Vector2(left, bottom), Color = color, UV = new Vector2(uMin, vMax) };
 
-                buffer.Add(new(a, b, c));
-                buffer.Add(new(a, c, d));
+                buffer.Add(a);
+                buffer.Add(b);
+                buffer.Add(c);
+
+                buffer.Add(a);
+                buffer.Add(c);
+                buffer.Add(d);
             }
         }
 

@@ -7,7 +7,7 @@ namespace Barebone.Graphics.Sprites
         public void Dispose()
         {
             if (IsTextureOwner)
-                Texture.Dispose();
+                (Texture as IDisposable)?.Dispose();
         }
     }
 }

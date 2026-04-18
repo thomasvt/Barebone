@@ -1,4 +1,5 @@
 ﻿using System.Numerics;
+using Barebone.Geometry;
 
 namespace Barebone.Game.Graphics
 {
@@ -6,16 +7,12 @@ namespace Barebone.Game.Graphics
     {
         Vector2 Position { get; set; }
         float Zoom { get; set; }
+        float? LogicalViewHeight { get; set; }
+        Matrix3x2 WorldToScreenTransform { get; }
+        Matrix3x2 ScreenToWorldTransform { get; }
         Vector2 ScreenToWorld(Vector2 screenPosition);
+        float ScreenLengthToWorld(float length);
         Vector2 WorldToScreen(Vector2 position);
         float WorldLengthToScreen(float length);
-
-        /// <summary>
-        /// Forces the game to always render a fixed amount of world-height disregarding the window's size.
-        /// What is horizontally visible depends on aspect ratio of the window.
-        /// This combines with Zoom: the LogicalViewHeight is exactly applied when Zoom is 1.
-        /// </summary>
-        float? LogicalViewHeight { get; set; }
-        float ScreenLengthToWorld(float length);
     }
 }

@@ -6,6 +6,7 @@ using Barebone.Messaging;
 using Barebone.UI.Controls;
 using Barebone.UI.Text;
 using System.Drawing;
+using Barebone.Graphics.Text;
 using MouseButton = Barebone.Input.MouseButton;
 
 namespace Barebone.UI

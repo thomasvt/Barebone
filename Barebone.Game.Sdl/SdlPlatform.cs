@@ -11,6 +11,7 @@ namespace Barebone.Game.Sdl
     {
         private readonly SDL_Window* _windowPtr;
         private readonly SDL_Renderer* _rendererPtr;
+        private readonly SdlGraphics _graphics;
 
         public SdlPlatform(in string windowTitle, Vector2I windowSize)
         {
@@ -31,7 +32,7 @@ namespace Barebone.Game.Sdl
 
             _windowPtr = windowPtr;
             _rendererPtr = rendererPtr;
-            Graphics = new SdlGraphics(_rendererPtr);
+            _graphics = new SdlGraphics(_rendererPtr);
         }
 
         //public ViewportSettings GetViewSettings()
@@ -82,7 +83,7 @@ namespace Barebone.Game.Sdl
                 throw new SdlException("SDL_RenderPresent failed: " + SDL3.SDL_GetError());
         }
 
-        public IPlatformGraphics Graphics { get; }
+        public IPlatformGraphics Graphics => _graphics;
 
         public bool IsQuitRequested { get; private set; }
 
@@ -114,6 +115,7 @@ namespace Barebone.Game.Sdl
 
         public void Dispose()
         {
+            _graphics.Dispose();
             SDL3.SDL_DestroyRenderer(_rendererPtr);
             SDL3.SDL_DestroyWindow(_windowPtr);
         }
