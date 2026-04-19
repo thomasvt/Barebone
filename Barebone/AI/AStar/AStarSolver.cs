@@ -1,46 +1,25 @@
-﻿using System.Runtime.CompilerServices;
-using Barebone.Geometry;
-
-namespace Barebone.AI.AStar
+﻿namespace Barebone.AI.AStar
 {
-    public class AStarSolver(Vector2I gridSize, AStarSolver.HeuristicDelegate heuristic)
+    public class AStarSolver<TGraph>(TGraph graph) where TGraph : struct, IGraphTopology // when TGraph is a struct, compiler will build a non-generic result that can even get its methods inlined.
     {
-        public delegate float HeuristicDelegate(in Vector2I from, in Vector2I to);
-
         private record struct Node(float G, bool IsSeen);
-
-        private readonly record struct Connection(int DeltaIndex, float Cost, int DeltaX, int DeltaY);
-
-        private readonly int _width = gridSize.X;
-        private readonly int _cellCount = gridSize.X * gridSize.Y;
-
-        private readonly PriorityQueue<int, float> _openList = new(1000);
-        private readonly bool[] _closedList = new bool[gridSize.X * gridSize.Y];
-        private readonly Node[] _nodes = new Node[gridSize.X * gridSize.Y];
-        private readonly int[] _parents = new int[gridSize.X * gridSize.Y];
 
         private const int NoParent = -1;
 
-        private static readonly float Sqrt2 = MathF.Sqrt(2);
+        private readonly PriorityQueue<int, float> _openList = new(1000);
+        private readonly bool[] _closedList = new bool[graph.NodeCount];
+        private readonly Node[] _nodes = new Node[graph.NodeCount];
+        private readonly int[] _parents = new int[graph.NodeCount];
 
-        public void FindPath(in ReadOnlySpan<bool> obstacles, in Vector2I start, in Vector2I goal, in BBList<Vector2I> solutionBuffer)
+        public bool FindPath(int startIdx, int goalIdx, in BBList<int> solutionBuffer)
         {
-            if (obstacles.Length != _cellCount)
-                throw new ArgumentException("Obstacle array size does not match grid size.");
-
             solutionBuffer.Clear();
 
-            if (start.Equals(goal))
+            if (startIdx == goalIdx)
             {
-                solutionBuffer.Add(start);
-                return;
+                solutionBuffer.Add(startIdx);
+                return true;
             }
-
-            var startIdx = PosToIdx(start);
-            var goalIdx = PosToIdx(goal);
-
-            if (obstacles[startIdx] || obstacles[goalIdx])
-                return;
 
             Array.Clear(_nodes);
             Array.Fill(_parents, NoParent);
@@ -48,20 +27,9 @@ namespace Barebone.AI.AStar
             _openList.Clear();
 
             _nodes[startIdx] = new(0f, true);
-            _openList.Enqueue(startIdx, heuristic(start, goal));
+            _openList.Enqueue(startIdx, graph.Heuristic(startIdx, goalIdx));
 
-            var w = _width;
-            ReadOnlySpan<Connection> connections =
-            [
-                new(w, 1, 0, 1),         // up
-                new(1, 1, 1, 0),          // right
-                new(-w, 1, 0, -1),        // down
-                new(-1, 1, -1, 0),        // left
-                new(w + 1, Sqrt2, 1, 1),  // up-right
-                new(w - 1, Sqrt2, -1, 1), // up-left
-                new(-w + 1, Sqrt2, 1, -1),// down-right
-                new(-w - 1, Sqrt2, -1, -1)// down-left
-            ];
+            Span<Connection> neighbourBuffer = stackalloc Connection[graph.MaxNeighbours];
 
             while (_openList.Count > 0)
             {
@@ -73,38 +41,24 @@ namespace Barebone.AI.AStar
                 if (currentIdx == goalIdx)
                 {
                     ConstructPath(goalIdx, solutionBuffer);
-                    return;
+                    return true;
                 }
 
                 ref readonly var currentNode = ref _nodes[currentIdx];
                 _closedList[currentIdx] = true;
 
-                var cx = currentIdx % w;
-                var cy = currentIdx / w;
+                var count = graph.GetNeighbours(currentIdx, neighbourBuffer);
 
-                foreach (ref readonly var conn in connections)
+                for (var i = 0; i < count; i++)
                 {
-                    var nx = cx + conn.DeltaX;
-                    var ny = cy + conn.DeltaY;
+                    ref readonly var edge = ref neighbourBuffer[i];
+                    var neighbourIdx = edge.NeighbourIdx;
 
-                    // bounds check ((uint)nx >= (uint)w checks both < 0 and >= w in a single comparison)
-                    if ((uint)nx >= (uint)w || (uint)ny >= (uint)gridSize.Y)
+                    if (_closedList[neighbourIdx])
                         continue;
-
-                    var neighbourIdx = currentIdx + conn.DeltaIndex;
-
-                    if (_closedList[neighbourIdx] || obstacles[neighbourIdx])
-                        continue;
-
-                    if (conn.DeltaX != 0 && conn.DeltaY != 0)
-                    {
-                        // prevent diagonal moves if the adjacent cells are obstacles
-                        if (obstacles[currentIdx + conn.DeltaX] || obstacles[currentIdx + conn.DeltaY * w])
-                            continue;
-                    }
 
                     ref var neighbourNode = ref _nodes[neighbourIdx];
-                    var g = currentNode.G + conn.Cost;
+                    var g = currentNode.G + edge.Cost;
 
                     if (neighbourNode.IsSeen && g >= neighbourNode.G)
                         continue;
@@ -112,18 +66,19 @@ namespace Barebone.AI.AStar
                     neighbourNode.G = g;
                     neighbourNode.IsSeen = true;
                     _parents[neighbourIdx] = currentIdx;
-                    var f = g + heuristic(IdxToPos(neighbourIdx), goal);
-                    _openList.Enqueue(neighbourIdx, f);
+                    _openList.Enqueue(neighbourIdx, g + graph.Heuristic(neighbourIdx, goalIdx));
                 }
             }
+
+            return false;
         }
 
-        private void ConstructPath(int goalIdx, in BBList<Vector2I> solutionBuffer)
+        private void ConstructPath(int goalIdx, in BBList<int> solutionBuffer)
         {
             var idx = goalIdx;
             while (true)
             {
-                solutionBuffer.Add(IdxToPos(idx));
+                solutionBuffer.Add(idx);
                 var parentIdx = _parents[idx];
                 if (parentIdx == NoParent)
                     break;
@@ -131,18 +86,6 @@ namespace Barebone.AI.AStar
             }
 
             solutionBuffer.Reverse();
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private int PosToIdx(in Vector2I position)
-        {
-            return position.Y * _width + position.X;
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private Vector2I IdxToPos(int idx)
-        {
-            return new Vector2I(idx % _width, idx / _width);
         }
     }
 }
