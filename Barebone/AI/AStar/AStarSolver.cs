@@ -6,23 +6,26 @@ namespace Barebone.AI.AStar
     public class AStarSolver(Vector2I gridSize, AStarSolver.HeuristicDelegate heuristic)
     {
         public delegate float HeuristicDelegate(in Vector2I from, in Vector2I to);
-        
+
         private record struct Node(float G, bool IsSeen);
 
-        private record struct Connection(Vector2I Direction, float Cost, bool IsDiagonal);
+        private readonly record struct Connection(int DeltaIndex, float Cost, int DeltaX, int DeltaY);
 
-        private readonly PriorityQueue<Vector2I, float> _openList = new(1000);
+        private readonly int _width = gridSize.X;
+        private readonly int _cellCount = gridSize.X * gridSize.Y;
+
+        private readonly PriorityQueue<int, float> _openList = new(1000);
         private readonly bool[] _closedList = new bool[gridSize.X * gridSize.Y];
         private readonly Node[] _nodes = new Node[gridSize.X * gridSize.Y];
-        private readonly Vector2I[] _parents = new Vector2I[gridSize.X * gridSize.Y];
+        private readonly int[] _parents = new int[gridSize.X * gridSize.Y];
 
-        private readonly Vector2I _startParent = new(-1, -1);
+        private const int NoParent = -1;
 
-        private readonly static float Sqrt2 = MathF.Sqrt(2);
+        private static readonly float Sqrt2 = MathF.Sqrt(2);
 
         public void FindPath(in ReadOnlySpan<bool> obstacles, in Vector2I start, in Vector2I goal, in BBList<Vector2I> solutionBuffer)
         {
-            if (obstacles.Length != gridSize.X * gridSize.Y)
+            if (obstacles.Length != _cellCount)
                 throw new ArgumentException("Obstacle array size does not match grid size.");
 
             solutionBuffer.Clear();
@@ -40,99 +43,106 @@ namespace Barebone.AI.AStar
                 return;
 
             Array.Clear(_nodes);
-            Array.Clear(_parents);
+            Array.Fill(_parents, NoParent);
             Array.Clear(_closedList);
             _openList.Clear();
 
             _nodes[startIdx] = new(0f, true);
-            _parents[startIdx] = _startParent;
-            _openList.Enqueue(start, heuristic(start, goal));
+            _openList.Enqueue(startIdx, heuristic(start, goal));
 
-            ReadOnlySpan<Connection> connections = stackalloc Connection[]
-            {
-                new(new(0, 1), 1, false),
-                new(new(1, 0), 1, false),
-                new(new(0, -1), 1, false),
-                new(new(-1, 0), 1, false),
-                new(new(1,1), Sqrt2, true),
-                new(new(-1,1), Sqrt2, true),
-                new(new(1,-1), Sqrt2, true),
-                new(new(-1,-1), Sqrt2, true),
-            };
+            var w = _width;
+            ReadOnlySpan<Connection> connections =
+            [
+                new(w, 1, 0, 1),         // up
+                new(1, 1, 1, 0),          // right
+                new(-w, 1, 0, -1),        // down
+                new(-1, 1, -1, 0),        // left
+                new(w + 1, Sqrt2, 1, 1),  // up-right
+                new(w - 1, Sqrt2, -1, 1), // up-left
+                new(-w + 1, Sqrt2, 1, -1),// down-right
+                new(-w - 1, Sqrt2, -1, -1)// down-left
+            ];
 
             while (_openList.Count > 0)
             {
-                var currentPos = _openList.Dequeue();
-                var currentIdx = PosToIdx(currentPos);
+                var currentIdx = _openList.Dequeue();
 
-                if (_closedList[currentIdx]) // queue might have closed it due to finding and processing a better path through it
+                if (_closedList[currentIdx])
                     continue;
 
-                ref readonly var currentNode = ref _nodes[currentIdx];
-
-                if (currentPos.Equals(goal))
+                if (currentIdx == goalIdx)
                 {
-                    ConstructPath(currentPos, solutionBuffer);
+                    ConstructPath(goalIdx, solutionBuffer);
                     return;
                 }
 
+                ref readonly var currentNode = ref _nodes[currentIdx];
                 _closedList[currentIdx] = true;
 
-                foreach (ref readonly var connection in connections)
+                var cx = currentIdx % w;
+                var cy = currentIdx / w;
+
+                foreach (ref readonly var conn in connections)
                 {
-                    var neighbourPos = currentPos + connection.Direction;
-                    if (neighbourPos.X < 0 || neighbourPos.X >= gridSize.X || neighbourPos.Y < 0 || neighbourPos.Y >= gridSize.Y)
+                    var nx = cx + conn.DeltaX;
+                    var ny = cy + conn.DeltaY;
+
+                    // bounds check ((uint)nx >= (uint)w checks both < 0 and >= w in a single comparison)
+                    if ((uint)nx >= (uint)w || (uint)ny >= (uint)gridSize.Y)
                         continue;
 
-                    var neighbourIdx = PosToIdx(neighbourPos);
+                    var neighbourIdx = currentIdx + conn.DeltaIndex;
 
                     if (_closedList[neighbourIdx] || obstacles[neighbourIdx])
                         continue;
 
-                    if (connection.IsDiagonal)
+                    if (conn.DeltaX != 0 && conn.DeltaY != 0)
                     {
-                        // disallow moving through diagonally adjacent obstacles.
-                        var corner1 = new Vector2I(currentPos.X + connection.Direction.X, currentPos.Y);
-                        var corner2 = new Vector2I(currentPos.X, currentPos.Y + connection.Direction.Y);
-
-                        if (obstacles[PosToIdx(corner1)] || obstacles[PosToIdx(corner2)])
+                        // prevent diagonal moves if the adjacent cells are obstacles
+                        if (obstacles[currentIdx + conn.DeltaX] || obstacles[currentIdx + conn.DeltaY * w])
                             continue;
                     }
 
                     ref var neighbourNode = ref _nodes[neighbourIdx];
-                    var g = currentNode.G + connection.Cost;
+                    var g = currentNode.G + conn.Cost;
 
                     if (neighbourNode.IsSeen && g >= neighbourNode.G)
-                        continue; // neighbour already visited with a better path
+                        continue;
 
                     neighbourNode.G = g;
                     neighbourNode.IsSeen = true;
-                    _parents[neighbourIdx] = currentPos;
-                    var f = g + heuristic(neighbourPos, goal);
-                    _openList.Enqueue(neighbourPos, f);
+                    _parents[neighbourIdx] = currentIdx;
+                    var f = g + heuristic(IdxToPos(neighbourIdx), goal);
+                    _openList.Enqueue(neighbourIdx, f);
                 }
             }
         }
 
-        private void ConstructPath(in Vector2I goalPosition, in BBList<Vector2I> solutionBuffer)
+        private void ConstructPath(int goalIdx, in BBList<Vector2I> solutionBuffer)
         {
-            var currentPos = goalPosition;
+            var idx = goalIdx;
             while (true)
             {
-                solutionBuffer.Add(currentPos);
-                var parentPos = _parents[PosToIdx(currentPos)];
-                if (parentPos == _startParent)
-                    break; // start reached
-                currentPos = parentPos;
+                solutionBuffer.Add(IdxToPos(idx));
+                var parentIdx = _parents[idx];
+                if (parentIdx == NoParent)
+                    break;
+                idx = parentIdx;
             }
-            
+
             solutionBuffer.Reverse();
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private int PosToIdx(in Vector2I position)
         {
-            return position.Y * gridSize.X + position.X;
+            return position.Y * _width + position.X;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private Vector2I IdxToPos(int idx)
+        {
+            return new Vector2I(idx % _width, idx / _width);
         }
     }
 }
