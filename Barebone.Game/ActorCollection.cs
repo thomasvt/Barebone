@@ -2,15 +2,13 @@
 
 namespace Barebone.Game
 {
-    public sealed class ActorCollection : ActorCollection<object>;
-
     /// <summary>
     /// Speciialized collection for game objects with low GC pressure, deferred collection mutations and support for Update and Draw operations on the actors.
     /// Actors must implement <see cref="IUpdate"/>, <see cref="IDraw"/>, <see cref="IOnAdded"/> and/or <see cref="IOnRemoved"/> to subscribe to those hooks.
     /// </summary>
-    public class ActorCollection<T> : Poolable, IDisposable where T : class
+    public class ActorCollection : Poolable, IDisposable
     {
-        private BBListDeferred<T> _entities = null!;
+        private BBListDeferred<object> _entities = null!;
 
         public ActorCollection()
         {
@@ -20,7 +18,7 @@ namespace Barebone.Game
         protected override void Construct()
         {
             _entities?.Return(true);
-            _entities = Pool.Rent<BBListDeferred<T>>();
+            _entities = Pool.Rent<BBListDeferred<object>>();
         }
 
         protected override void Destruct()
@@ -29,7 +27,7 @@ namespace Barebone.Game
             _entities = null!;
         }
 
-        public T1 Add<T1>(T1 entity) where T1 : T
+        public T1 Add<T1>(T1 entity) where T1: class
         {
             _entities.Add(entity);
             return entity;
@@ -38,7 +36,7 @@ namespace Barebone.Game
         /// <summary>
         /// Schedules to remove the entity upon next UpdateAll() call. Note that this will call its Dispose or will return it to the Pool.
         /// </summary>
-        public void Remove(T entity)
+        public void Remove(object entity)
         {
             _entities.Remove(entity);
         }

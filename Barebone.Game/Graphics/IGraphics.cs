@@ -28,7 +28,7 @@ namespace Barebone.Game.Graphics
         /// <summary>
         /// Sets the camera to use for subsequent rendering.
         /// </summary>
-        void ActivateCamera(in ICamera camera);
+        void SetCamera(in ICamera camera);
 
         /// <summary>
         /// Sets a world transform applied to vertices BEFORE the active camera's WorldToScreen transform.

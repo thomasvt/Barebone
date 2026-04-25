@@ -1,5 +1,6 @@
 ﻿using System.Numerics;
 using Barebone.Geometry;
+using Barebone.Messaging;
 
 namespace Barebone.Game.Graphics
 {
@@ -10,9 +11,15 @@ namespace Barebone.Game.Graphics
         private Vector2I _viewportSize;
         private bool _isDirty;
 
-        internal Camera()
+        internal Camera(IMessageBus messageBus)
         {
             _isDirty = true;
+            messageBus.Subscribe<ViewportSizeChanged>(OnViewportSizeChanged);
+        }
+
+        private void OnViewportSizeChanged(in ViewportSizeChanged e)
+        {
+            SetViewportSize(e.ViewportSize);
         }
 
         public Vector2 Position
@@ -91,7 +98,6 @@ namespace Barebone.Game.Graphics
         private void EnsureMatrices()
         {
             if (!_isDirty) return;
-
 
             var combinedZoom = Zoom;
             if (LogicalViewHeight.HasValue) combinedZoom *= _viewportSize.Y / LogicalViewHeight.Value;

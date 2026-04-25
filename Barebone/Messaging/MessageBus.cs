@@ -1,6 +1,6 @@
 ﻿namespace Barebone.Messaging
 {
-    public class MessageBus : IMessagePublisher
+    public class MessageBus : IMessageBus
     {
         public delegate void Handler<TMessage>(in TMessage message) where TMessage : struct;
 

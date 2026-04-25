@@ -2,19 +2,20 @@
 using Barebone.Game.Graphics;
 using Barebone.Game.Input;
 using Barebone.Game.Physics;
-using Barebone.Geometry;
+using Barebone.Messaging;
 
 namespace Barebone.Game
 {
     public static class BB
     {
-        internal static void Init(IClock clock, IGraphics graphics, IInput input, IDebug debug, IPhysics physics)
+        internal static void Init(IClock clock, IGraphics graphics, IInput input, IDebug debug, IPhysics physics, IMessageBus messageBus)
         {
             Clock = clock;
             Graphics = graphics;
             Input = input;
             Debug = debug;
             Physics = physics;
+            MessageBus = messageBus;
         }
 
         public static IClock Clock { get; private set; } = null!;
@@ -22,6 +23,7 @@ namespace Barebone.Game
         public static IInput Input { get; private set; } = null!;
         public static IDebug Debug { get; private set; } = null!;
         public static IPhysics Physics { get; private set; } = null!;
+        public static IMessageBus MessageBus { get; private set; } = null!;
         public static void Quit()
         {
             QuitRequested = true;

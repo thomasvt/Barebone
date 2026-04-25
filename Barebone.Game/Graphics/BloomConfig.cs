@@ -33,6 +33,7 @@
         // Sharp neon highlights only — threshold 0.95, knee 0.1, upsample 0.7, final 0.7
 
         public static BloomConfig Realistic = new(0.85f, 0.5f, 1, 1, 0.45f);
+        public static BloomConfig RealisticIntense = new(0.85f, 0.5f, 1, 1, 0.6f);
         public static BloomConfig Retro = new(0.6f, 0.2f, 1f, 1.3f, 0.8f);
         public static BloomConfig Foggy = new(0.4f, 0.7f, 1, 1.5f, 0.6f);
         public static BloomConfig SharpNeon = new(0.95f, 0.1f, 1, 0.7f, 0.7f);

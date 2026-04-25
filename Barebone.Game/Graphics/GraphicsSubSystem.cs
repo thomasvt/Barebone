@@ -3,24 +3,34 @@ using System.Numerics;
 using Barebone.Geometry;
 using Barebone.Graphics;
 using Barebone.Graphics.Text;
+using Barebone.Messaging;
 
 namespace Barebone.Game.Graphics
 {
     internal class GraphicsSubSystem : IGraphics, IDisposable
     {
         private readonly IPlatformGraphics _pg;
+        private readonly IMessageBus _messageBus;
         private ITexture? _texture;
         private Matrix3x2 _uvTransform;
         private Matrix3x2 _worldTransform = Matrix3x2.Identity;
         private readonly Font _defaultFont;
         private readonly BBList<Vertex> _textTriangleBuffer = new();
         private ICamera _activeCamera;
-        private Vector2I _viewportSize;
+        public Vector2I ViewportSize { get; private set; }
 
-        public GraphicsSubSystem(IPlatformGraphics pg)
+        public GraphicsSubSystem(IPlatformGraphics pg, IMessageBus messageBus, float windowHeight)
         {
             _pg = pg;
+            _messageBus = messageBus;
             _defaultFont = Font.FromBMFontFile("UbuntuMono32.fnt", GetTexture("UbuntuMono32_0.png"));
+            _activeCamera = new Camera(messageBus)
+            {
+                LogicalViewHeight = windowHeight,
+                ScreenOrigin = ScreenOrigin.Center,
+                Zoom = 1,
+                Position = Vector2.Zero
+            };
             SetBloom(BloomConfig.None);
         }
 
@@ -50,9 +60,8 @@ namespace Barebone.Game.Graphics
             _pg.FillTriangles(_textTriangleBuffer.AsReadOnlySpan(), _defaultFont.Texture);
         }
 
-        public void ActivateCamera(in ICamera camera)
+        public void SetCamera(in ICamera camera)
         {
-            ((Camera)camera).SetViewportSize(_viewportSize);
             _activeCamera = camera;
         }
 
@@ -87,7 +96,7 @@ namespace Barebone.Game.Graphics
 
         public ICamera CreateCamera(float viewHeight, ScreenOrigin screenOrigin)
         {
-            return new Camera
+            return new Camera(_messageBus)
             {
                 LogicalViewHeight = viewHeight,
                 ScreenOrigin = screenOrigin
@@ -177,14 +186,15 @@ namespace Barebone.Game.Graphics
         }
 
 
+        public void SetViewportSize(Vector2I viewportSize)
+        {
+            ViewportSize = viewportSize;
+            BB.MessageBus.Publish(new ViewportSizeChanged(viewportSize));
+        }
+
         public void Dispose()
         {
             _textTriangleBuffer.Dispose();
-        }
-
-        public void SetViewportSize(Vector2I viewportSize)
-        {
-            _viewportSize = viewportSize;
         }
     }
 }

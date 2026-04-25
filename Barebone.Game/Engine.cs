@@ -3,6 +3,7 @@ using Barebone.Game.Debugging;
 using Barebone.Game.Graphics;
 using Barebone.Game.Input;
 using Barebone.Game.Physics;
+using Barebone.Messaging;
 
 namespace Barebone.Game
 {
@@ -23,7 +24,8 @@ namespace Barebone.Game
         public Engine(IPlatform platform)
         {
             _platform = platform;
-            _graphics = new GraphicsSubSystem(platform.Graphics);
+            var messageBus = new MessageBus();
+            _graphics = new GraphicsSubSystem(platform.Graphics, messageBus, platform.GetWindowSize().Y);
             _input = new InputSubSystem();
             _physics = new PhysicsSubSystem();
             _clock = new Clock();
@@ -31,7 +33,7 @@ namespace Barebone.Game
 #if DEBUG
             _debug = new DebugSubSystem(this);
 #endif
-            BB.Init(_clock, _graphics, _input, _debug, _physics);
+            BB.Init(_clock, _graphics, _input, _debug, _physics, messageBus);
         }
 
         public void Run(Func<IGame> gameFactory)

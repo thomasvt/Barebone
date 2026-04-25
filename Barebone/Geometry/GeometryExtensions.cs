@@ -63,7 +63,7 @@ public static class GeometryExtensions
             return MathF.Atan2(vector.Y, vector.X);
         }
 
-        public float? GetAngleOrDefault(float? @default = null)
+        public float GetAngleOrDefault(float @default = 0f)
         {
             return vector is { X: 0, Y: 0 } ? @default : MathF.Atan2(vector.Y, vector.X);
         }
