@@ -5,7 +5,7 @@
         /// <summary>
         /// Converts degrees to radians.
         /// </summary>
-        public static float ToRadians(this float degrees) => degrees * DegreeToRadians;
+        public static float Deg(this float degrees) => degrees * DegreeToRadians;
 
         public const float DegreeToRadians = MathF.PI / 180f;
         public const float RadiansToDegree = 180f / MathF.PI;

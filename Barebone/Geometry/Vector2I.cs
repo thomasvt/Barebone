@@ -23,6 +23,11 @@ namespace Barebone.Geometry
             return new Vector2I(a.X * b.X, a.Y * b.Y);
         }
 
+        public static Vector2 operator /(float a, Vector2I b)
+        {
+            return new Vector2(a / b.X, a / b.Y);
+        }
+
         public static Vector2 operator /(Vector2I a, float b)
         {
             return new Vector2(a.X / b, a.Y / b);

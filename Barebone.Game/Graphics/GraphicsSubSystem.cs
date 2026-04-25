@@ -61,10 +61,10 @@ namespace Barebone.Game.Graphics
             _uvTransform = Matrix3x2.Identity;
         }
 
-        public void SetTexture(in ITexture texture, in Matrix3x2 uvTransform)
+        public void SetTexture(in ITexture texture, in Matrix3x2 projection)
         {
             _texture = texture;
-            _uvTransform = uvTransform;
+            _uvTransform = projection;
         }
 
         public ITexture GetTexture(string assetPath)
@@ -138,6 +138,11 @@ namespace Barebone.Game.Graphics
             }
 
             _pg.FillTriangles(vertices, _texture);
+        }
+
+        public Matrix3x2 CalculateTextureProjection(in ITexture texture, in Vector2 textureOrigin, in float texelsPerUnit)
+        {
+            return Matrix3x2.CreateTranslation(-textureOrigin) * Matrix3x2.CreateScale(texelsPerUnit / texture.Size);
         }
 
         public void Dispose()

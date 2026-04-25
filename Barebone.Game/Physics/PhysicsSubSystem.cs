@@ -82,8 +82,7 @@ namespace Barebone.Game.Physics
 
         public ShapeId AttachCircle(in BodyId bodyId, in Vector2? center, in float radius, in float friction)
         {
-            if (!_b2BodyIdsByBodyId.TryGetValue(bodyId, out var b2BodyId))
-                throw new InvalidOperationException($"Unknown BodyId: {bodyId}.");
+            var b2BodyId = GetB2BodyIdOrThrow(bodyId);
 
             var shapeId = new ShapeId(++_nextShapeId);
 
@@ -98,8 +97,7 @@ namespace Barebone.Game.Physics
 
         public ShapeId AttachPolygon(in BodyId bodyId, in Polygon8 polygon, in float friction)
         {
-            if (!_b2BodyIdsByBodyId.TryGetValue(bodyId, out var b2BodyId))
-                throw new InvalidOperationException($"Unknown BodyId: {bodyId}.");
+            var b2BodyId = GetB2BodyIdOrThrow(bodyId);
 
             var shapeId = new ShapeId(++_nextShapeId);
 
@@ -119,8 +117,7 @@ namespace Barebone.Game.Physics
 
         public ShapeId AttachCapsule(in BodyId bodyId, in Vector2 center1, in Vector2 center2, in float radius, in float friction)
         {
-            if (!_b2BodyIdsByBodyId.TryGetValue(bodyId, out var b2BodyId))
-                throw new InvalidOperationException($"Unknown BodyId: {bodyId}.");
+            var b2BodyId = GetB2BodyIdOrThrow(bodyId);
 
             var shapeId = new ShapeId(++_nextShapeId);
 
@@ -135,23 +132,24 @@ namespace Barebone.Game.Physics
 
         public void GetTransform(in BodyId bodyId, out Vector2 position, out float angle)
         {
-            if (!_b2BodyIdsByBodyId.TryGetValue(bodyId, out var b2BodyId))
-                throw new InvalidOperationException($"Unknown BodyId: {bodyId}.");
+            var b2BodyId = GetB2BodyIdOrThrow(bodyId);
 
             var transform = B2Api.b2Body_GetTransform(b2BodyId);
             position = transform.p;
             angle = transform.q.GetAngle();
         }
 
+        public void SetVelocity(in BodyId bodyId, in Vector2 velocity)
+        {
+            var b2BodyId = GetB2BodyIdOrThrow(bodyId);
+
+            B2Api.b2Body_SetLinearVelocity(b2BodyId, velocity);
+        }
+
         public void Clear()
         {
             B2Api.b2DestroyWorld(_b2WorldId);
             _b2WorldId = B2Api.b2CreateWorld(B2Api.b2DefaultWorldDef());
-        }
-
-        public void Dispose()
-        {
-            B2Api.b2DestroyWorld(_b2WorldId);
         }
 
         public void DestroyBody(BodyId bodyId)
@@ -171,6 +169,18 @@ namespace Barebone.Game.Physics
         public void Step(float deltaT, int subStepCount)
         {
             B2Api.b2World_Step(_b2WorldId, deltaT, subStepCount);
+        }
+
+        public void Dispose()
+        {
+            B2Api.b2DestroyWorld(_b2WorldId);
+        }
+
+        private b2BodyId GetB2BodyIdOrThrow(BodyId bodyId)
+        {
+            if (!_b2BodyIdsByBodyId.TryGetValue(bodyId, out var b2BodyId))
+                throw new InvalidOperationException($"Unknown BodyId: {bodyId}.");
+            return b2BodyId;
         }
     }
 }

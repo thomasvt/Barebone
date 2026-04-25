@@ -74,5 +74,26 @@ namespace Barebone.Game.Input
         }
 
         public Vector2 MousePosition { get; private set; }
+        public Vector2 GetLeftDirectional()
+        {
+            return new(GetAxis(KeyboardKey.A, KeyboardKey.D),
+                GetAxis(KeyboardKey.W, KeyboardKey.S));
+        }
+
+        public Vector2 GetRightDirectional()
+        {
+            return new(
+                GetAxis(KeyboardKey.Left, KeyboardKey.Right),
+                GetAxis(KeyboardKey.Down, KeyboardKey.Up));
+        }
+
+        private float GetAxis(KeyboardKey decrease, KeyboardKey increase)
+        {
+            return IsPressed(decrease) 
+                ? -1f 
+                : IsPressed(increase)
+                    ? 1
+                    : 0;
+        }
     }
 }

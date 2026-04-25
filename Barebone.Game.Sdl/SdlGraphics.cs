@@ -5,14 +5,21 @@ using SDL;
 
 namespace Barebone.Game.Sdl
 {
-    public unsafe class SdlGraphics(SDL_Renderer* rendererPtr) : IPlatformGraphics, IDisposable
+    public unsafe class SdlGraphics : IPlatformGraphics, IDisposable
     {
+        private readonly SDL_Renderer* _rendererPtr;
         private readonly Dictionary<string, SdlTexture> _textureCache = new();
-        
+
+        public SdlGraphics(SDL_Renderer* rendererPtr)
+        {
+            _rendererPtr = rendererPtr;
+            SDL3.SDL_SetRenderDrawBlendMode(rendererPtr, SDL_BlendMode.SDL_BLENDMODE_BLEND);
+        }
+
         public void ClearScreen(in Color color)
         {
-            SDL3.SDL_SetRenderDrawColor(rendererPtr, color.R, color.G, color.B, color.A);
-            SDL3.SDL_RenderClear(rendererPtr);
+            SDL3.SDL_SetRenderDrawColor(_rendererPtr, color.R, color.G, color.B, color.A);
+            SDL3.SDL_RenderClear(_rendererPtr);
         }
 
         public void FillTriangles(in ReadOnlySpan<Vertex> vertices, ITexture? texture)
@@ -23,7 +30,7 @@ namespace Barebone.Game.Sdl
             fixed (Vertex* ptr = vertices)
             {
                 var sdlPtr = (SDL_Vertex*)ptr; // we matched our own Vertex to this. For other platforms, we may have to map instead.
-                if (!SDL3.SDL_RenderGeometry(rendererPtr, texturePtr, sdlPtr, vertices.Length, null, 0))
+                if (!SDL3.SDL_RenderGeometry(_rendererPtr, texturePtr, sdlPtr, vertices.Length, null, 0))
                     throw new SdlException("SDL_RenderGeometry failed: " + SDL3.SDL_GetError());
             }
         }
@@ -38,10 +45,11 @@ namespace Barebone.Game.Sdl
         private SdlTexture LoadTexture(string assetPath)
         {
             var surface = LoadSurface(assetPath);
-            var texture = SDL3.SDL_CreateTextureFromSurface(rendererPtr, surface);
+            var texture = SDL3.SDL_CreateTextureFromSurface(_rendererPtr, surface);
             if (texture == null)
                 throw new SdlException("SDL_CreateTextureFromSurface failed: " + SDL3.SDL_GetError());
 
+            
             SDL3.SDL_ConvertSurface(surface, SDL_PixelFormat.SDL_PIXELFORMAT_ABGR8888); // conpatible with struct RGBA because x86 is little-endian
             SDL3.SDL_SetTextureBlendMode(texture, SDL_BlendMode.SDL_BLENDMODE_BLEND);
             SDL3.SDL_SetTextureColorMod(texture, 255, 255, 255);

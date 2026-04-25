@@ -19,7 +19,7 @@ namespace Barebone.Game.Graphics
         /// <summary>
         /// Set a texture for projection onto your subsequent drawing of geometry, using the uvTransform for controlling that projection.
         /// </summary>
-        void SetTexture(in ITexture texture, in Matrix3x2 uvTransform);
+        void SetTexture(in ITexture texture, in Matrix3x2 projection);
         void Print(in Vector2 position, in string text, in Color color, in float scale = 1f);
         /// <summary>
         /// Sets the camera to use for subsequent rendering.
@@ -32,5 +32,12 @@ namespace Barebone.Game.Graphics
         /// Returns the active camera. Change it with ActivateCamera()
         /// </summary>
         ICamera Camera { get; }
+
+        /// <summary>
+        /// Calculates a projection to use when drawing geometry.
+        /// </summary>
+        /// <param name="textureOrigin">Location in teh world where the texture's TopLeft should align with.</param>
+        /// <param name="texelsPerUnit">How many texture texels fit in 1 world unit.</param>
+        Matrix3x2 CalculateTextureProjection(in ITexture texture, in Vector2 textureOrigin, in float texelsPerUnit);
     }
 }

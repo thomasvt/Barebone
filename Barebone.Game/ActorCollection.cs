@@ -29,9 +29,10 @@ namespace Barebone.Game
             _entities = null!;
         }
 
-        public void Add(T entity)
+        public T1 Add<T1>(T1 entity) where T1 : T
         {
             _entities.Add(entity);
+            return entity;
         }
 
         /// <summary>

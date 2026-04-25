@@ -28,6 +28,12 @@ namespace Barebone.Geometry
 
         private PointArray8 _vertices;
 
+        public Polygon8(int count)
+        {
+            if (count is < 3 or > 8) throw new ArgumentOutOfRangeException(nameof(count), "Polygon8 must have Count between 3 and 8");
+            Count = count;
+        }
+
         public Polygon8(Vector2 p0, Vector2 p1, Vector2 p2)
         {
             Count = 3;
