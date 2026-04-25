@@ -1,4 +1,4 @@
-﻿using System.Drawing;
+using System.Drawing;
 using System.Numerics;
 using Barebone.Geometry;
 using Barebone.Graphics;
@@ -11,6 +11,7 @@ namespace Barebone.Game.Graphics
         private readonly IPlatformGraphics _pg;
         private ITexture? _texture;
         private Matrix3x2 _uvTransform;
+        private Matrix3x2 _worldTransform = Matrix3x2.Identity;
         private readonly Font _defaultFont;
         private readonly BBList<Vertex> _textTriangleBuffer = new();
         private ICamera _activeCamera;
@@ -20,6 +21,7 @@ namespace Barebone.Game.Graphics
         {
             _pg = pg;
             _defaultFont = Font.FromBMFontFile("UbuntuMono32.fnt", GetTexture("UbuntuMono32_0.png"));
+            SetBloom(BloomConfig.None);
         }
 
         public void ClearScreen(in Color color)
@@ -42,10 +44,9 @@ namespace Barebone.Game.Graphics
             _textTriangleBuffer.Clear();
             var colorF = ColorF.FromColor(color);
             _defaultFont.AppendString(true, _textTriangleBuffer, text, colorF, position, scale);
-            foreach (ref var v in _textTriangleBuffer.AsSpan())
-            {
-                v.Position = Vector2.Transform(v.Position, _activeCamera.WorldToScreenTransform);
-            }
+
+            // Text positions are absolute world coords; SetWorldTransform must NOT apply to them.
+            _pg.SetTransform(Matrix3x2.Identity, _activeCamera.WorldToScreenTransform);
             _pg.FillTriangles(_textTriangleBuffer.AsReadOnlySpan(), _defaultFont.Texture);
         }
 
@@ -54,6 +55,13 @@ namespace Barebone.Game.Graphics
             ((Camera)camera).SetViewportSize(_viewportSize);
             _activeCamera = camera;
         }
+
+        public void SetWorldTransform(in Matrix3x2 world)
+        {
+            _worldTransform = world;
+        }
+
+        public Matrix3x2 WorldTransform => _worldTransform;
 
         public void SetColorOnly()
         {
@@ -96,7 +104,9 @@ namespace Barebone.Game.Graphics
             var angle = -angleStep;
             var a = center + angle.AngleToVector2(radius);
 
-            var transform = _activeCamera.WorldToScreenTransform;
+            // UV is computed from world-space position (the world transform is applied first, then uv projection).
+            // Position stays in MODEL space; the platform applies world * camera on the GPU.
+            var modelToUv = _worldTransform * _uvTransform;
 
             for (var s = 0; s < segmentCount; s++)
             {
@@ -104,13 +114,14 @@ namespace Barebone.Game.Graphics
 
                 var b = center + angle.AngleToVector2(radius);
 
-                vertices[i++] = new() { Color = colorF, Position = Vector2.Transform(center, transform), UV = Vector2.Transform(center, _uvTransform) };
-                vertices[i++] = new() { Color = colorF, Position = Vector2.Transform(a, transform), UV = Vector2.Transform(a, _uvTransform) };
-                vertices[i++] = new() { Color = colorF, Position = Vector2.Transform(b, transform), UV = Vector2.Transform(b, _uvTransform) };
+                vertices[i++] = new() { Color = colorF, Position = center, UV = Vector2.Transform(center, modelToUv) };
+                vertices[i++] = new() { Color = colorF, Position = a,      UV = Vector2.Transform(a,      modelToUv) };
+                vertices[i++] = new() { Color = colorF, Position = b,      UV = Vector2.Transform(b,      modelToUv) };
 
                 a = b;
             }
 
+            _pg.SetTransform(_worldTransform, _activeCamera.WorldToScreenTransform);
             _pg.FillTriangles(vertices, _texture);
         }
 
@@ -124,19 +135,20 @@ namespace Barebone.Game.Graphics
             var i = 0;
             var pB = polygon[1];
 
-            var transform = _activeCamera.WorldToScreenTransform;
+            var modelToUv = _worldTransform * _uvTransform;
 
             for (var c = 2; c < polygon.Count; c++)
             {
                 var pC = polygon[c]; // Polygon indexer supports wrap-around
 
-                vertices[i++] = new() { Color = colorF, Position = Vector2.Transform(pA, transform), UV = Vector2.Transform(pA, _uvTransform) };
-                vertices[i++] = new() { Color = colorF, Position = Vector2.Transform(pB, transform), UV = Vector2.Transform(pB, _uvTransform) };
-                vertices[i++] = new() { Color = colorF, Position = Vector2.Transform(pC, transform), UV = Vector2.Transform(pC, _uvTransform) };
+                vertices[i++] = new() { Color = colorF, Position = pA, UV = Vector2.Transform(pA, modelToUv) };
+                vertices[i++] = new() { Color = colorF, Position = pB, UV = Vector2.Transform(pB, modelToUv) };
+                vertices[i++] = new() { Color = colorF, Position = pC, UV = Vector2.Transform(pC, modelToUv) };
 
                 pB = pC;
             }
 
+            _pg.SetTransform(_worldTransform, _activeCamera.WorldToScreenTransform);
             _pg.FillTriangles(vertices, _texture);
         }
 
@@ -144,6 +156,21 @@ namespace Barebone.Game.Graphics
         {
             return Matrix3x2.CreateTranslation(-textureOrigin) * Matrix3x2.CreateScale(texelsPerUnit / texture.Size);
         }
+
+        public void SetBloom(in BloomConfig config)
+        {
+            _pg.BloomThreshold = config.BloomThreshold;
+            _pg.BloomBrightIntensity = config.BloomBrightIntensity;
+            _pg.BloomFinalIntensity = config.BloomFinalIntensity;
+            _pg.BloomSoftKnee = config.BloomSoftKnee;
+            _pg.BloomUpsampleStrength = config.BloomUpsampleStrength;
+        }
+
+        public BloomConfig GetBloom()
+        {
+            return new(_pg.BloomThreshold, _pg.BloomSoftKnee, _pg.BloomBrightIntensity, _pg.BloomUpsampleStrength, _pg.BloomFinalIntensity);
+        }
+
 
         public void Dispose()
         {

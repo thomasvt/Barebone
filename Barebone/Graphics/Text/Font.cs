@@ -93,23 +93,6 @@ namespace Barebone.Graphics.Text
             return new Font(pngTexture, lineHeight, @base, glyphs, kernings);
         }
 
-        private static unsafe ITexture ConvertGraynessToOpacity(ITexture texture)
-        {
-            Span<ColorRgba> pixels = stackalloc ColorRgba[texture.Size.X * texture.Size.Y];
-            texture.ReadPixels(pixels);
-            for (var i = 0; i < pixels.Length; i++)
-            {
-                ref var c = ref pixels[i];
-                c.A = c.R;
-                c.R = 255;
-                c.G = 255;
-                c.B = 255;
-            }
-
-            texture.WritePixels(pixels);
-            return texture;
-        }
-
         private static List<Kerning> ParseKernings(global::font fontDefinition)
         {
             var kerningsIn = fontDefinition.Items.OfType<fontKernings>().SingleOrDefault();

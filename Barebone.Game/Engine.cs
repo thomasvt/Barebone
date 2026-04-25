@@ -15,6 +15,11 @@ namespace Barebone.Game
         private readonly Clock _clock;
         private readonly DebugSubSystem _debug;
 
+        // Used by external loop drivers (e.g. MonoGameEngine) when the platform itself owns the
+        // render loop and feeds us frames via TickUpdate/TickDraw instead of calling Run().
+        private IGame? _externalGame;
+        private double _externalGameTime;
+
         public Engine(IPlatform platform)
         {
             _platform = platform;
@@ -79,6 +84,52 @@ namespace Barebone.Game
                 realTimePreviousFrame = realTime;
             }
         }
+
+        // ===========================================================================================
+        // External-loop entry points.
+        // For platforms that drive the render loop themselves (MonoGame's Game.Update/Draw model).
+        // The host calls StartGame() once after the engine is constructed, then TickUpdate + TickDraw
+        // each frame. Fixed-timestep behaviour, if desired, must be ensured by the host (MonoGame
+        // does this with IsFixedTimeStep + TargetElapsedTime).
+        // ===========================================================================================
+        public void StartGame(Func<IGame> gameFactory)
+        {
+            _externalGame = gameFactory.Invoke();
+            _externalGameTime = 0;
+        }
+
+        public void TickUpdate(float deltaSeconds)
+        {
+            if (_externalGame == null) throw new InvalidOperationException("StartGame() must be called first.");
+
+            _platform.ProcessEvents(_input);
+            _graphics.SetViewportSize(_platform.GetWindowSize());
+
+            _externalGameTime += deltaSeconds * Speed;
+            _clock.BeginFrame((float)_externalGameTime, deltaSeconds * Speed);
+
+            var sw = Stopwatch.StartNew();
+            _externalGame.Update();
+            UpdateTime = sw.Elapsed.TotalSeconds;
+#if DEBUG
+            _debug.Update();
+#endif
+            _input.EndFrame();
+        }
+
+        public void TickDraw()
+        {
+            if (_externalGame == null) throw new InvalidOperationException("StartGame() must be called first.");
+            var sw = Stopwatch.StartNew();
+            _externalGame.Draw();
+            DrawTime = sw.Elapsed.TotalSeconds;
+        }
+
+        /// <summary>
+        /// True when either the platform or game logic asked to quit. External loop drivers should
+        /// poll this each frame and exit their loop accordingly.
+        /// </summary>
+        public bool IsQuitRequested => _platform.IsQuitRequested || BB.QuitRequested;
 
         public float Speed { get; set; } = 1f;
         public double UpdateTime { get; set; }

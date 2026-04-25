@@ -7,10 +7,10 @@ namespace Barebone.Game.Debugging
     {
         public void Update()
         {
-            if (BB.Input.JustPressed(KeyboardKey.Grave)) WriteDebugScreen();
-            if (BB.Input.JustPressed(KeyboardKey.NumPadPlus)) { IncreaseGameSpeed(); WriteDebugScreen(); } 
-            if (BB.Input.JustPressed(KeyboardKey.NumPadMinus)) { DecreaseGameSpeed(); WriteDebugScreen(); }
-            if (BB.Input.JustPressed(KeyboardKey.NumPadEnter)) { WriteDebugScreen(); Debugger.Break(); }
+            if (BB.Input.JustPressed(KeyboardKey.OemTilde)) WriteDebugScreen();
+            if (BB.Input.JustPressed(KeyboardKey.OemPlus)) { IncreaseGameSpeed(); WriteDebugScreen(); } 
+            if (BB.Input.JustPressed(KeyboardKey.OemMinus)) { DecreaseGameSpeed(); WriteDebugScreen(); }
+            if (BB.Input.JustPressed(KeyboardKey.Enter)) { WriteDebugScreen(); Debugger.Break(); }
 
             if (engine.UpdateTime > 0.016f)
                 WriteLine($"Frame {BB.Clock.FrameNumber}: UPDATE IS SLOW: {engine.UpdateTime*1000:0.0}ms");

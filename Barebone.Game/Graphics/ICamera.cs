@@ -1,5 +1,4 @@
 ﻿using System.Numerics;
-using Barebone.Geometry;
 
 namespace Barebone.Game.Graphics
 {
