@@ -37,7 +37,7 @@ namespace Barebone.Game.Monogame
                 GraphicsProfile = GraphicsProfile.HiDef, // needed for >2048 textures and float color formats
                 PreferMultiSampling = false,             // we do our own SSAA
                 SynchronizeWithVerticalRetrace = true,
-                PreferHalfPixelOffset = true,
+                PreferHalfPixelOffset = false, // legacy XNA/D3D9 quirk; on means rasterization is shifted by +½ pixel which accumulates across the bloom passes and biases halos toward bottom-right
             };
             Window.Title = windowTitle;
             Window.AllowUserResizing = true;

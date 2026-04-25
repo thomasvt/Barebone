@@ -38,6 +38,8 @@ namespace Barebone.Game.Graphics
         /// </summary>
         void SetWorldTransform(in Matrix3x2 world);
 
+        void ResetWorldTransform();
+
         /// <summary>
         /// The currently active world transform (defaults to <see cref="Matrix3x2.Identity"/>).
         /// </summary>

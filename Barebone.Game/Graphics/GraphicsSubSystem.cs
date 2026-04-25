@@ -61,6 +61,11 @@ namespace Barebone.Game.Graphics
             _worldTransform = world;
         }
 
+        public void ResetWorldTransform()
+        {
+            _worldTransform= Matrix3x2.Identity;
+        }
+
         public Matrix3x2 WorldTransform => _worldTransform;
 
         public void SetColorOnly()
