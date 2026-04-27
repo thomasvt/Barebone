@@ -60,7 +60,7 @@ namespace Barebone.Game.Graphics
             }
             _defaultFont.AppendString(true, _textTriangleBuffer, text, colorF, position, scale);
 
-            _pg.SetTransform(_worldTransform, _activeCamera.ScreenToWorldTransform);
+            _pg.SetTransform(_worldTransform, _activeCamera.WorldToScreenTransform);
             _pg.FillTriangles(_textTriangleBuffer.AsReadOnlySpan(), _defaultFont.Texture);
         }
 

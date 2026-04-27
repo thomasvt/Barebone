@@ -4,12 +4,15 @@
     /// Speciialized collection for game objects with low GC pressure, deferred collection mutations and support for Update and Draw operations on the actors.
     /// Actors must implement <see cref="IUpdate"/>, <see cref="IDraw"/>, <see cref="IOnAdded"/> and/or <see cref="IOnRemoved"/> to subscribe to those hooks.
     /// </summary>
-    public class ComponentCollection : IDisposable
+    internal class ComponentCollection : IDisposable, IComponentCollection
     {
         private readonly BBListDeferred<Component> _components = new()!;
 
+        public Component Parent { get; internal set; }
+
         public T1 Add<T1>(T1 component) where T1: Component
         {
+            component.Parent = Parent;
             _components.Add(component);
             return component;
         }
@@ -19,6 +22,7 @@
         /// </summary>
         public void Remove(Component component)
         {
+            component.Parent = null;
             _components.Remove(component);
         }
 

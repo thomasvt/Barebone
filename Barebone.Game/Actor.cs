@@ -1,27 +1,37 @@
-﻿namespace Barebone.Game
+﻿
+namespace Barebone.Game
 {
     /// <summary>
     /// A Component with children.
     /// </summary>
     public class Actor : Component
     {
-        public readonly ComponentCollection Children = new();
+        private readonly ComponentCollection _children;
+        public IComponentCollection Children => _children;
+
+        public Actor()
+        {
+            _children = new()
+            {
+                Parent = this
+            };
+        }
 
         public override void Draw()
         {
-            Children.DrawAll();
+            _children.DrawAll();
             base.Draw();
         }
 
         public override void Update()
         {
-            Children.UpdateAll();
+            _children.UpdateAll();
             base.Update();
         }
 
         public override void Dispose()
         {
-            Children.Dispose();
+            _children.Dispose();
             base.Dispose();
         }
     }

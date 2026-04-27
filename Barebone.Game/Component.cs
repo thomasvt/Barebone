@@ -5,6 +5,8 @@
         private static ulong _nextId = 1;
         public readonly ulong Id = _nextId++;
 
+        public Component? Parent { get; internal set; }
+
         public virtual void Update()
         {}
 
