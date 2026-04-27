@@ -201,6 +201,24 @@ namespace Barebone
             return true;
         }
 
+        /// <summary>
+        /// Remove of an item without changing the order of remaining items.
+        /// </summary>
+        public bool Remove(T item, bool returnIfPoolable = false)
+        {
+            var idx = IndexOf(item);
+            if (idx <= -1) return false;
+
+            if (returnIfPoolable)
+                (item as IPoolable)?.Return();
+
+            if (Count > idx + 1)
+                Array.Copy(_items, idx + 1, _items, idx, Count - idx - 1);
+
+            Count--;
+            return true;
+        }
+
         private int IndexOf(T item)
         {
             if (item == null) throw new ArgumentNullException(nameof(item));

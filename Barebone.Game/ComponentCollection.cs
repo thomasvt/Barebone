@@ -1,44 +1,25 @@
-﻿using Barebone.Pools;
-
-namespace Barebone.Game
+﻿namespace Barebone.Game
 {
     /// <summary>
     /// Speciialized collection for game objects with low GC pressure, deferred collection mutations and support for Update and Draw operations on the actors.
     /// Actors must implement <see cref="IUpdate"/>, <see cref="IDraw"/>, <see cref="IOnAdded"/> and/or <see cref="IOnRemoved"/> to subscribe to those hooks.
     /// </summary>
-    public class ActorCollection : Poolable, IDisposable
+    public class ComponentCollection : IDisposable
     {
-        private BBListDeferred<object> _entities = null!;
+        private readonly BBListDeferred<Component> _components = new()!;
 
-        public ActorCollection()
+        public T1 Add<T1>(T1 component) where T1: Component
         {
-            Construct();
-        }
-
-        protected override void Construct()
-        {
-            _entities?.Return(true);
-            _entities = Pool.Rent<BBListDeferred<object>>();
-        }
-
-        protected override void Destruct()
-        {
-            _entities?.Return(true);
-            _entities = null!;
-        }
-
-        public T1 Add<T1>(T1 entity) where T1: class
-        {
-            _entities.Add(entity);
-            return entity;
+            _components.Add(component);
+            return component;
         }
 
         /// <summary>
         /// Schedules to remove the entity upon next UpdateAll() call. Note that this will call its Dispose or will return it to the Pool.
         /// </summary>
-        public void Remove(object entity)
+        public void Remove(Component component)
         {
-            _entities.Remove(entity);
+            _components.Remove(component);
         }
 
         /// <summary>
@@ -46,8 +27,8 @@ namespace Barebone.Game
         /// </summary>
         public void ClearImmediate()
         {
-            _entities.DisposeItems();
-            _entities.ClearImmediate(true, false);
+            _components.DisposeItems();
+            _components.ClearImmediate(true, false);
         }
 
         /// <summary>
@@ -55,9 +36,9 @@ namespace Barebone.Game
         /// </summary>
         public void UpdateAll()
         {
-            _entities.ApplyChanges(true);
-            foreach (var entity in _entities.AsReadOnlySpan())
-                (entity as IUpdate)?.Update();
+            _components.ApplyChanges(true);
+            foreach (var entity in _components.AsReadOnlySpan())
+                entity.Update();
         }
 
         /// <summary>
@@ -65,16 +46,14 @@ namespace Barebone.Game
         /// </summary>
         public void DrawAll()
         {
-            foreach (var entity in _entities.AsReadOnlySpan())
-                (entity as IDraw)?.Draw();
+            foreach (var entity in _components.AsReadOnlySpan())
+                entity.Draw();
         }
 
         public void Dispose()
         {
-            _entities.DisposeItems();
-            _entities.Dispose();
+            _components.DisposeItems();
+            _components.Dispose();
         }
-
-        
     }
 }

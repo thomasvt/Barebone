@@ -8,7 +8,8 @@ namespace Barebone
     }
 
     /// <summary>
-    /// A BBList that defers all mutations to the controlled moment when ApplyChanges() is called. Can be used both in Poolable or classic IDisposable pattern.
+    /// A BBList that defers all mutations to the controlled moment when ApplyChanges() is called. Removals maintain order of the remaining items.
+    /// Can be used both in Poolable or classic IDisposable pattern.
     /// </summary>
     public sealed class BBListDeferred<T> : Poolable, IDisposable
     {
@@ -83,7 +84,7 @@ namespace Barebone
                         (command.Item as IOnAdded)?.OnAdded();
                         break;
                     case MutationType.Remove:
-                        _list.RemoveBySwap(command.Item!, returnPoolableItems);
+                        _list.Remove(command.Item!, returnPoolableItems);
                         (command.Item as IDisposable)?.Dispose();
                         break;
                     default: throw new ArgumentOutOfRangeException();

@@ -21,7 +21,7 @@ namespace Barebone.Architecture.NodeTree
 
         private bool _isDisabled = false;
         private bool _isActive = false;
-        private BBOwningList<Node>? _children;
+        private BBList<Node> _children = null!;
         private Node? _parent;
         private NodeScene? _scene;
         private bool _isDisabledByParent;
@@ -34,7 +34,7 @@ namespace Barebone.Architecture.NodeTree
             _isDisabledByParent = false;
             _isDisabled = false;
             _isActive = false;
-            _children = Pool.Rent<BBOwningList<Node>>();
+            _children = Pool.Rent<BBList<Node>>();
             _scene = default;
             _parent = default;
             _eulerAngles = Vector3.Zero;
@@ -54,7 +54,7 @@ namespace Barebone.Architecture.NodeTree
             _scene = default;
             _parent = default;
             Pool.Return(_children!);
-            _children = default;
+            _children = null!;
 
             // destruct transform data:
             _worldToLocalDirty = default;
@@ -76,7 +76,7 @@ namespace Barebone.Architecture.NodeTree
             {
                 child.Parent = null;
             }
-            _children!.Clear(true, freeCapacity);
+            _children.Clear(true, freeCapacity);
         }
 
         /// <summary>
@@ -137,56 +137,20 @@ namespace Barebone.Architecture.NodeTree
         /// <summary>
         /// Finds the first child node directly below the current one that is of a certain type.
         /// </summary>
-        public T? FindChild<T>()
+        public bool TryFindChild<T>(out T? child)
         {
-            foreach (var child in Children)
+            foreach (var c in Children)
             {
-                if (child is T t) return t;
-            }
-            return default;
-        }
-
-        /// <summary>
-        /// Finds the first child node directly below the current one that is of a certain type and matches the predicate.
-        /// </summary>
-        public T? FindChild<T>(Func<T, bool> predicate)
-        {
-            foreach (var child in Children)
-            {
-                if (child is T t && predicate(t)) return t;
-            }
-            return default;
-        }
-
-
-        /// <summary>
-        /// Enumerates all direct children that are of type T and match the predicate.
-        /// </summary>
-        public IEnumerable<T> FindChildren<T>(Func<T, bool> predicate)
-        {
-            for (var i = 0; i < _children!.Count; i++)
-            {
-                var child = _children.InternalArray[i];
-                if (child is T t && predicate(t)) yield return t;
-            }
-        }
-
-        /// <summary>
-        /// Enumerates all nodes below this node that are of type T and match the predicate.
-        /// </summary>
-        public IEnumerable<T> FindChildrenRecursive<T>(Func<T, bool> predicate)
-        {
-            for (var i = 0; i < _children!.Count; i++)
-            {
-                var child = _children.InternalArray[i];
-                if (child is T t && predicate(t)) yield return t;
-                foreach (var grandChild in child.FindChildrenRecursive<T>(predicate))
+                if (c is T t)
                 {
-                    yield return grandChild;
+                    child = t;
+                    return true;
                 }
             }
+            child = default;
+            return false;
         }
-
+        
         /// <summary>
         /// Finds the first child node directly below the current one that is of a certain type. Throws an exception is no such child is found.
         /// </summary>
@@ -251,7 +215,7 @@ namespace Barebone.Architecture.NodeTree
             child.Parent = null; // triggers Deactivate() on this child and its children.
             if (_isDisabled || _isDisabledByParent)
                 child.EnableChildren(); // resets the `disabledByParent` flag
-            _children!.SwapRemove(child);
+            _children!.RemoveBySwap(child, true);
         }
 
         /// <summary>
