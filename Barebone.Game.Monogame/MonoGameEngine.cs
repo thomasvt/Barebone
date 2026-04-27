@@ -43,7 +43,7 @@ namespace Barebone.Game.Monogame
             Window.AllowUserResizing = true;
             IsMouseVisible = true;
             IsFixedTimeStep = true;
-            TargetElapsedTime = TimeSpan.FromTicks(166_667); // ~60 Hz
+            TargetElapsedTime = TimeSpan.FromSeconds(1/60f);
         }
 
         /// <summary>

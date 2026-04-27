@@ -1,12 +1,9 @@
-using System.Drawing;
-using System.IO;
 using System.Numerics;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using Barebone.Game.Graphics;
 using Barebone.Geometry;
 using Barebone.Graphics;
-using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using XnaColor = Microsoft.Xna.Framework.Color;
 using XnaMatrix = Microsoft.Xna.Framework.Matrix;
@@ -95,7 +92,7 @@ namespace Barebone.Game.Monogame
         private Matrix3x2 _currentCamera = Matrix3x2.Identity;
 
         // -------- Static fullscreen triangle (no vertex buffer needed; uses DrawUserPrimitives) --------
-        private static readonly VertexPositionTexture[] _fullscreenTri =
+        private readonly static VertexPositionTexture[] _fullscreenTri =
         {
             new(new XnaVector3(-1f,  1f, 0f), new XnaVector2(0f, 0f)),
             new(new XnaVector3( 3f,  1f, 0f), new XnaVector2(2f, 0f)),
@@ -103,7 +100,7 @@ namespace Barebone.Game.Monogame
         };
 
         // -------- BlendState used for additive bloom upsample --------
-        private static readonly BlendState AdditiveBlend = new()
+        private readonly static BlendState AdditiveBlend = new()
         {
             ColorSourceBlend = Blend.One,
             ColorDestinationBlend = Blend.One,
@@ -252,7 +249,7 @@ namespace Barebone.Game.Monogame
             var projection = XnaMatrix.CreateOrthographicOffCenter(0, backbufferWidth, backbufferHeight, 0, 0, 1);
             _spriteProjection.SetValue(projection);
 
-            for (int i = 0; i < _drawItems.Count; i++)
+            for (var i = 0; i < _drawItems.Count; i++)
             {
                 ref var di = ref CollectionsMarshal.AsSpan(_drawItems)[i];
                 _spriteWorld.SetValue(LiftMatrix(di.World));

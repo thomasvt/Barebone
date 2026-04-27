@@ -58,11 +58,17 @@ public static class GeometryExtensions
             return new ((int)MathF.Ceiling(vector.X), (int)MathF.Ceiling(vector.Y));
         }
 
+        /// <summary>
+        /// Gets angle of the vector within (-180, +180)
+        /// </summary>
         public float GetAngle()
         {
             return MathF.Atan2(vector.Y, vector.X);
         }
 
+        /// <summary>
+        /// Gets angle of the vector within (-180, +180), or the given default if the vector has no length.
+        /// </summary>
         public float GetAngleOrDefault(float @default = 0f)
         {
             return vector is { X: 0, Y: 0 } ? @default : MathF.Atan2(vector.Y, vector.X);
@@ -218,7 +224,7 @@ public static class GeometryExtensions
         /// <summary>
         /// Rotates the angle one step towards the targetAngle along the shortest side of the circle. Guarantees the final step returns 'targetAngle' exactly.
         /// </summary>
-        public float RotateTowards(float targetAngle, float absoluteStep, out bool isTargetReached)
+        public float StepAngleTowards(float targetAngle, float absoluteStep, out bool isTargetReached)
         {
             var shortestAngleChange = angle.GetShortestAngleTo(targetAngle);
 
