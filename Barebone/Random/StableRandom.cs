@@ -124,6 +124,15 @@ namespace BareBone.Random
         {
             return new(NextFloat(range.Left, range.Right), NextFloat(range.Bottom, range.Top));
         }
+
+        /// <summary>
+        /// Returns a vector within the range.
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public Vector2I NextVector2I(AabbI range)
+        {
+            return new(NextInt(range.Left, range.Right), NextInt(range.Bottom, range.Top));
+        }
     }
 
     /// <summary>

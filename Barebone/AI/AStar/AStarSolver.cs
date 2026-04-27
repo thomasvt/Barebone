@@ -1,6 +1,9 @@
-﻿namespace Barebone.AI.AStar
+﻿using System.Runtime.CompilerServices;
+using Barebone.Geometry;
+
+namespace Barebone.AI.AStar
 {
-    public class AStarSolver<TGraph>(TGraph graph) where TGraph : struct, IGraphTopology // when TGraph is a struct, compiler will build a non-generic result that can even get its methods inlined.
+    public class AStarSolver<TGraph>(TGraph graph) : IPathSolver where TGraph : struct, IGraphTopology // when TGraph is a struct, compiler will build a non-generic result that can even get its methods inlined.
     {
         private record struct Node(float G, bool IsSeen);
 
@@ -10,14 +13,25 @@
         private readonly bool[] _closedList = new bool[graph.NodeCount];
         private readonly Node[] _nodes = new Node[graph.NodeCount];
         private readonly int[] _parents = new int[graph.NodeCount];
+        private TGraph _graph = graph;
 
-        public bool FindPath(int startIdx, int goalIdx, in BBList<int> solutionBuffer)
+        /// <summary>
+        /// Fills your solutionBuffer. Consume the path by calling Pop
+        /// </summary>
+        /// <param name="start"></param>
+        /// <param name="goal"></param>
+        /// <param name="solutionBuffer"></param>
+        /// <returns></returns>
+        public bool FindPath(in Vector2I start, in Vector2I goal, in BBList<Vector2I> solutionBuffer)
         {
+            var startIdx = PosToIdx(start);
+            var goalIdx = PosToIdx(goal);
+
             solutionBuffer.Clear();
 
             if (startIdx == goalIdx)
             {
-                solutionBuffer.Add(startIdx);
+                solutionBuffer.Add(IdxToPos(startIdx));
                 return true;
             }
 
@@ -27,9 +41,9 @@
             _openList.Clear();
 
             _nodes[startIdx] = new(0f, true);
-            _openList.Enqueue(startIdx, graph.Heuristic(startIdx, goalIdx));
+            _openList.Enqueue(startIdx, _graph.Heuristic(startIdx, goalIdx));
 
-            Span<Connection> neighbourBuffer = stackalloc Connection[graph.MaxNeighbours];
+            Span<Connection> neighbourBuffer = stackalloc Connection[_graph.MaxNeighbours];
 
             while (_openList.Count > 0)
             {
@@ -47,7 +61,7 @@
                 ref readonly var currentNode = ref _nodes[currentIdx];
                 _closedList[currentIdx] = true;
 
-                var count = graph.GetNeighbours(currentIdx, neighbourBuffer);
+                var count = _graph.GetNeighbours(currentIdx, neighbourBuffer);
 
                 for (var i = 0; i < count; i++)
                 {
@@ -66,19 +80,19 @@
                     neighbourNode.G = g;
                     neighbourNode.IsSeen = true;
                     _parents[neighbourIdx] = currentIdx;
-                    _openList.Enqueue(neighbourIdx, g + graph.Heuristic(neighbourIdx, goalIdx));
+                    _openList.Enqueue(neighbourIdx, g + _graph.Heuristic(neighbourIdx, goalIdx));
                 }
             }
 
             return false;
         }
 
-        private void ConstructPath(int goalIdx, in BBList<int> solutionBuffer)
+        private void ConstructPath(int goalIdx, in BBList<Vector2I> solutionBuffer)
         {
             var idx = goalIdx;
             while (true)
             {
-                solutionBuffer.Add(idx);
+                solutionBuffer.Add(IdxToPos(idx));
                 var parentIdx = _parents[idx];
                 if (parentIdx == NoParent)
                     break;
@@ -87,5 +101,11 @@
 
             solutionBuffer.Reverse();
         }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public int PosToIdx(in Vector2I position) => position.Y * graph.GridSize.X + position.X;
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public Vector2I IdxToPos(int idx) => new(idx % graph.GridSize.X, idx / graph.GridSize.X);
     }
 }

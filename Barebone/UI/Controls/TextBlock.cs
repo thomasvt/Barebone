@@ -47,7 +47,7 @@ namespace Barebone.UI.Controls
                 VerticalAlignment.Center => (Viewport.Size.Y - textSize.Y) / 2
             };
 
-            var topLeft = Viewport.MinCorner + new Vector2I(textOffsetX, textOffsetY);
+            var topLeft = Viewport.MinCorner + new Vector2I((int)textOffsetX, (int)textOffsetY);
 
             if (maxLinesVisible <= 0)
                 return;

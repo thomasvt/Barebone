@@ -83,7 +83,7 @@ namespace Barebone
                         (command.Item as IOnAdded)?.OnAdded();
                         break;
                     case MutationType.Remove:
-                        _list.SwapRemove(command.Item!, returnPoolableItems);
+                        _list.RemoveBySwap(command.Item!, returnPoolableItems);
                         (command.Item as IDisposable)?.Dispose();
                         break;
                     default: throw new ArgumentOutOfRangeException();

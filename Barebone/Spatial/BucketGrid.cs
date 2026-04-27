@@ -32,7 +32,7 @@ namespace Barebone.Spatial
 
             var bucket = _buckets[position.X + position.Y * Size.X];
 #if DEBUG
-            if (!bucket.SwapRemove(item)) Debugger.Break();
+            if (!bucket.RemoveBySwap(item)) Debugger.Break();
 #else
             bucket.SwapRemove(item);
 #endif
@@ -47,7 +47,7 @@ namespace Barebone.Spatial
             if (oldCell.X < 0 || oldCell.X >= Size.X || oldCell.Y < 0 || oldCell.Y >= Size.Y) throw new ArgumentOutOfRangeException(nameof(oldCell));
                 
 #if DEBUG
-            if (!_buckets[oldCell.X + oldCell.Y * Size.X].SwapRemove(item)) Debugger.Break();
+            if (!_buckets[oldCell.X + oldCell.Y * Size.X].RemoveBySwap(item)) Debugger.Break();
 #else
             _buckets[oldCell.X + oldCell.Y * Size.X].SwapRemove(item);
 #endif

@@ -166,7 +166,7 @@ namespace Barebone.Graphics.Text
         /// <summary>
         /// Returns the size of the rendered text in texels.
         /// </summary>
-        public Vector2I Measure(ReadOnlySpan<char> text)
+        public Vector2 Measure(ReadOnlySpan<char> text, float scale = 1f)
         {
             var width = 0;
             var previousCharCode = (ushort)0;
@@ -183,7 +183,7 @@ namespace Barebone.Graphics.Text
                 previousCharCode = code;
             }
 
-            return new Vector2I(width, LineHeight);
+            return new Vector2I(width, LineHeight) * scale;
         }
 
         /// <summary>

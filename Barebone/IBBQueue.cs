@@ -21,7 +21,7 @@ namespace Barebone
         /// Clears the collection. Optionally frees the allocated capacity memory.
         /// </summary>
         /// <param name="freeCapacity">free the memory allocated for the current capacity of this GrowArray</param>
-        public void Clear(bool returnItems, bool freeCapacity);
+        public void Clear(bool returnItems = false, bool freeCapacity = false);
 
         public int Count { get; }
 
@@ -37,5 +37,10 @@ namespace Barebone
         public void Return(bool returnItems);
 
         public void DisposeItems();
+
+        /// <summary>
+        /// Reverses the entire queue.
+        /// </summary>
+        void Reverse();
     }
 }

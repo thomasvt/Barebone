@@ -3,6 +3,7 @@ using Barebone.Game.Graphics;
 using Barebone.Game.Input;
 using Barebone.Game.Physics;
 using Barebone.Messaging;
+using BareBone.Random;
 
 namespace Barebone.Game
 {
@@ -16,6 +17,7 @@ namespace Barebone.Game
             Debug = debug;
             Physics = physics;
             MessageBus = messageBus;
+            Random = new StableRandom(1337);
         }
 
         public static IClock Clock { get; private set; } = null!;
@@ -24,6 +26,7 @@ namespace Barebone.Game
         public static IDebug Debug { get; private set; } = null!;
         public static IPhysics Physics { get; private set; } = null!;
         public static IMessageBus MessageBus { get; private set; } = null!;
+        public static StableRandom Random { get; private set; } = null!;
         public static void Quit()
         {
             QuitRequested = true;

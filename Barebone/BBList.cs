@@ -189,10 +189,10 @@ namespace Barebone
         }
 
         /// <summary>
-        /// Fast remove of an item by overwriting it with the last item and shrinking the array by 1.
+        /// Fast remove of an item by moving the last item in the list over it.
         /// This sacrifices the order of the items in the array but is faster because no parts of the array need to be copied around to close the gap.
         /// </summary>
-        public bool SwapRemove(T item, bool returnIfPoolable = false)
+        public bool RemoveBySwap(T item, bool returnIfPoolable = false)
         {
             var idx = IndexOf(item);
             if (idx <= -1) return false;
@@ -316,6 +316,9 @@ namespace Barebone
             return AsReadOnlySpan().ToArray();
         }
 
+        public T First => Count > 0 ? _items[0] : throw new Exception("BBList is empty.");
+        public T Last => Count > 0 ? _items[^1] : throw new Exception("BBList is empty.");
+
         public int Capacity
         {
             get => _items.Length;
@@ -350,6 +353,7 @@ namespace Barebone
         /// The underlying array. Mind that the length of this array is often bigger than Count because it's the Capacity of this GrowArray.
         /// </summary>
         public T[] InternalArray => _items;
+        public bool IsEmpty => Count == 0;
 
         /// <summary>
         /// Direct access to the items as a Span.

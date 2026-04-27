@@ -38,10 +38,6 @@ namespace Barebone.AI.AStar
             return dx + dy;
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public int PosToIdx(in Vector2I position) => position.Y * width + position.X;
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public Vector2I IdxToPos(int idx) => new(idx % width, idx / width);
+        public Vector2I GridSize { get; } = new (width, height);
     }
 }

@@ -49,14 +49,17 @@ namespace Barebone.Game.Graphics
             FillCircleInternal(center, radius, segmentCount, color);
         }
 
-        public void Print(in Vector2 position, in string text, in Color color, in float scale = 1f)
+        public void DrawText(Vector2 position, in string text, in Color color, in float scale = 1f, bool center = false)
         {
             _textTriangleBuffer.Clear();
             var colorF = ColorF.FromColor(color);
+            if (center)
+            {
+                var size = _defaultFont.Measure(text, scale);
+                position -= size * 0.5f;
+            }
             _defaultFont.AppendString(true, _textTriangleBuffer, text, colorF, position, scale);
 
-            // Text positions are absolute world coords; SetWorldTransform must NOT apply to them.
-            _pg.SetTransform(Matrix3x2.Identity, _activeCamera.WorldToScreenTransform);
             _pg.FillTriangles(_textTriangleBuffer.AsReadOnlySpan(), _defaultFont.Texture);
         }
 

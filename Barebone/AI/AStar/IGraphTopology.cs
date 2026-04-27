@@ -1,4 +1,6 @@
-﻿namespace Barebone.AI.AStar
+﻿using Barebone.Geometry;
+
+namespace Barebone.AI.AStar
 {
     public interface IGraphTopology
     {
@@ -12,5 +14,7 @@
         /// Returns the distance heuristic for the 2 given positions (as indices)
         /// </summary>
         float Heuristic(int fromIdx, int toIdx);
+
+        Vector2I GridSize { get; }
     }
 }

@@ -482,7 +482,7 @@ namespace Barebone.UI.Controls
             if (textIndex.X < 0 || textIndex.X > line.Length) return null;
 
             var lineStart = new Vector2I(0, (textIndex.Y - TopIndexActual) * _font.LineHeight);
-            var p = Viewport.MinCorner + _textOffset + lineStart + _font.Measure(line.AsSpan(0, textIndex.X));
+            var p = Viewport.MinCorner + _textOffset + lineStart + _font.Measure(line.AsSpan(0, textIndex.X)).Round();
 
             return Viewport.Grow(Font.LineHeight).Contains(p) ? p : null;
         }

@@ -26,7 +26,7 @@ namespace Barebone
         /// Clears the collection. Optionally frees the allocated capacity memory.
         /// </summary>
         /// <param name="freeCapacity">free the memory allocated for the current capacity of this GrowArray</param>
-        void Clear(bool returnItems, bool freeCapacity);
+        void Clear(bool returnItems = false, bool freeCapacity = false);
 
         int Count { get; }
 

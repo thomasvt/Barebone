@@ -24,7 +24,7 @@ namespace Barebone.Game.Graphics
         /// Set a texture for projection onto your subsequent drawing of geometry, using the uvTransform for controlling that projection.
         /// </summary>
         void SetTexture(in ITexture texture, in Matrix3x2 projection);
-        void Print(in Vector2 position, in string text, in Color color, in float scale = 1f);
+        void DrawText(Vector2 position, in string text, in Color color, in float scale = 1f, bool center = false);
         /// <summary>
         /// Sets the camera to use for subsequent rendering.
         /// </summary>
