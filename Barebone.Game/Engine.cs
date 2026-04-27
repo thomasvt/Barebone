@@ -18,8 +18,8 @@ namespace Barebone.Game
 
         // Used by external loop drivers (e.g. MonoGameEngine) when the platform itself owns the
         // render loop and feeds us frames via TickUpdate/TickDraw instead of calling Run().
-        private IGame? _externalGame;
-        private double _externalGameTime;
+        private IGame? _game;
+        private double _gameTime;
 
         public Engine(IPlatform platform)
         {
@@ -96,22 +96,22 @@ namespace Barebone.Game
         // ===========================================================================================
         public void StartGame(Func<IGame> gameFactory)
         {
-            _externalGame = gameFactory.Invoke();
-            _externalGameTime = 0;
+            _game = gameFactory.Invoke();
+            _gameTime = 0;
         }
 
-        public void TickUpdate(float deltaSeconds)
+        public void Update(float deltaT)
         {
-            if (_externalGame == null) throw new InvalidOperationException("StartGame() must be called first.");
+            if (_game == null) throw new InvalidOperationException("StartGame() must be called first.");
 
             _platform.ProcessEvents(_input);
             _graphics.SetViewportSize(_platform.GetWindowSize());
 
-            _externalGameTime += deltaSeconds * Speed;
-            _clock.BeginFrame((float)_externalGameTime, deltaSeconds * Speed);
+            _gameTime += deltaT * Speed;
+            _clock.BeginFrame((float)_gameTime, deltaT * Speed);
 
             var sw = Stopwatch.StartNew();
-            _externalGame.Update();
+            _game.Update();
             UpdateTime = sw.Elapsed.TotalSeconds;
 #if DEBUG
             _debug.Update();
@@ -119,11 +119,11 @@ namespace Barebone.Game
             _input.EndFrame();
         }
 
-        public void TickDraw()
+        public void DrawAll()
         {
-            if (_externalGame == null) throw new InvalidOperationException("StartGame() must be called first.");
+            if (_game == null) throw new InvalidOperationException("StartGame() must be called first.");
             var sw = Stopwatch.StartNew();
-            _externalGame.Draw();
+            _game.Draw();
             DrawTime = sw.Elapsed.TotalSeconds;
         }
 

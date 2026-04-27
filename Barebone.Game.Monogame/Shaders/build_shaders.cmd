@@ -1,4 +1,5 @@
-﻿
+﻿rem builds .fx into .mgfxo, which is automatically embedded in .dll, see csproj for that.
+
 dotnet tool install -g dotnet-mgfxc
 
 mgfxc Sprite.fx       Sprite.mgfxo       /Profile:OpenGL

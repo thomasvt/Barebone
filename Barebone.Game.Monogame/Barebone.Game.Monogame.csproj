@@ -16,16 +16,7 @@
     <ProjectReference Include="..\Barebone.Game\Barebone.Game.csproj" />
   </ItemGroup>
 
-  <!-- Pre-compiled shader blobs (.mgfxo).
-       Author the .fx files in Shaders/ and compile once with mgfxc:
-         dotnet tool install -g dotnet-mgfxc
-         cd Shaders
-         mgfxc Sprite.fx       Sprite.mgfxo       /Profile:OpenGL
-         mgfxc BrightPass.fx   BrightPass.mgfxo   /Profile:OpenGL
-         mgfxc Downsample.fx   Downsample.mgfxo   /Profile:OpenGL
-         mgfxc Upsample.fx     Upsample.mgfxo     /Profile:OpenGL
-         mgfxc Composite.fx    Composite.mgfxo    /Profile:OpenGL
-       Commit the .mgfxo files; they are embedded so deployment doesn't need a shader compiler. -->
+  <!-- Pre-compiled shader blobs (.mgfxo). Use build_shaders.cmd to compile them from .fx  -->
   <ItemGroup>
     <EmbeddedResource Include="Shaders\*.mgfxo">
       <LogicalName>Barebone.Game.Monogame.Shaders.%(Filename)%(Extension)</LogicalName>

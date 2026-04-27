@@ -23,6 +23,7 @@ namespace Barebone.Game.Physics
         ShapeId AttachCapsule(in BodyId bodyId, in Vector2 center1, in Vector2 center2, in float radius, in float friction);
 
         void GetTransform(in BodyId bodyId, out Vector2 position, out float angle);
+        Vector2 GetVelocity(in BodyId bodyId);
         void SetVelocity(in BodyId bodyId, in Vector2 velocity);
 
 

@@ -1,5 +1,4 @@
 using System.Numerics;
-using System.Reflection;
 using System.Runtime.InteropServices;
 using Barebone.Game.Graphics;
 using Barebone.Geometry;
@@ -24,7 +23,6 @@ namespace Barebone.Game.Monogame
     /// </summary>
     public class MonoGameGraphics : IPlatformGraphics, IDisposable
     {
-        // -------- Tunables --------
         private const int BloomMipCount = 5;
         private const int SsaaScale = 2;
 
@@ -34,73 +32,42 @@ namespace Barebone.Game.Monogame
         public float BloomUpsampleStrength { get; set; } = 1.0f;
         public float BloomFinalIntensity { get; set; } = 0.5f;
 
-        // -------- GraphicsDevice --------
         private readonly GraphicsDevice _gd;
 
-        // -------- Effects --------
-        private readonly Effect _spriteEffect;
-        private readonly Effect _brightEffect;
-        private readonly Effect _downsampleEffect;
-        private readonly Effect _upsampleEffect;
-        private readonly Effect _compositeEffect;
+        private readonly SpriteEffect _spriteEffect;
+        private readonly BrightEffect _brightEffect;
+        private readonly DownsampleEffect _downsampleEffect;
+        private readonly UpsampleEffect _upsampleEffect;
+        private readonly CompositeEffect _compositeEffect;
 
-        // Effect parameters cached so we don't pay the dictionary lookup every draw.
-        private readonly EffectParameter _spriteWorld;
-        private readonly EffectParameter _spriteView;
-        private readonly EffectParameter _spriteProjection;
-        private readonly EffectParameter _spriteTex;
-
-        private readonly EffectParameter _brightScene;
-        private readonly EffectParameter _brightThreshold;
-        private readonly EffectParameter _brightSoftKnee;
-        private readonly EffectParameter _brightIntensity;
-
-        private readonly EffectParameter _downsampleSource;
-        private readonly EffectParameter _downsampleSrcTexel;
-
-        private readonly EffectParameter _upsampleSource;
-        private readonly EffectParameter _upsampleSrcTexel;
-        private readonly EffectParameter _upsampleStrength;
-
-        private readonly EffectParameter _compositeScene;
-        private readonly EffectParameter _compositeBloom;
-        private readonly EffectParameter _compositeBloomIntensity;
-
-        // -------- White texture (for color-only draws) --------
         private readonly Texture2D _whiteTexture;
 
-        // -------- Vertex buffer + draw queue --------
         private DynamicVertexBuffer? _vertexBuffer;
         private int _vertexCapacity;
         private Vertex[] _cpuVertices = new Vertex[4096];
         private int _cpuVertexCount;
-        private readonly List<DrawItem> _drawItems = new(256);
+        private readonly List<DrawCommand> _drawCommandQueue = new(256);
 
-        // -------- Render targets --------
         private Vector2I _backbufferSize;
-        private Vector2I _scene2xSize;
-        private RenderTarget2D? _scene2x;
-        private RenderTarget2D[] _bloomMips = Array.Empty<RenderTarget2D>();
-        private Vector2I[] _bloomMipSizes = Array.Empty<Vector2I>();
+        private Vector2I _scene2XSize;
+        private RenderTarget2D? _scene2X;
+        private RenderTarget2D[] _bloomMips = [];
+        private Vector2I[] _bloomMipSizes = [];
 
-        // -------- Texture cache --------
         private readonly Dictionary<string, MonoGameTexture> _textureCache = new();
 
-        // -------- Frame state --------
         private XnaColor _clearColor = XnaColor.Black;
         private Matrix3x2 _currentWorld = Matrix3x2.Identity;
         private Matrix3x2 _currentCamera = Matrix3x2.Identity;
 
-        // -------- Static fullscreen triangle (no vertex buffer needed; uses DrawUserPrimitives) --------
-        private readonly static VertexPositionTexture[] _fullscreenTri =
-        {
+        private readonly static VertexPositionTexture[] FullscreenTriangle =
+        [
             new(new XnaVector3(-1f,  1f, 0f), new XnaVector2(0f, 0f)),
             new(new XnaVector3( 3f,  1f, 0f), new XnaVector2(2f, 0f)),
-            new(new XnaVector3(-1f, -3f, 0f), new XnaVector2(0f, 2f)),
-        };
+            new(new XnaVector3(-1f, -3f, 0f), new XnaVector2(0f, 2f))
+        ];
 
-        // -------- BlendState used for additive bloom upsample --------
-        private readonly static BlendState AdditiveBlend = new()
+        private readonly static BlendState AdditiveBlendForBloom = new()
         {
             ColorSourceBlend = Blend.One,
             ColorDestinationBlend = Blend.One,
@@ -110,46 +77,23 @@ namespace Barebone.Game.Monogame
             AlphaBlendFunction = BlendFunction.Add,
         };
 
-        // ------------------------------------------------------------------------------------------------
-
         public MonoGameGraphics(GraphicsDevice gd)
         {
             _gd = gd;
 
-            _spriteEffect    = LoadEffect("Sprite");
-            _brightEffect    = LoadEffect("BrightPass");
-            _downsampleEffect = LoadEffect("Downsample");
-            _upsampleEffect  = LoadEffect("Upsample");
-            _compositeEffect = LoadEffect("Composite");
-
-            _spriteWorld      = _spriteEffect.Parameters["World"];
-            _spriteView       = _spriteEffect.Parameters["View"];
-            _spriteProjection = _spriteEffect.Parameters["Projection"];
-            _spriteTex        = _spriteEffect.Parameters["SpriteTex"];
-
-            _brightScene     = _brightEffect.Parameters["Scene"];
-            _brightThreshold = _brightEffect.Parameters["Threshold"];
-            _brightSoftKnee  = _brightEffect.Parameters["SoftKnee"];
-            _brightIntensity = _brightEffect.Parameters["Intensity"];
-
-            _downsampleSource   = _downsampleEffect.Parameters["Source"];
-            _downsampleSrcTexel = _downsampleEffect.Parameters["SrcTexelSize"];
-
-            _upsampleSource   = _upsampleEffect.Parameters["Source"];
-            _upsampleSrcTexel = _upsampleEffect.Parameters["SrcTexelSize"];
-            _upsampleStrength = _upsampleEffect.Parameters["Strength"];
-
-            _compositeScene          = _compositeEffect.Parameters["Scene"];
-            _compositeBloom          = _compositeEffect.Parameters["Bloom"];
-            _compositeBloomIntensity = _compositeEffect.Parameters["BloomIntensity"];
+            _spriteEffect    = new SpriteEffect(gd);
+            _brightEffect    = new BrightEffect(gd);
+            _downsampleEffect = new DownsampleEffect(gd);
+            _upsampleEffect = new UpsampleEffect(gd);
+            _compositeEffect = new CompositeEffect(gd);
 
             _whiteTexture = new Texture2D(gd, 1, 1, false, SurfaceFormat.Color);
-            _whiteTexture.SetData(new[] { XnaColor.White });
+            _whiteTexture.SetData([XnaColor.White]);
 
             EnsureVertexBuffer(4096);
         }
 
-        private struct DrawItem
+        private struct DrawCommand
         {
             public int FirstVertex;
             public int VertexCount;
@@ -157,16 +101,12 @@ namespace Barebone.Game.Monogame
             public Matrix3x2 World;
             public Matrix3x2 Camera;
         }
-
-        // ============================================================================
-        // IPlatformGraphics
-        // ============================================================================
-
+        
         public void ClearScreen(in ScreenColor color)
         {
             _clearColor = new XnaColor(color.R, color.G, color.B, color.A);
             _cpuVertexCount = 0;
-            _drawItems.Clear();
+            _drawCommandQueue.Clear();
         }
 
         public void SetTransform(in Matrix3x2 worldTransform, in Matrix3x2 cameraTransform)
@@ -182,7 +122,7 @@ namespace Barebone.Game.Monogame
             EnsureCpuVertexCapacity(_cpuVertexCount + vertices.Length);
             vertices.CopyTo(_cpuVertices.AsSpan(_cpuVertexCount));
 
-            _drawItems.Add(new DrawItem
+            _drawCommandQueue.Add(new DrawCommand
             {
                 FirstVertex = _cpuVertexCount,
                 VertexCount = vertices.Length,
@@ -201,40 +141,32 @@ namespace Barebone.Game.Monogame
             return t;
         }
 
-        // ============================================================================
-        // Frame rendering — invoked from MonoGamePlatform.Present BEFORE GraphicsDevice.Present
-        // ============================================================================
-
         internal void RenderFrame()
         {
             var bbW = _gd.PresentationParameters.BackBufferWidth;
             var bbH = _gd.PresentationParameters.BackBufferHeight;
             EnsureRenderTargets(new Vector2I(bbW, bbH));
 
-            // Upload all the frame's vertices in one shot.
             if (_cpuVertexCount > 0)
             {
                 EnsureVertexBuffer(_cpuVertexCount);
                 _vertexBuffer!.SetData(_cpuVertices, 0, _cpuVertexCount, SetDataOptions.Discard);
             }
 
-            DrawScene(bbW, bbH);
-            RunBloom();
-            RunComposite();
+            DrawScenePass(bbW, bbH);
+            BloomPass();
+            ComposePass();
 
             _cpuVertexCount = 0;
-            _drawItems.Clear();
+            _drawCommandQueue.Clear();
         }
 
-        // ----------------------------------------------------------------------------
-        // Scene pass
-        // ----------------------------------------------------------------------------
-        private void DrawScene(int backbufferWidth, int backbufferHeight)
+        private void DrawScenePass(int backbufferWidth, int backbufferHeight)
         {
-            _gd.SetRenderTarget(_scene2x);
+            _gd.SetRenderTarget(_scene2X);
             _gd.Clear(_clearColor);
 
-            if (_drawItems.Count == 0) return;
+            if (_drawCommandQueue.Count == 0) return;
 
             _gd.BlendState = BlendState.NonPremultiplied;
             _gd.DepthStencilState = DepthStencilState.None;
@@ -247,36 +179,33 @@ namespace Barebone.Game.Monogame
             // The viewport is automatically the 2x render target's bounds, so the rasterizer naturally
             // upscales the 1x-pixel-space output to 2x — that IS the supersampling.
             var projection = XnaMatrix.CreateOrthographicOffCenter(0, backbufferWidth, backbufferHeight, 0, 0, 1);
-            _spriteProjection.SetValue(projection);
+            _spriteEffect.Projection.SetValue(projection);
 
-            for (var i = 0; i < _drawItems.Count; i++)
+            for (var i = 0; i < _drawCommandQueue.Count; i++)
             {
-                ref var di = ref CollectionsMarshal.AsSpan(_drawItems)[i];
-                _spriteWorld.SetValue(LiftMatrix(di.World));
-                _spriteView.SetValue(LiftMatrix(di.Camera));
-                _spriteTex.SetValue(di.Texture ?? _whiteTexture);
-                _spriteEffect.CurrentTechnique.Passes[0].Apply();
+                ref var di = ref CollectionsMarshal.AsSpan(_drawCommandQueue)[i];
+                _spriteEffect.World.SetValue(ToXnaMatrix(di.World));
+                _spriteEffect.View.SetValue(ToXnaMatrix(di.Camera));
+                _spriteEffect.Texture.SetValue(di.Texture ?? _whiteTexture);
+                _spriteEffect.Apply();
 
                 _gd.DrawPrimitives(PrimitiveType.TriangleList, di.FirstVertex, di.VertexCount / 3);
             }
         }
 
-        // ----------------------------------------------------------------------------
-        // Bloom mip-chain
-        // ----------------------------------------------------------------------------
-        private void RunBloom()
+        private void BloomPass()
         {
             // 1) Bright pass: scene2x (with bilinear sampling = SSAA reduce) -> bloom_mips[0]
             _gd.SetRenderTarget(_bloomMips[0]);
             _gd.Clear(XnaColor.Transparent);
             _gd.BlendState = BlendState.Opaque;
 
-            _brightScene.SetValue(_scene2x);
-            _brightThreshold.SetValue(BloomThreshold);
-            _brightSoftKnee.SetValue(BloomSoftKnee);
-            _brightIntensity.SetValue(BloomBrightIntensity);
-            _brightEffect.CurrentTechnique.Passes[0].Apply();
-            _gd.DrawUserPrimitives(PrimitiveType.TriangleList, _fullscreenTri, 0, 1);
+            _brightEffect.Scene.SetValue(_scene2X);
+            _brightEffect.Threshold.SetValue(BloomThreshold);
+            _brightEffect.SoftKnee.SetValue(BloomSoftKnee);
+            _brightEffect.Intensity.SetValue(BloomBrightIntensity);
+            _brightEffect.Apply();
+            _gd.DrawUserPrimitives(PrimitiveType.TriangleList, FullscreenTriangle, 0, 1);
 
             // 2) Downsample chain: mips[i] -> mips[i+1]
             _gd.BlendState = BlendState.Opaque;
@@ -286,59 +215,56 @@ namespace Barebone.Game.Monogame
                 _gd.Clear(XnaColor.Transparent);
 
                 var srcSize = _bloomMipSizes[i];
-                _downsampleSource.SetValue(_bloomMips[i]);
-                _downsampleSrcTexel.SetValue(new XnaVector2(1f / srcSize.X, 1f / srcSize.Y));
-                _downsampleEffect.CurrentTechnique.Passes[0].Apply();
-                _gd.DrawUserPrimitives(PrimitiveType.TriangleList, _fullscreenTri, 0, 1);
+                _downsampleEffect.Source.SetValue(_bloomMips[i]);
+                _downsampleEffect.SrcTexel.SetValue(new XnaVector2(1f / srcSize.X, 1f / srcSize.Y));
+                _downsampleEffect.Apply();
+                _gd.DrawUserPrimitives(PrimitiveType.TriangleList, FullscreenTriangle, 0, 1);
             }
 
             // 3) Upsample chain (additive): mips[i+1] -> mips[i]
-            _gd.BlendState = AdditiveBlend;
+            _gd.BlendState = AdditiveBlendForBloom;
             for (int i = BloomMipCount - 2; i >= 0; i--)
             {
                 _gd.SetRenderTarget(_bloomMips[i]);
                 // Don't clear — we want to ADD to whatever was previously written.
 
                 var srcSize = _bloomMipSizes[i + 1];
-                _upsampleSource.SetValue(_bloomMips[i + 1]);
-                _upsampleSrcTexel.SetValue(new XnaVector2(1f / srcSize.X, 1f / srcSize.Y));
-                _upsampleStrength.SetValue(BloomUpsampleStrength);
-                _upsampleEffect.CurrentTechnique.Passes[0].Apply();
-                _gd.DrawUserPrimitives(PrimitiveType.TriangleList, _fullscreenTri, 0, 1);
+                _upsampleEffect.Source.SetValue(_bloomMips[i + 1]);
+                _upsampleEffect.SrcTexel.SetValue(new XnaVector2(1f / srcSize.X, 1f / srcSize.Y));
+                _upsampleEffect.Strength.SetValue(BloomUpsampleStrength);
+                _upsampleEffect.Apply();
+                _gd.DrawUserPrimitives(PrimitiveType.TriangleList, FullscreenTriangle, 0, 1);
             }
         }
 
-        // ----------------------------------------------------------------------------
-        // Final composite: scene2x bilinear (SSAA resolve) + bloom_mip[0] -> backbuffer
-        // ----------------------------------------------------------------------------
-        private void RunComposite()
+        /// <summary>
+        /// Final composite: scene2x bilinear (SSAA resolve) + bloom_mip[0] -> backbuffer
+        /// </summary>
+        private void ComposePass()
         {
             _gd.SetRenderTarget(null); // backbuffer
             _gd.Clear(XnaColor.Black);
             _gd.BlendState = BlendState.Opaque;
 
-            _compositeScene.SetValue(_scene2x);
-            _compositeBloom.SetValue(_bloomMips[0]);
-            _compositeBloomIntensity.SetValue(BloomFinalIntensity);
-            _compositeEffect.CurrentTechnique.Passes[0].Apply();
+            _compositeEffect.Scene.SetValue(_scene2X);
+            _compositeEffect.Bloom.SetValue(_bloomMips[0]);
+            _compositeEffect.BloomIntensity.SetValue(BloomFinalIntensity);
+            _compositeEffect.Apply();
 
-            _gd.DrawUserPrimitives(PrimitiveType.TriangleList, _fullscreenTri, 0, 1);
+            _gd.DrawUserPrimitives(PrimitiveType.TriangleList, FullscreenTriangle, 0, 1);
         }
 
-        // ============================================================================
-        // RenderTarget lifecycle
-        // ============================================================================
         private void EnsureRenderTargets(Vector2I backbufferSize)
         {
-            if (_backbufferSize == backbufferSize && _scene2x != null) return;
+            if (_backbufferSize == backbufferSize && _scene2X != null) return;
             DestroyRenderTargets();
             _backbufferSize = backbufferSize;
-            _scene2xSize = new Vector2I(backbufferSize.X * SsaaScale, backbufferSize.Y * SsaaScale);
+            _scene2XSize = new Vector2I(backbufferSize.X * SsaaScale, backbufferSize.Y * SsaaScale);
 
             // SSAA scene render target
-            _scene2x = new RenderTarget2D(
+            _scene2X = new RenderTarget2D(
                 _gd,
-                _scene2xSize.X, _scene2xSize.Y,
+                _scene2XSize.X, _scene2XSize.Y,
                 mipMap: false,
                 preferredFormat: SurfaceFormat.Color,
                 preferredDepthFormat: DepthFormat.None,
@@ -349,7 +275,7 @@ namespace Barebone.Game.Monogame
             _bloomMips = new RenderTarget2D[BloomMipCount];
             _bloomMipSizes = new Vector2I[BloomMipCount];
             int mw = backbufferSize.X, mh = backbufferSize.Y;
-            for (int i = 0; i < BloomMipCount; i++)
+            for (var i = 0; i < BloomMipCount; i++)
             {
                 mw = Math.Max(1, mw);
                 mh = Math.Max(1, mh);
@@ -369,16 +295,13 @@ namespace Barebone.Game.Monogame
 
         private void DestroyRenderTargets()
         {
-            _scene2x?.Dispose();
-            _scene2x = null;
+            _scene2X?.Dispose();
+            _scene2X = null;
             foreach (var rt in _bloomMips) rt?.Dispose();
             _bloomMips = Array.Empty<RenderTarget2D>();
             _bloomMipSizes = Array.Empty<Vector2I>();
         }
 
-        // ============================================================================
-        // Vertex buffer
-        // ============================================================================
         private void EnsureCpuVertexCapacity(int required)
         {
             if (_cpuVertices.Length >= required) return;
@@ -395,19 +318,12 @@ namespace Barebone.Game.Monogame
             _vertexCapacity = newCap;
         }
 
-        // Layout matches Barebone.Graphics.Vertex byte-for-byte:
-        //   Position : Vector2 (8 bytes)
-        //   Color    : ColorF=4 floats (16 bytes)
-        //   UV       : Vector2 (8 bytes)
-        public static readonly VertexDeclaration BareboneVertexDeclaration = new(
+        public readonly static VertexDeclaration BareboneVertexDeclaration = new(
             new VertexElement(0,  VertexElementFormat.Vector2, VertexElementUsage.Position, 0),
             new VertexElement(8,  VertexElementFormat.Vector4, VertexElementUsage.Color, 0),
             new VertexElement(24, VertexElementFormat.Vector2, VertexElementUsage.TextureCoordinate, 0)
         );
 
-        // ============================================================================
-        // Texture loading
-        // ============================================================================
         private MonoGameTexture LoadTexture(string assetPath)
         {
             using var stream = File.OpenRead(assetPath);
@@ -415,31 +331,13 @@ namespace Barebone.Game.Monogame
             return new MonoGameTexture(tex);
         }
 
-        // ============================================================================
-        // Effect loading (from embedded resource)
-        // ============================================================================
-        private Effect LoadEffect(string baseName)
+        /// <summary>
+        /// Lifts the 2D matrix to the 4x4 which XNA needs.
+        /// </summary>
+        /// <param name="m"></param>
+        /// <returns></returns>
+        private static XnaMatrix ToXnaMatrix(in Matrix3x2 m)
         {
-            var resourceName = $"Barebone.Game.Monogame.Shaders.{baseName}.mgfxo";
-            using var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream(resourceName)
-                               ?? throw new MonoGameException(
-                                   $"Embedded shader '{resourceName}' not found. " +
-                                   "Run mgfxc Shaders/*.fx to generate the .mgfxo files first.");
-            using var ms = new MemoryStream();
-            stream.CopyTo(ms);
-            return new Effect(_gd, ms.ToArray());
-        }
-
-        // ============================================================================
-        // Helpers
-        // ============================================================================
-        private static XnaMatrix LiftMatrix(in Matrix3x2 m)
-        {
-            // Matrix3x2:           Lifted to row-major Matrix (XNA's convention is row-vector * matrix):
-            // | M11 M12 |          | M11 M12 0 0 |
-            // | M21 M22 |  ==>     | M21 M22 0 0 |
-            // | M31 M32 |          | 0   0   1 0 |
-            //                      | M31 M32 0 1 |
             return new XnaMatrix(
                 m.M11, m.M12, 0, 0,
                 m.M21, m.M22, 0, 0,
@@ -447,9 +345,6 @@ namespace Barebone.Game.Monogame
                 m.M31, m.M32, 0, 1);
         }
 
-        // ============================================================================
-        // Dispose
-        // ============================================================================
         public void Dispose()
         {
             DestroyRenderTargets();

@@ -24,8 +24,8 @@ namespace Barebone.Game.Monogame
         private Engine? _engine;
 
         // Input state for diff-based event emission.
-        private KeyboardState _kbCurr, _kbPrev;
-        private MouseState _msCurr, _msPrev;
+        private KeyboardState _keyboardState, _keyboardStatePrevious;
+        private MouseState _mouseState, _mouseStatePrevious;
 
         public MonoGameEngine(Func<IGame> gameFactory, string windowTitle, Vector2I windowSize)
         {
@@ -43,7 +43,7 @@ namespace Barebone.Game.Monogame
             Window.AllowUserResizing = true;
             IsMouseVisible = true;
             IsFixedTimeStep = true;
-            TargetElapsedTime = TimeSpan.FromSeconds(1/60f);
+            TargetElapsedTime = TimeSpan.FromSeconds(1 / 60f);
         }
 
         /// <summary>
@@ -76,42 +76,53 @@ namespace Barebone.Game.Monogame
 
         public void ProcessEvents(InputSubSystem input)
         {
-            // ---- Keyboard ----
-            _kbPrev = _kbCurr;
-            _kbCurr = Keyboard.GetState();
-            // Edge-detect transitions. KeyboardKey values match XnaKeys exactly so we cast directly.
-            var pressedNow = _kbCurr.GetPressedKeys();
-            var pressedBefore = _kbPrev.GetPressedKeys();
-            for (int i = 0; i < pressedNow.Length; i++)
-            {
-                var k = pressedNow[i];
-                if (!_kbPrev.IsKeyDown(k)) input.KeyboardDown((KeyboardKey)(int)k);
-            }
-            for (int i = 0; i < pressedBefore.Length; i++)
-            {
-                var k = pressedBefore[i];
-                if (!_kbCurr.IsKeyDown(k)) input.KeyboardUp((KeyboardKey)(int)k);
-            }
+            if (!IsActive) return;
 
-            // ---- Mouse ----
-            _msPrev = _msCurr;
-            _msCurr = Mouse.GetState();
-            var pos = new Vector2(_msCurr.X, _msCurr.Y);
-
-            if (_msCurr.X != _msPrev.X || _msCurr.Y != _msPrev.Y)
-                input.MouseMove(pos);
-
-            EmitMouseTransition(input, MouseButton.Left,   _msPrev.LeftButton,   _msCurr.LeftButton,   pos);
-            EmitMouseTransition(input, MouseButton.Right,  _msPrev.RightButton,  _msCurr.RightButton,  pos);
-            EmitMouseTransition(input, MouseButton.Middle, _msPrev.MiddleButton, _msCurr.MiddleButton, pos);
-            EmitMouseTransition(input, MouseButton.X1,     _msPrev.XButton1,     _msCurr.XButton1,     pos);
-            EmitMouseTransition(input, MouseButton.X2,     _msPrev.XButton2,     _msCurr.XButton2,     pos);
+            EmitKeyboardEvents(input);
+            EmitMouseEvents(input);
         }
 
-        private static void EmitMouseTransition(InputSubSystem input, MouseButton button, ButtonState before, ButtonState now, Vector2 pos)
+        private void EmitMouseEvents(InputSubSystem input)
         {
-            if (before == ButtonState.Released && now == ButtonState.Pressed) input.MouseDown(button, pos);
-            else if (before == ButtonState.Pressed && now == ButtonState.Released) input.MouseUp(button, pos);
+            _mouseStatePrevious = _mouseState;
+            _mouseState = Mouse.GetState();
+
+            var position = new Vector2(_mouseState.X, _mouseState.Y);
+            if (_mouseState.X < 0 || _mouseState.X >= Window.ClientBounds.Width ||
+                _mouseState.Y < 0 || _mouseState.Y >= Window.ClientBounds.Height) // mouse position is relative to window!
+                return; // mouse is out of window.
+
+            if (_mouseState.X != _mouseStatePrevious.X || _mouseState.Y != _mouseStatePrevious.Y)
+                input.MouseMove(position);
+
+            EmitMouseTransition(input, MouseButton.Left, _mouseStatePrevious.LeftButton, _mouseState.LeftButton, position);
+            EmitMouseTransition(input, MouseButton.Right, _mouseStatePrevious.RightButton, _mouseState.RightButton, position);
+            EmitMouseTransition(input, MouseButton.Middle, _mouseStatePrevious.MiddleButton, _mouseState.MiddleButton, position);
+            EmitMouseTransition(input, MouseButton.X1, _mouseStatePrevious.XButton1, _mouseState.XButton1, position);
+            EmitMouseTransition(input, MouseButton.X2, _mouseStatePrevious.XButton2, _mouseState.XButton2, position);
+        }
+
+        private void EmitKeyboardEvents(InputSubSystem input)
+        {
+            _keyboardStatePrevious = _keyboardState;
+            _keyboardState = Keyboard.GetState();
+
+            var pressedNow = _keyboardState.GetPressedKeys();
+            var pressedBefore = _keyboardStatePrevious.GetPressedKeys();
+            foreach (var k in pressedNow)
+            {
+                if (!_keyboardStatePrevious.IsKeyDown(k)) input.KeyboardDown((KeyboardKey)(int)k);
+            }
+            foreach (var k in pressedBefore)
+            {
+                if (!_keyboardState.IsKeyDown(k)) input.KeyboardUp((KeyboardKey)(int)k);
+            }
+        }
+
+        private static void EmitMouseTransition(InputSubSystem input, MouseButton button, ButtonState previous, ButtonState now, Vector2 pos)
+        {
+            if (previous == ButtonState.Released && now == ButtonState.Pressed) input.MouseDown(button, pos);
+            else if (previous == ButtonState.Pressed && now == ButtonState.Released) input.MouseUp(button, pos);
         }
 
         protected override void LoadContent()
@@ -136,7 +147,7 @@ namespace Barebone.Game.Monogame
         {
             if (_engine == null) return;
 
-            _engine.TickUpdate((float)gameTime.ElapsedGameTime.TotalSeconds);
+            _engine.Update((float)gameTime.ElapsedGameTime.TotalSeconds);
 
             if (_engine.IsQuitRequested)
             {
@@ -149,11 +160,8 @@ namespace Barebone.Game.Monogame
         {
             if (_engine == null || _graphics == null) return;
 
-            // Game.Draw lets the user enqueue draw calls into MonoGameGraphics' deferred batch...
-            _engine.TickDraw();
+            _engine.DrawAll();
 
-            // ...and now we replay them through the SSAA scene RT, the bloom mip chain, and the
-            // final composite into the backbuffer. MonoGame presents automatically after this returns.
             _graphics.RenderFrame();
         }
     }

@@ -139,6 +139,12 @@ namespace Barebone.Game.Physics
             angle = transform.q.GetAngle();
         }
 
+        public Vector2 GetVelocity(in BodyId bodyId)
+        {
+            var b2BodyId = GetB2BodyIdOrThrow(bodyId);
+            return B2Api.b2Body_GetLinearVelocity(b2BodyId);
+        }
+
         public void SetVelocity(in BodyId bodyId, in Vector2 velocity)
         {
             var b2BodyId = GetB2BodyIdOrThrow(bodyId);
