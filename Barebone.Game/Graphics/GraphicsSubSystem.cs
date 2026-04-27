@@ -60,6 +60,7 @@ namespace Barebone.Game.Graphics
             }
             _defaultFont.AppendString(true, _textTriangleBuffer, text, colorF, position, scale);
 
+            _pg.SetTransform(_worldTransform, _activeCamera.ScreenToWorldTransform);
             _pg.FillTriangles(_textTriangleBuffer.AsReadOnlySpan(), _defaultFont.Texture);
         }
 
@@ -75,10 +76,8 @@ namespace Barebone.Game.Graphics
 
         public void ResetWorldTransform()
         {
-            _worldTransform= Matrix3x2.Identity;
+            _worldTransform = Matrix3x2.Identity;
         }
-
-        public Matrix3x2 WorldTransform => _worldTransform;
 
         public void SetColorOnly()
         {
@@ -105,8 +104,6 @@ namespace Barebone.Game.Graphics
                 ScreenOrigin = screenOrigin
             };
         }
-
-        public ICamera Camera => _activeCamera;
 
         private void FillCircleInternal(in Vector2 center, in float radius, in int segmentCount, in Color color)
         {
@@ -194,6 +191,9 @@ namespace Barebone.Game.Graphics
             ViewportSize = viewportSize;
             BB.MessageBus.Publish(new ViewportSizeChanged(viewportSize));
         }
+
+        public ICamera Camera => _activeCamera;
+        public Matrix3x2 WorldTransform => _worldTransform;
 
         public void Dispose()
         {
