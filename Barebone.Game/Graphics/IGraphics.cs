@@ -38,6 +38,9 @@ namespace Barebone.Game.Graphics
         /// </summary>
         void SetWorldTransform(in Matrix3x2 world);
 
+        /// <summary>
+        /// Sets the world transform to zero translation, zero rotation and zero scaling. (= Identity matrix).
+        /// </summary>
         void ResetWorldTransform();
 
         /// <summary>

@@ -8,7 +8,7 @@ public static class GeometryExtensions
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Aabb ToAabb(this AabbI aabb)
     {
-        return new Aabb(aabb.MinCorner, aabb.MaxCorner);
+        return new Aabb(aabb.MinCorner, aabb.MaxCornerIncl);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

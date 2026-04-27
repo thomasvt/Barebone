@@ -274,8 +274,8 @@ namespace Barebone.UI.Controls
             {
                 if (field == value) return;
 
-                if (value.Width < 0) value.MaxCorner = value.MaxCorner with { X = value.MinCorner.X };
-                if (value.Height < 0) value.MaxCorner = value.MaxCorner with { Y = value.MinCorner.Y };
+                if (value.Width < 0) value.MaxCornerIncl = value.MaxCornerIncl with { X = value.MinCorner.X };
+                if (value.Height < 0) value.MaxCornerIncl = value.MaxCornerIncl with { Y = value.MinCorner.Y };
 
                 field = value;
                 InvalidateArrange();

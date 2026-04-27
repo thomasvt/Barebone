@@ -12,7 +12,7 @@ namespace Barebone.Spatial
             aabb = gridRange.GetIntersection(aabb);
 
             var offsetX = aabb.MinCorner.X - gridRange.MinCorner.X;
-            for (var y = aabb.MinCorner.Y; y < aabb.MaxCorner.Y; y++)
+            for (var y = aabb.MinCorner.Y; y < aabb.MaxCornerIncl.Y; y++)
             {
                 var offsetY = y - gridRange.MinCorner.Y;
                 var offset = offsetY * gridRange.Width + offsetX;

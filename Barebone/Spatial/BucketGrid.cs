@@ -91,8 +91,8 @@ namespace Barebone.Spatial
         public int Append(AabbI cellRange, BBList<T> buffer)
         {
             var count = 0;
-            for (var x = cellRange.MinCorner.X; x < cellRange.MaxCorner.X; x++)
-                for (var y = cellRange.MinCorner.Y; y < cellRange.MaxCorner.Y; y++)
+            for (var x = cellRange.MinCorner.X; x < cellRange.MaxCornerIncl.X; x++)
+                for (var y = cellRange.MinCorner.Y; y < cellRange.MaxCornerIncl.Y; y++)
                 {
                     if (x < 0 || x >= Size.X || y < 0 || y >= Size.Y) continue;
 
@@ -109,8 +109,8 @@ namespace Barebone.Spatial
         public int AppendNoCheck(AabbI cellRange, BBList<T> buffer)
         {
             var count = 0;
-            for (var x = cellRange.MinCorner.X; x < cellRange.MaxCorner.X; x++)
-            for (var y = cellRange.MinCorner.Y; y < cellRange.MaxCorner.Y; y++)
+            for (var x = cellRange.MinCorner.X; x < cellRange.MaxCornerIncl.X; x++)
+            for (var y = cellRange.MinCorner.Y; y < cellRange.MaxCornerIncl.Y; y++)
             {
                 var bucket = _buckets[x + y * Size.X];
                 buffer.AddBBList(bucket);
