@@ -13,6 +13,21 @@
         public virtual void Draw()
         {}
 
+        public T FindAncestorOrThrow<T>() where T : Component
+        {
+            return FindAncestor<T>() ?? throw new Exception($"Failed to find ancestor of type {typeof(T).Name}.");
+        }
+
+        public T? FindAncestor<T>() where T : Component
+        {
+            return Parent switch
+            {
+                null => null,
+                T t => t,
+                _ => Parent.FindAncestor<T>()
+            };
+        }
+
         public virtual void Dispose()
         {
         }
