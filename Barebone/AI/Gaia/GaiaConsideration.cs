@@ -1,6 +1,13 @@
-﻿namespace Barebone.AI.Gaia
+﻿
+namespace Barebone.AI.Gaia
 {
-    public record struct AIConsiderationWeights(float Addend, float Multiplier);
+    public record struct Weights(float Addend, float Multiplier)
+    {
+        /// <summary>
+        /// Prevents the option this Consideration is attached to from being picked.
+        /// </summary>
+        public static Weights Veto = new(0, 0);
+    }
 
     public abstract class GaiaConsideration
     {
@@ -9,9 +16,9 @@
             ConsiderationWeights = CalculateWeights();
         }
 
-        protected abstract AIConsiderationWeights CalculateWeights();
+        protected abstract Weights CalculateWeights();
 
-        public AIConsiderationWeights ConsiderationWeights { get; private set; } = default;
+        public Weights ConsiderationWeights { get; private set; } = default;
     }
 
     public class Tuning(float addend, float multiplier) : GaiaConsideration
@@ -19,7 +26,7 @@
         public Tuning(float multiplier, int rank) : this(1, multiplier)
         {}
 
-        protected override AIConsiderationWeights CalculateWeights()
+        protected override Weights CalculateWeights()
         {
             return new(addend, multiplier);
         }
@@ -30,7 +37,7 @@
     /// </summary>
     public class Veto() : GaiaConsideration
     {
-        protected override AIConsiderationWeights CalculateWeights()
+        protected override Weights CalculateWeights()
         {
             return new(0, 0);
         }

@@ -50,8 +50,4 @@
 
         internal float Score { get; private set; }
     }
-
-    public class NoopAction : GaiaAction
-    {
-    }
 }

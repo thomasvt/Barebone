@@ -6,5 +6,7 @@
         protected internal virtual void Update() { }
         protected internal virtual void OnLeave() { }
         protected internal virtual bool IsDone => true;
+
+        public static GaiaAction Noop = new NoopAction();
     }
 }
