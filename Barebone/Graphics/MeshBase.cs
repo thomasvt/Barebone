@@ -149,15 +149,17 @@ public abstract class MeshBase<TMesh, TTriangle, TVertex> : Poolable
     public TMesh FillCircleInZ(in Vector2 center, in float radius, in int segmentCount, in float z, in Color colorIn, in Color? colorOut = null, in float angleOffset = 0f)
     {
         var angleStep = Angles._360 / segmentCount;
-            
-        var p0 = new Vector2(MathF.Cos(angleOffset), MathF.Sin(angleOffset)) * radius;
+
+        var (sin, cos) = MathF.SinCos(angleOffset);
+        var p0 = new Vector2(cos, sin) * radius;
 
         var c = ToVertex(center.ToVector3(z), colorIn.ToGpuColor());
         var colorOutGpu = (colorOut ?? colorIn).ToGpuColor();
         for (var i = 1; i <= segmentCount; i++)
         {
             var a1 = angleOffset + i * angleStep;
-            var p1 = new Vector2(MathF.Cos(a1), MathF.Sin(a1)) * radius;
+            (sin, cos) = MathF.SinCos(a1);
+            var p1 = new Vector2(cos, sin) * radius;
 
             AddTriangle(c, ToVertex((center + p1).ToVector3(z), colorOutGpu), ToVertex((center + p0).ToVector3(z), colorOutGpu));
 

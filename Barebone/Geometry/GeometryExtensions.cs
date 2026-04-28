@@ -287,7 +287,8 @@ public static class GeometryExtensions
 
         public Vector2 AngleToVector2(float length = 1f)
         {
-            return new Vector2(MathF.Cos(angle), MathF.Sin(angle)) * length;
+            var (s, c) = MathF.SinCos(angle);
+            return new Vector2(c * length, s * length);
         }
     }
 }

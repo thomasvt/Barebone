@@ -17,7 +17,8 @@ namespace BareBone.Random
         public static Vector2 PickUnitVector2(this Seed seed, float minAngle, float maxAngle)
         {
             var a = PickFloat(seed, minAngle, maxAngle);
-            return new Vector2(MathF.Cos(a), MathF.Sin(a));
+            var (s, c) = MathF.SinCos(a);
+            return new Vector2(c, s);
         }
 
         /// <summary>
@@ -26,7 +27,8 @@ namespace BareBone.Random
         public static Vector2 PickUnitVector2(this Seed seed)
         {
             var a = PickFloat(seed) * MathF.Tau;
-            return new Vector2(MathF.Cos(a), MathF.Sin(a));
+            var (s, c) = MathF.SinCos(a);
+            return new Vector2(c, s);
         }
         
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

@@ -3,9 +3,6 @@ using System.Numerics;
 using Barebone.Geometry;
 using Barebone.Graphics.Gpu;
 using Barebone.Graphics.Sprites;
-using Barebone.Graphics.Text;
-using Barebone.UI.Controls;
-using Barebone.UI.Text;
 
 namespace Barebone.Graphics
 {
