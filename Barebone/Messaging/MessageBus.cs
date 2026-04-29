@@ -4,24 +4,27 @@
     {
         public delegate void Handler<TMessage>(in TMessage message) where TMessage : struct;
 
-        private readonly Dictionary<Type, List<object>> _handlersPerMessageType = new();
+        private readonly Dictionary<Type, object> _handlers = new();
 
         public void Subscribe<TMessage>(Handler<TMessage> handler) where TMessage : struct
         {
             var messageType = typeof(TMessage);
-            if (!_handlersPerMessageType.TryGetValue(messageType, out var handlers))
+
+            if (!_handlers.TryGetValue(messageType, out var handlerList))
             {
-                _handlersPerMessageType.Add(messageType, handlers = new List<object>());
+                _handlers.Add(messageType, handlerList = new List<Handler<TMessage>>());
             }
-            handlers.Add(handler);
+            ((List<Handler<TMessage>>)handlerList).Add(handler);
         }
 
         public void Publish<TMessage>(in TMessage message) where TMessage : struct
         {
             var messageType = typeof(TMessage);
-            if (_handlersPerMessageType.TryGetValue(messageType, out var handlers))
+
+            if (_handlers.TryGetValue(messageType, out var handlerList))
             {
-                foreach (Handler<TMessage> handler in handlers)
+                var handlers = (List<Handler<TMessage>>)handlerList;
+                foreach (var handler in handlers)
                     handler.Invoke(in message);
             }
         }

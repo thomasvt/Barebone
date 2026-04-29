@@ -38,7 +38,7 @@ namespace Barebone
         }
 
         /// <summary>
-        /// Enqueues this item to be added the next time you call ApplyChanges(). If item is IOnAdded, its OnAdded() will be invoked when that happens.
+        /// Enqueues this item to be added the next time you call ApplyChanges().
         /// </summary>
         public void Add(T item)
         {
@@ -46,7 +46,7 @@ namespace Barebone
         }
 
         /// <summary>
-        /// Enqueues this item to be removed the next time you call ApplyChanges(). If item is IOnRemoved, its OnRemoved() will be invoked when that happens.
+        /// Enqueues this item to be removed the next time you call ApplyChanges().
         /// </summary>
         public void Remove(T item)
         {
@@ -79,8 +79,8 @@ namespace Barebone
                         OnAdded?.Invoke(command.Item!);
                         break;
                     case MutationType.Remove:
+                        OnRemoving?.Invoke(command.Item!);
                         _list.Remove(command.Item!, returnPoolableItems);
-                        OnRemoved?.Invoke(command.Item!);
                         break;
                     default: throw new ArgumentOutOfRangeException();
                 }
@@ -135,6 +135,6 @@ namespace Barebone
         }
 
         public Action<T>? OnAdded { get; set; }
-        public Action<T>? OnRemoved { get; set; }
+        public Action<T>? OnRemoving { get; set; }
     }
 }

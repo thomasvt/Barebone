@@ -11,5 +11,10 @@
         }
 
         public float Middle => (Max + Min) * 0.5f;
+
+        public override string ToString()
+        {
+            return $"{Min}:{Max}";
+        }
     }
 }

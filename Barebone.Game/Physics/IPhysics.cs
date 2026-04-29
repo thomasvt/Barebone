@@ -37,5 +37,7 @@ namespace Barebone.Game.Physics
         /// Detaches a shape from the body and destroys it.
         /// </summary>
         void DestroyShape(ShapeId shapeId);
+
+        unsafe void QueryShapes(in Aabb aabb, BBList<ShapeId> shapeBuffer);
     }
 }

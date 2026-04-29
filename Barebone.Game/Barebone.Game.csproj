@@ -4,19 +4,16 @@
     <TargetFramework>net10.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="Box2dNet" Version="3.1.8.9" />
   </ItemGroup>
 
- 
-
-  <ItemGroup>
+ <ItemGroup>
     <ProjectReference Include="..\Barebone\Barebone.csproj" />
   </ItemGroup>
-
- 
 
   <ItemGroup>
     <None Update="UbuntuMono32.fnt">

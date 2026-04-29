@@ -1,6 +1,6 @@
 ﻿using System.Numerics;
+using System.Runtime.InteropServices;
 using Barebone.Geometry;
-using Barebone.Graphics.NodeArt.Core;
 using Barebone.Pools;
 using Box2dNet.Interop;
 
@@ -34,6 +34,8 @@ namespace Barebone.Game.Physics
         private readonly Dictionary<ShapeId, b2ShapeId> _b2ShapeIdsByShapeId = new();
         private readonly Dictionary<b2ShapeId, ShapeId> _shapeIdsByB2ShapeId = new();
 
+        private readonly BBList<b2ShapeId> _b2ShapeIdBuffer = new();
+
         public PhysicsSubSystem()
         {
             var def = B2Api.b2DefaultWorldDef();
@@ -45,7 +47,7 @@ namespace Barebone.Game.Physics
         {
             return B2Api.b2World_GetGravity(_b2WorldId);
         }
-        
+
         public void SetGravity(in Vector2 gravity)
         {
             B2Api.b2World_SetGravity(_b2WorldId, gravity);
@@ -95,7 +97,7 @@ namespace Barebone.Game.Physics
 
             var b2ShapeId = B2Api.b2CreateCircleShape(b2BodyId, def, new b2Circle(center ?? Vector2.Zero, radius));
             RegisterShape(b2ShapeId, shapeId);
-            
+
             return shapeId;
         }
 
@@ -156,6 +158,37 @@ namespace Barebone.Game.Physics
             var b2BodyId = GetB2BodyIdOrThrow(bodyId);
 
             B2Api.b2Body_SetLinearVelocity(b2BodyId, velocity);
+        }
+
+        public void QueryShapes(in Aabb aabb, BBList<ShapeId> shapeBuffer)
+        {
+            _b2ShapeIdBuffer.Clear();
+
+            var b2Aabb = new b2AABB(aabb.MinCorner, aabb.MaxCorner);
+            var filter = new b2QueryFilter(ulong.MaxValue, ulong.MaxValue);
+
+            var handle = GCHandle.Alloc(_b2ShapeIdBuffer);
+            try
+            {
+                B2Api.b2World_OverlapAABB(_b2WorldId, b2Aabb, filter, b2WorldOverlapAabbCallbackPtr, (IntPtr)handle);
+            }
+            finally
+            {
+                handle.Free();
+            }
+
+            shapeBuffer.Clear();
+            foreach (var b2ShapeId in _b2ShapeIdBuffer.AsReadOnlySpan())
+                shapeBuffer.Add(_shapeIdsByB2ShapeId[b2ShapeId]);
+        }
+
+
+        private readonly static IntPtr b2WorldOverlapAabbCallbackPtr = Marshal.GetFunctionPointerForDelegate<b2OverlapResultFcn>(b2World_OverlapAABB_Callback);
+        private static bool b2World_OverlapAABB_Callback(b2ShapeId b2ShapeId, IntPtr context)
+        {
+            var ctx = (BBList<b2ShapeId>)GCHandle.FromIntPtr(context).Target!;
+            ctx.Add(b2ShapeId);
+            return true; // continue query
         }
 
         public void Clear()
@@ -227,6 +260,7 @@ namespace Barebone.Game.Physics
 
         public void Dispose()
         {
+            _b2ShapeIdBuffer.Dispose();
             B2Api.b2DestroyWorld(_b2WorldId);
         }
     }

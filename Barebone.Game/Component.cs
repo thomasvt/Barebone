@@ -1,4 +1,6 @@
-﻿namespace Barebone.Game
+﻿using System.Diagnostics.CodeAnalysis;
+
+namespace Barebone.Game
 {
     public abstract class Component
     {
@@ -18,6 +20,12 @@
             return FindAncestor<T>() ?? throw new Exception($"Failed to find ancestor of type {typeof(T).Name}.");
         }
 
+        public bool TryFindAncestor<T>([MaybeNullWhen(false)] out T ancestor) where T : Component
+        {
+            ancestor = FindAncestor<T>();
+            return ancestor != null;
+        }
+
         public T? FindAncestor<T>() where T : Component
         {
             return Parent switch
@@ -25,6 +33,26 @@
                 null => null,
                 T t => t,
                 _ => Parent.FindAncestor<T>()
+            };
+        }
+
+        public T FindSiblingOrThrow<T>() where T : Component
+        {
+            return FindSibling<T>() ?? throw new Exception($"Failed to find sibling component/actor of type {typeof(T).Name}.");
+        }
+
+        public bool TryFindSibling<T>([MaybeNullWhen(false)] out T sibling) where T : Component
+        {
+            sibling = FindSibling<T>();
+            return sibling != null;
+        }
+
+        public T? FindSibling<T>() where T : Component
+        {
+            return Parent switch
+            {
+                Actor a => a.FindChild<T>(),
+                _ => null
             };
         }
 

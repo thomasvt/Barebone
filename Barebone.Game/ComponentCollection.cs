@@ -1,28 +1,26 @@
-﻿using System.ComponentModel;
-
-namespace Barebone.Game
+﻿namespace Barebone.Game
 {
     /// <summary>
-    /// Speciialized collection for game objects with low GC pressure, deferred collection mutations and support for Update and Draw operations on the actors.
-    /// Actors must implement <see cref="IUpdate"/>, <see cref="IDraw"/>, <see cref="IOnAdded"/> and/or <see cref="IOnRemoved"/> to subscribe to those hooks.
+    /// Specialized collection for game objects with low GC pressure, deferred collection mutations and support for Update and Draw operations on the actors.
     /// </summary>
     internal class ComponentCollection : IDisposable, IComponentCollection
     {
         private readonly BBListDeferred<Component> _components;
 
-        public ComponentCollection()
+        public ComponentCollection(Actor parent)
         {
+            Parent = parent;
             _components = new()
             {
                 OnAdded = OnComponentAdded,
-                OnRemoved = OnComponentRemoved
+                OnRemoving = OnComponentRemoving
             };
         }
 
-        private void OnComponentRemoved(Component c)
+        private void OnComponentRemoving(Component c)
         {
-            c.Parent = null;
             (c as IDisposable)?.Dispose();
+            c.Parent = null;
         }
 
         private void OnComponentAdded(Component c)
@@ -31,7 +29,7 @@ namespace Barebone.Game
             c.OnAdded();
         }
 
-        public Component Parent { get; internal set; }
+        public Component Parent { get; }
 
         public T1 Add<T1>(T1 component) where T1: Component
         {
@@ -73,6 +71,19 @@ namespace Barebone.Game
         {
             foreach (var entity in _components.AsReadOnlySpan())
                 entity.Draw();
+        }
+
+        public T? Find<T>() where T : Component
+        {
+            foreach (var c in _components.AsReadOnlySpan())
+                if (c is T t) return t;
+
+            return null;
+        }
+
+        public ReadOnlySpan<Component> AsSpan()
+        {
+            return _components.AsReadOnlySpan();
         }
 
         public void Dispose()

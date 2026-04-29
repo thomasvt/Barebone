@@ -1,4 +1,6 @@
 ﻿
+using System.Diagnostics.CodeAnalysis;
+
 namespace Barebone.Game
 {
     /// <summary>
@@ -11,10 +13,13 @@ namespace Barebone.Game
 
         public Actor()
         {
-            _children = new()
-            {
-                Parent = this
-            };
+            _children = new(this);
+        }
+
+        public override void OnAdded()
+        {
+            foreach (var c in Children.AsSpan())
+                c.OnAdded();
         }
 
         public override void Draw()
@@ -29,9 +34,25 @@ namespace Barebone.Game
             base.Update();
         }
 
-        public void Dispose()
+        public virtual void Dispose()
         {
             _children.Dispose();
+        }
+
+        public bool TryFindChild<T>([MaybeNullWhen(false)] out T child) where T : Component
+        {
+            child = FindChild<T>();
+            return child != null;
+        }
+
+        public T? FindChild<T>() where T : Component
+        {
+            return Children.Find<T>();
+        }
+
+        public T FindChildOrThrow<T>() where T : Component
+        {
+            return Children.Find<T>() ?? throw new Exception($"No child of type '{typeof(T).Name}' found.");
         }
     }
 }

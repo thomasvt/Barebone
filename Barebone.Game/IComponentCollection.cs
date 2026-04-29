@@ -1,4 +1,6 @@
-﻿namespace Barebone.Game
+﻿using System.Collections;
+
+namespace Barebone.Game
 {
     public interface IComponentCollection
     {
@@ -24,5 +26,8 @@
         /// Triggers Draw() on all entities.
         /// </summary>
         void DrawAll();
+
+        T? Find<T>() where T : Component;
+        ReadOnlySpan<Component> AsSpan();
     }
 }
