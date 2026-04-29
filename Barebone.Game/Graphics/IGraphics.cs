@@ -8,8 +8,8 @@ namespace Barebone.Game.Graphics
     public interface IGraphics
     {
         void ClearScreen(in Color color);
-        void FillPolygon(in Polygon8 polygon, in Color? color = null);
-        void FillCircle(Vector2 center, float radius, in int segmentCount, in Color color);
+        void FillPolygon(in Polygon8 polygon, in Color? color = null, in int zLayer = 0);
+        void FillCircle(Vector2 center, float radius, in int segmentCount, in Color color, in int zLayer = 0);
 
         /// <summary>
         /// The following draw calls will only use vertex colors. No textures.
@@ -24,7 +24,7 @@ namespace Barebone.Game.Graphics
         /// Set a texture for projection onto your subsequent drawing of geometry, using the uvTransform for controlling that projection.
         /// </summary>
         void SetTexture(in ITexture texture, in Matrix3x2 projection);
-        void DrawText(Vector2 position, in string text, in Color color, in float scale = 1f, bool center = false);
+        void DrawText(Vector2 position, in string text, in Color color, in float scale = 1f, bool center = false, in int zLayer = 0);
         /// <summary>
         /// Sets the camera to use for subsequent rendering.
         /// </summary>

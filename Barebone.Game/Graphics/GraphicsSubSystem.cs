@@ -39,17 +39,17 @@ namespace Barebone.Game.Graphics
             _pg.ClearScreen(color);
         }
 
-        public void FillPolygon(in Polygon8 polygon, in Color? color = null)
+        public void FillPolygon(in Polygon8 polygon, in Color? color = null, in int zLayer = 0)
         {
-            FillPolygonInternal(polygon, color ?? Color.White);
+            FillPolygonInternal(polygon, color ?? Color.White, zLayer);
         }
 
-        public void FillCircle(Vector2 center, float radius, in int segmentCount, in Color color)
+        public void FillCircle(Vector2 center, float radius, in int segmentCount, in Color color, in int zLayer = 0)
         {
-            FillCircleInternal(center, radius, segmentCount, color);
+            FillCircleInternal(center, radius, segmentCount, color, zLayer);
         }
 
-        public void DrawText(Vector2 position, in string text, in Color color, in float scale = 1f, bool center = false)
+        public void DrawText(Vector2 position, in string text, in Color color, in float scale = 1f, bool center = false, in int zLayer = 0)
         {
             _textTriangleBuffer.Clear();
             var colorF = ColorF.FromColor(color);
@@ -61,7 +61,7 @@ namespace Barebone.Game.Graphics
             _defaultFont.AppendString(true, _textTriangleBuffer, text, colorF, position, scale);
 
             _pg.SetTransform(_worldTransform, _activeCamera.WorldToScreenTransform);
-            _pg.FillTriangles(_textTriangleBuffer.AsReadOnlySpan(), _defaultFont.Texture);
+            _pg.FillTriangles(_textTriangleBuffer.AsReadOnlySpan(), _defaultFont.Texture, zLayer);
         }
 
         public void SetCamera(in ICamera camera)
@@ -105,7 +105,7 @@ namespace Barebone.Game.Graphics
             };
         }
 
-        private void FillCircleInternal(in Vector2 center, in float radius, in int segmentCount, in Color color)
+        private void FillCircleInternal(in Vector2 center, in float radius, in int segmentCount, in Color color, in int zLayer = 0)
         {
             var colorF = ColorF.FromColor(color);
 
@@ -136,10 +136,10 @@ namespace Barebone.Game.Graphics
             }
 
             _pg.SetTransform(_worldTransform, _activeCamera.WorldToScreenTransform);
-            _pg.FillTriangles(vertices, _texture);
+            _pg.FillTriangles(vertices, _texture, zLayer);
         }
 
-        private void FillPolygonInternal(in Polygon8 polygon, in Color color)
+        private void FillPolygonInternal(in Polygon8 polygon, in Color color, in int zLayer = 0)
         {
             var colorF = ColorF.FromColor(color);
 
@@ -163,7 +163,7 @@ namespace Barebone.Game.Graphics
             }
 
             _pg.SetTransform(_worldTransform, _activeCamera.WorldToScreenTransform);
-            _pg.FillTriangles(vertices, _texture);
+            _pg.FillTriangles(vertices, _texture, zLayer);
         }
 
         public Matrix3x2 CalculateTextureProjection(in ITexture texture, in Vector2 textureOrigin, in float texelsPerUnit)

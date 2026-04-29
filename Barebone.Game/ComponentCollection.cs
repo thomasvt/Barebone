@@ -1,4 +1,6 @@
-﻿namespace Barebone.Game
+﻿using System.ComponentModel;
+
+namespace Barebone.Game
 {
     /// <summary>
     /// Speciialized collection for game objects with low GC pressure, deferred collection mutations and support for Update and Draw operations on the actors.
@@ -6,13 +8,33 @@
     /// </summary>
     internal class ComponentCollection : IDisposable, IComponentCollection
     {
-        private readonly BBListDeferred<Component> _components = new()!;
+        private readonly BBListDeferred<Component> _components;
+
+        public ComponentCollection()
+        {
+            _components = new()
+            {
+                OnAdded = OnComponentAdded,
+                OnRemoved = OnComponentRemoved
+            };
+        }
+
+        private void OnComponentRemoved(Component c)
+        {
+            c.Parent = null;
+            (c as IDisposable)?.Dispose();
+        }
+
+        private void OnComponentAdded(Component c)
+        {
+            c.Parent = Parent;
+            c.OnAdded();
+        }
 
         public Component Parent { get; internal set; }
 
         public T1 Add<T1>(T1 component) where T1: Component
         {
-            component.Parent = Parent;
             _components.Add(component);
             return component;
         }
@@ -22,7 +44,6 @@
         /// </summary>
         public void Remove(Component component)
         {
-            component.Parent = null;
             _components.Remove(component);
         }
 

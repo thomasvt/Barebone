@@ -2,11 +2,6 @@
 
 namespace Barebone
 {
-    public interface IOnAdded
-    {
-        void OnAdded();
-    }
-
     /// <summary>
     /// A BBList that defers all mutations to the controlled moment when ApplyChanges() is called. Removals maintain order of the remaining items.
     /// Can be used both in Poolable or classic IDisposable pattern.
@@ -15,10 +10,10 @@ namespace Barebone
     {
         internal enum MutationType { Add, Remove }
 
-        internal readonly record struct Mutation<T>(MutationType Type, T? Item);
+        internal readonly record struct Mutation(MutationType Type, T? Item);
 
         private BBList<T> _list = null!;
-        private IBBQueue<Mutation<T>> _queue = null!;
+        private IBBQueue<Mutation> _queue = null!;
 
         public BBListDeferred()
         {
@@ -31,7 +26,7 @@ namespace Barebone
             _list = Pool.Rent<BBList<T>>();
 
             _queue?.Return();
-            _queue = Pool.Rent<BBList<Mutation<T>>>().AsQueue();
+            _queue = Pool.Rent<BBList<Mutation>>().AsQueue();
         }
 
         protected internal override void Destruct()
@@ -81,11 +76,11 @@ namespace Barebone
                 {
                     case MutationType.Add:
                         _list.Add(command.Item!);
-                        (command.Item as IOnAdded)?.OnAdded();
+                        OnAdded?.Invoke(command.Item!);
                         break;
                     case MutationType.Remove:
                         _list.Remove(command.Item!, returnPoolableItems);
-                        (command.Item as IDisposable)?.Dispose();
+                        OnRemoved?.Invoke(command.Item!);
                         break;
                     default: throw new ArgumentOutOfRangeException();
                 }
@@ -138,5 +133,8 @@ namespace Barebone
         {
             Destruct();
         }
+
+        public Action<T>? OnAdded { get; set; }
+        public Action<T>? OnRemoved { get; set; }
     }
 }

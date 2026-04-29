@@ -14,14 +14,12 @@
         private GaiaOption? _currentOption = null;
         public void Update()
         {
-            if (_currentOption == null || _currentOption.Action.IsDone)
+            if (_currentOption == null || _currentOption.Action.Interruptable)
             {
                 var option = ChooseBestOption();
                 if (option != _currentOption)
                 {
-                    if (Debug && _currentOption != null)
-                        Console.WriteLine("LEAVE " + _currentOption.Name);
-                    _currentOption?.Action.OnLeave();
+                    LeaveCurrentOption();
 
                     _currentOption = option;
 
@@ -31,14 +29,31 @@
                 }
             }
 
-            _currentOption?.Action.Update();
+            if (_currentOption != null)
+            {
+                if (_currentOption.Action.IsDone)
+                    LeaveCurrentOption();
+                else
+                    _currentOption?.Action.Update();
+            }
+        }
+
+        private void LeaveCurrentOption()
+        {
+            if (_currentOption == null) return;
+
+            if (Debug)
+                Console.WriteLine("LEAVE " + _currentOption.Name);
+
+            _currentOption?.Action.OnLeave();
+            _currentOption = null;
         }
 
         private GaiaOption? ChooseBestOption()
         {
             CollectCandidatesOfHighestRankOnly();
-            
-            _candidates.Sort((a, b) => b.Score.CompareTo(a.Score)); // sort by descending score.
+
+            _candidates.Sort((a, b) => b.Weight.CompareTo(a.Weight)); // sort by descending score.
 
             return _candidates.FirstOrDefault(); // todo remove all less than 90% of winner's score and pick among remaining candidates by weighted random.
         }
@@ -53,21 +68,21 @@
                 if (option.Rank >= highestRank)
                 {
                     option.Calculate();
-                    if (option.Score > 0)
+                    if (option.Weight > 0)
                     {
                         if (option.Rank > highestRank)
                         {
                             // new maxrank found!
                             // all previous candidates' rank is now too low, so restart candidate tracking with the current option as the first candidate.
-                            _candidates.Clear(); 
+                            _candidates.Clear();
                             _candidates.Add(option);
-                            highestScore = option.Score;
+                            highestScore = option.Weight;
                             highestRank = option.Rank;
                         }
                         else
                         {
                             _candidates.Add(option);
-                            highestScore = MathF.Max(highestScore, option.Score);
+                            highestScore = MathF.Max(highestScore, option.Weight);
                         }
                     }
                 }

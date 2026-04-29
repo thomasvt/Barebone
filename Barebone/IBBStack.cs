@@ -22,6 +22,8 @@ namespace Barebone
         /// </summary>
         T Peek();
 
+        bool Any { get; }
+
         /// <summary>
         /// Clears the collection. Optionally frees the allocated capacity memory.
         /// </summary>

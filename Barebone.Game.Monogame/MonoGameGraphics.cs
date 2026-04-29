@@ -1,5 +1,4 @@
 using System.Numerics;
-using System.Runtime.InteropServices;
 using Barebone.Game.Graphics;
 using Barebone.Geometry;
 using Barebone.Graphics;
@@ -12,6 +11,16 @@ using ScreenColor = System.Drawing.Color;
 
 namespace Barebone.Game.Monogame
 {
+    internal struct DrawCommand
+    {
+        public int FirstVertex;
+        public int VertexCount;
+        public Texture2D? Texture;
+        public Matrix3x2 World;
+        public Matrix3x2 Camera;
+        public int Z;
+    }
+
     /// <summary>
     /// MonoGame-based <see cref="IPlatformGraphics"/> with manual SSAA antialiasing and mip-chain bloom.
     /// Draws are buffered during the frame and replayed in <see cref="RenderFrame"/>:
@@ -46,7 +55,7 @@ namespace Barebone.Game.Monogame
         private int _vertexCapacity;
         private Vertex[] _cpuVertices = new Vertex[4096];
         private int _cpuVertexCount;
-        private readonly List<DrawCommand> _drawCommandQueue = new(256);
+        private readonly IBBQueue<DrawCommand> _drawCommandQueue = new BBList<DrawCommand>().AsQueue();
 
         private Vector2I _backbufferSize;
         private Vector2I _scene2XSize;
@@ -92,15 +101,6 @@ namespace Barebone.Game.Monogame
 
             EnsureVertexBuffer(4096);
         }
-
-        private struct DrawCommand
-        {
-            public int FirstVertex;
-            public int VertexCount;
-            public Texture2D? Texture;
-            public Matrix3x2 World;
-            public Matrix3x2 Camera;
-        }
         
         public void ClearScreen(in ScreenColor color)
         {
@@ -115,20 +115,21 @@ namespace Barebone.Game.Monogame
             _currentCamera = cameraTransform;
         }
 
-        public void FillTriangles(in ReadOnlySpan<Vertex> vertices, ITexture? texture)
+        public void FillTriangles(in ReadOnlySpan<Vertex> vertices, ITexture? texture, in int zLayer)
         {
             if (vertices.Length == 0) return;
 
             EnsureCpuVertexCapacity(_cpuVertexCount + vertices.Length);
             vertices.CopyTo(_cpuVertices.AsSpan(_cpuVertexCount));
 
-            _drawCommandQueue.Add(new DrawCommand
+            _drawCommandQueue.Enqueue(new DrawCommand
             {
                 FirstVertex = _cpuVertexCount,
                 VertexCount = vertices.Length,
                 Texture = (texture as MonoGameTexture)?.Texture,
                 World = _currentWorld,
                 Camera = _currentCamera,
+                Z = zLayer
             });
 
             _cpuVertexCount += vertices.Length;
@@ -169,7 +170,7 @@ namespace Barebone.Game.Monogame
             if (_drawCommandQueue.Count == 0) return;
 
             _gd.BlendState = BlendState.NonPremultiplied;
-            _gd.DepthStencilState = DepthStencilState.None;
+            _gd.DepthStencilState = DepthStencilState.Default;
             _gd.RasterizerState = RasterizerState.CullNone;
             _gd.SamplerStates[0] = SamplerState.LinearClamp;
 
@@ -181,10 +182,10 @@ namespace Barebone.Game.Monogame
             var projection = XnaMatrix.CreateOrthographicOffCenter(0, backbufferWidth, backbufferHeight, 0, 0, 1);
             _spriteEffect.Projection.SetValue(projection);
 
-            for (var i = 0; i < _drawCommandQueue.Count; i++)
+            while (_drawCommandQueue.Any)
             {
-                ref var di = ref CollectionsMarshal.AsSpan(_drawCommandQueue)[i];
-                _spriteEffect.World.SetValue(ToXnaMatrix(di.World));
+                var di = _drawCommandQueue.Dequeue();
+                _spriteEffect.World.SetValue(ToXnaMatrix(di.World, di.Z));
                 _spriteEffect.View.SetValue(ToXnaMatrix(di.Camera));
                 _spriteEffect.Texture.SetValue(di.Texture ?? _whiteTexture);
                 _spriteEffect.Apply();
@@ -331,18 +332,13 @@ namespace Barebone.Game.Monogame
             return new MonoGameTexture(tex);
         }
 
-        /// <summary>
-        /// Lifts the 2D matrix to the 4x4 which XNA needs.
-        /// </summary>
-        /// <param name="m"></param>
-        /// <returns></returns>
-        private static XnaMatrix ToXnaMatrix(in Matrix3x2 m)
+        private static XnaMatrix ToXnaMatrix(in Matrix3x2 m, float z = 0)
         {
             return new XnaMatrix(
                 m.M11, m.M12, 0, 0,
                 m.M21, m.M22, 0, 0,
-                0,     0,     1, 0,
-                m.M31, m.M32, 0, 1);
+                0, 0, 1, 0,
+                m.M31, m.M32, z, 1);
         }
 
         public void Dispose()

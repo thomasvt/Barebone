@@ -1,6 +1,6 @@
 ﻿namespace Barebone.Game
 {
-    public abstract class Component : IDisposable
+    public abstract class Component
     {
         private static ulong _nextId = 1;
         public readonly ulong Id = _nextId++;
@@ -28,7 +28,7 @@
             };
         }
 
-        public virtual void Dispose()
+        public virtual void OnAdded()
         {
         }
     }

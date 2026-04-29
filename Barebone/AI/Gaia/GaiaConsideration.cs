@@ -11,14 +11,26 @@ namespace Barebone.AI.Gaia
 
     public abstract class GaiaConsideration
     {
-        internal void Calculate()
+        private bool _inverted;
+
+        internal void CalculateWeight()
         {
-            ConsiderationWeights = CalculateWeights();
+            var weights = CalculateWeights();
+            if (_inverted)
+                weights.Multiplier = 1f - weights.Multiplier;
+
+            Weights = weights;
         }
 
         protected abstract Weights CalculateWeights();
 
-        public Weights ConsiderationWeights { get; private set; } = default;
+        public GaiaConsideration Invert()
+        {
+            _inverted = true;
+            return this;
+        }
+
+        public Weights Weights { get; private set; } = default;
     }
 
     public class Tuning(float addend, float multiplier) : GaiaConsideration

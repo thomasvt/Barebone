@@ -4,7 +4,7 @@ namespace Barebone.Game
     /// <summary>
     /// A Component with children.
     /// </summary>
-    public class Actor : Component
+    public class Actor : Component, IDisposable
     {
         private readonly ComponentCollection _children;
         public IComponentCollection Children => _children;
@@ -29,10 +29,9 @@ namespace Barebone.Game
             base.Update();
         }
 
-        public override void Dispose()
+        public void Dispose()
         {
             _children.Dispose();
-            base.Dispose();
         }
     }
 }

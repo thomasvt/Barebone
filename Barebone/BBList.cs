@@ -13,10 +13,51 @@ namespace Barebone
     /// * SwapRemove: removes a range of items by moving items from the back of the list over the range to remove.
     /// * AddSpan: performs ranged memory-copy instead of items 1 by 1.
     /// </summary>
-    public sealed class BBList<T> : Poolable, IBBQueue<T>, IBBStack<T>, IDisposable
+    public sealed class BBList<T> : Poolable, IBBQueue<T>, IBBStack<T>
     {
         private T[] _items = [];
         public int Count { get; private set; } = 0;
+        public bool Any => Count > 0;
+
+        public T First => Count > 0 ? _items[0] : throw new Exception("BBList is empty.");
+        public T Last => Count > 0 ? _items[^1] : throw new Exception("BBList is empty.");
+
+        public int Capacity
+        {
+            get => _items.Length;
+            private set => SetCapacity(value);
+        }
+
+        /// <summary>
+        /// The underlying array. Mind that the length of this array is often bigger than Count because it's the Capacity of this GrowArray.
+        /// </summary>
+        public T[] InternalArray => _items;
+        public bool IsEmpty => Count == 0;
+
+        /// <summary>
+        /// Direct access to the items as a Span.
+        /// </summary>
+        public Span<T> AsSpan() => _items.AsSpan(0, Count);
+
+        /// <summary>
+        /// Direct access to the items as a Span.
+        /// </summary>
+        public ReadOnlySpan<T> AsReadOnlySpan() => _items.AsSpan(0, Count);
+
+        /// <summary>
+        /// Direct access to the items as an <see cref="ArraySegment{T}"/>.
+        /// </summary>
+        public ArraySegment<T> AsArraySegment() => new(_items, 0, Count);
+
+        /// <summary>
+        /// Allows to use this BBList as a queue only. This prevents you from using queue-breaking features of BBList.
+        /// </summary>
+        public IBBQueue<T> AsQueue() => this;
+
+        /// <summary>
+        /// Allows to use this BBList as a stack only. This prevents you from using stack-breaking features of BBList.
+        /// </summary>
+        public IBBStack<T> AsStack() => this;
 
         protected internal override void Construct()
         {
@@ -334,59 +375,31 @@ namespace Barebone
             return AsReadOnlySpan().ToArray();
         }
 
-        public T First => Count > 0 ? _items[0] : throw new Exception("BBList is empty.");
-        public T Last => Count > 0 ? _items[^1] : throw new Exception("BBList is empty.");
-
-        public int Capacity
+        private void SetCapacity(int value)
         {
-            get => _items.Length;
-            private set
+            if (value < Count)
+                throw new Exception("Cannot set capacity lower than items in this GrowArray.");
+
+            if (value != _items.Length)
             {
-                if (value < Count)
-                    throw new Exception("Cannot set capacity lower than items in this GrowArray.");
-
-                if (value != _items.Length)
+                if (value > 0)
                 {
-                    if (value > 0)
+                    var newItems = ArrayPool<T>.Shared.Rent(value);
+                    if (Count > 0)
                     {
-                        var newItems = ArrayPool<T>.Shared.Rent(value);
-                        if (Count > 0)
-                        {
-                            Array.Copy(_items, newItems, Count);
-                        }
+                        Array.Copy(_items, newItems, Count);
+                    }
 
-                        if (_items.Length > 0)
-                            ArrayPool<T>.Shared.Return(_items);
-                        _items = newItems;
-                    }
-                    else
-                    {
-                        _items = [];
-                    }
+                    if (_items.Length > 0)
+                        ArrayPool<T>.Shared.Return(_items);
+                    _items = newItems;
+                }
+                else
+                {
+                    _items = [];
                 }
             }
         }
-
-        /// <summary>
-        /// The underlying array. Mind that the length of this array is often bigger than Count because it's the Capacity of this GrowArray.
-        /// </summary>
-        public T[] InternalArray => _items;
-        public bool IsEmpty => Count == 0;
-
-        /// <summary>
-        /// Direct access to the items as a Span.
-        /// </summary>
-        public Span<T> AsSpan() => _items.AsSpan(0, Count);
-
-        /// <summary>
-        /// Direct access to the items as a Span.
-        /// </summary>
-        public ReadOnlySpan<T> AsReadOnlySpan() => _items.AsSpan(0, Count);
-
-        /// <summary>
-        /// Direct access to the items as an <see cref="ArraySegment{T}"/>.
-        /// </summary>
-        public ArraySegment<T> AsArraySegment() => new(_items, 0, Count);
 
         public bool Contains(T item)
         {
@@ -425,16 +438,6 @@ namespace Barebone
         {
             Array.Reverse(_items, 0, Count);
         }
-
-        /// <summary>
-        /// Allows to use this BBList as a queue only. This prevents you from using queue-breaking features of BBList.
-        /// </summary>
-        public IBBQueue<T> AsQueue() => this;
-
-        /// <summary>
-        /// Allows to use this BBList as a stack only. This prevents you from using stack-breaking features of BBList.
-        /// </summary>
-        public IBBStack<T> AsStack() => this;
 
         public void DisposeItems()
         {

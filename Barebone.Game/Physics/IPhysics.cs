@@ -32,5 +32,10 @@ namespace Barebone.Game.Physics
         /// </summary>
         /// <param name="subStepCount">Substeps to simulate, this increases quality of the simulation but also the calculation cost.</param>
         void Step(float deltaT, int subStepCount);
+
+        /// <summary>
+        /// Detaches a shape from the body and destroys it.
+        /// </summary>
+        void DestroyShape(ShapeId shapeId);
     }
 }

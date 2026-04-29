@@ -21,7 +21,7 @@
             var multiplierProduct = 0f;
             foreach (var consideration in _considerations)
             {
-                consideration.Calculate();
+                consideration.CalculateWeight();
 
                 // keep track of:
                 // * max(rank)
@@ -29,25 +29,28 @@
                 // * product of all multipliers: Π(multipliers)
                 if (isFirst)
                 {
-                    addendsSum = consideration.ConsiderationWeights.Addend;
-                    multiplierProduct = consideration.ConsiderationWeights.Multiplier;
+                    addendsSum = consideration.Weights.Addend;
+                    multiplierProduct = consideration.Weights.Multiplier;
                     isFirst = false;
                 }
                 else
                 {
-                    addendsSum += consideration.ConsiderationWeights.Addend;
-                    multiplierProduct *= consideration.ConsiderationWeights.Multiplier;
+                    addendsSum += consideration.Weights.Addend;
+                    multiplierProduct *= consideration.Weights.Multiplier;
                 }
             }
 
             var combinedWeight = addendsSum * multiplierProduct;
 
-            Score = combinedWeight;
+            Weight = combinedWeight;
         }
 
         public int Rank { get; }
         public string Name { get; }
 
-        internal float Score { get; private set; }
+        /// <summary>
+        /// [0..1]. Utility of this option. Higher weight = higher prio.
+        /// </summary>
+        internal float Weight { get; private set; }
     }
 }

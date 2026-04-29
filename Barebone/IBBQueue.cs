@@ -24,6 +24,7 @@ namespace Barebone
         public void Clear(bool returnItems = false, bool freeCapacity = false);
 
         public int Count { get; }
+        bool Any { get; }
 
         /// <summary>
         /// Direct access to the items as a Span.

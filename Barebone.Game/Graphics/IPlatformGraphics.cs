@@ -20,7 +20,7 @@ namespace Barebone.Game.Graphics
         /// Submits triangles. Vertex positions are in WORLD space (i.e. before the active camera transform);
         /// the transforms set via <see cref="SetTransform"/> are applied by the backend.
         /// </summary>
-        void FillTriangles(in ReadOnlySpan<Vertex> vertices, ITexture? texture);
+        void FillTriangles(in ReadOnlySpan<Vertex> vertices, ITexture? texture, in int zLayer);
 
         ITexture GetTexture(string assetPath);
 

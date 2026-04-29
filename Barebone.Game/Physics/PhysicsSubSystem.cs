@@ -1,5 +1,6 @@
 ﻿using System.Numerics;
 using Barebone.Geometry;
+using Barebone.Graphics.NodeArt.Core;
 using Barebone.Pools;
 using Box2dNet.Interop;
 
@@ -30,6 +31,8 @@ namespace Barebone.Game.Physics
         private uint _nextBodyId;
         private b2WorldId _b2WorldId;
         private readonly Dictionary<BodyId, b2BodyId> _b2BodyIdsByBodyId = new();
+        private readonly Dictionary<ShapeId, b2ShapeId> _b2ShapeIdsByShapeId = new();
+        private readonly Dictionary<b2ShapeId, ShapeId> _shapeIdsByB2ShapeId = new();
 
         public PhysicsSubSystem()
         {
@@ -90,8 +93,9 @@ namespace Barebone.Game.Physics
             def.material.friction = friction;
             def.userData = (nint)shapeId.Value;
 
-            B2Api.b2CreateCircleShape(b2BodyId, def, new b2Circle(center ?? Vector2.Zero, radius));
-
+            var b2ShapeId = B2Api.b2CreateCircleShape(b2BodyId, def, new b2Circle(center ?? Vector2.Zero, radius));
+            RegisterShape(b2ShapeId, shapeId);
+            
             return shapeId;
         }
 
@@ -110,7 +114,8 @@ namespace Barebone.Game.Physics
             var b2Polygon = B2Api.b2MakePolygon(B2Api.b2ComputeHull(points, polygon.Count), 0f);
             Pool.ReturnArray(points);
 
-            B2Api.b2CreatePolygonShape(b2BodyId, def, b2Polygon);
+            var b2ShapeId = B2Api.b2CreatePolygonShape(b2BodyId, def, b2Polygon);
+            RegisterShape(b2ShapeId, shapeId);
 
             return shapeId;
         }
@@ -125,7 +130,8 @@ namespace Barebone.Game.Physics
             def.material.friction = friction;
             def.userData = (nint)shapeId.Value;
 
-            B2Api.b2CreateCapsuleShape(b2BodyId, def, new b2Capsule(center1, center2, radius));
+            var b2ShapeId = B2Api.b2CreateCapsuleShape(b2BodyId, def, new b2Capsule(center1, center2, radius));
+            RegisterShape(b2ShapeId, shapeId);
 
             return shapeId;
         }
@@ -156,6 +162,9 @@ namespace Barebone.Game.Physics
         {
             B2Api.b2DestroyWorld(_b2WorldId);
             _b2WorldId = B2Api.b2CreateWorld(B2Api.b2DefaultWorldDef());
+            _b2ShapeIdsByShapeId.Clear();
+            _b2BodyIdsByBodyId.Clear();
+            _shapeIdsByB2ShapeId.Clear();
         }
 
         public void DestroyBody(BodyId bodyId)
@@ -166,9 +175,19 @@ namespace Barebone.Game.Physics
                 var count = B2Api.b2Body_GetShapes(b2BodyId, b2ShapeIds, b2ShapeIds.Length);
                 foreach (var b2ShapeId in b2ShapeIds.AsSpan(0, count))
                 {
-                    // we will track shape mapping data soon, so we will have to clean it up too. We can do that here.
+                    UnregisterShape(b2ShapeId);
                 }
                 B2Api.b2DestroyBody(b2BodyId); // also destroys attached b2Shapes.
+            }
+        }
+
+        public void DestroyShape(ShapeId shapeId)
+        {
+            // delete only if it exists (important because shapes can indirectly be removed by calling DestroyBody first)
+            if (_b2ShapeIdsByShapeId.TryGetValue(shapeId, out var b2ShapeId))
+            {
+                B2Api.b2DestroyShape(b2ShapeId, true);
+                UnregisterShape(shapeId);
             }
         }
 
@@ -177,9 +196,26 @@ namespace Barebone.Game.Physics
             B2Api.b2World_Step(_b2WorldId, deltaT, subStepCount);
         }
 
-        public void Dispose()
+        private void RegisterShape(in b2ShapeId b2ShapeId, in ShapeId shapeId)
         {
-            B2Api.b2DestroyWorld(_b2WorldId);
+            _b2ShapeIdsByShapeId.Add(shapeId, b2ShapeId);
+            _shapeIdsByB2ShapeId.Add(b2ShapeId, shapeId);
+        }
+
+        private void UnregisterShape(in b2ShapeId b2ShapeId)
+        {
+            if (_shapeIdsByB2ShapeId.Remove(b2ShapeId, out var shapeId))
+            {
+                _b2ShapeIdsByShapeId.Remove(shapeId);
+            }
+        }
+
+        private void UnregisterShape(in ShapeId shapeId)
+        {
+            if (_b2ShapeIdsByShapeId.Remove(shapeId, out var b2ShapeId))
+            {
+                _shapeIdsByB2ShapeId.Remove(b2ShapeId);
+            }
         }
 
         private b2BodyId GetB2BodyIdOrThrow(BodyId bodyId)
@@ -187,6 +223,11 @@ namespace Barebone.Game.Physics
             if (!_b2BodyIdsByBodyId.TryGetValue(bodyId, out var b2BodyId))
                 throw new InvalidOperationException($"Unknown BodyId: {bodyId}.");
             return b2BodyId;
+        }
+
+        public void Dispose()
+        {
+            B2Api.b2DestroyWorld(_b2WorldId);
         }
     }
 }
