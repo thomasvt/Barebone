@@ -28,6 +28,11 @@ namespace Barebone.Geometry
             return new Polygon8(new(minX, minY), new(minX, maxY), new(maxX, maxY), new(maxX, minY));
         }
 
+        public static Polygon8 Triangle(in Vector2 a, in Vector2 b, in Vector2 c)
+        {
+            return new(a, b, c);
+        }
+
         /// <summary>
         /// Generates a polygon representing a line with given width and caps.
         /// </summary>

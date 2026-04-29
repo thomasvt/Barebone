@@ -14,6 +14,7 @@ namespace Barebone.Game.Graphics
         private ITexture? _texture;
         private Matrix3x2 _uvTransform;
         private Matrix3x2 _worldTransform = Matrix3x2.Identity;
+        private float _z;
         private readonly Font _defaultFont;
         private readonly BBList<Vertex> _textTriangleBuffer = new();
         private ICamera _activeCamera;
@@ -39,17 +40,17 @@ namespace Barebone.Game.Graphics
             _pg.ClearScreen(color);
         }
 
-        public void FillPolygon(in Polygon8 polygon, in Color? color = null, in float zLayer = 0)
+        public void FillPolygon(in Polygon8 polygon, in Color? color = null)
         {
-            FillPolygonInternal(polygon, color ?? Color.White, zLayer);
+            FillPolygonInternal(polygon, color ?? Color.White);
         }
 
-        public void FillCircle(Vector2 center, float radius, in int segmentCount, in Color color, in float zLayer = 0)
+        public void FillCircle(Vector2 center, float radius, in int segmentCount, in Color color)
         {
-            FillCircleInternal(center, radius, segmentCount, color, zLayer);
+            FillCircleInternal(center, radius, segmentCount, color);
         }
 
-        public void DrawText(Vector2 position, in string text, in Color color, in float scale = 1f, bool center = false, in float zLayer = 0)
+        public void DrawText(Vector2 position, in string text, in Color color, in float scale = 1f, bool center = false)
         {
             _textTriangleBuffer.Clear();
             var colorF = ColorF.FromColor(color);
@@ -60,8 +61,8 @@ namespace Barebone.Game.Graphics
             }
             _defaultFont.AppendString(true, _textTriangleBuffer, text, colorF, position, scale);
 
-            _pg.SetTransform(_worldTransform, _activeCamera.WorldToScreenTransform);
-            _pg.FillTriangles(_textTriangleBuffer.AsReadOnlySpan(), _defaultFont.Texture, zLayer);
+            FillTrianglesInternal(_textTriangleBuffer.AsReadOnlySpan(), _defaultFont.Texture);
+            
         }
 
         public void SetCamera(in ICamera camera)
@@ -69,9 +70,11 @@ namespace Barebone.Game.Graphics
             _activeCamera = camera;
         }
 
-        public void SetWorldTransform(in Matrix3x2 world)
+        public void SetWorldTransform(in Matrix3x2 world, in float z)
         {
+            if (z is < 0 or > 1) throw new ArgumentOutOfRangeException(nameof(z), "z should lay within [0,1]");
             _worldTransform = world;
+            _z = z;
         }
 
         public void ResetWorldTransform()
@@ -136,7 +139,7 @@ namespace Barebone.Game.Graphics
                 a = b;
             }
 
-            FillTrianglesInternal(vertices, zLayer);
+            FillTrianglesInternal(vertices, _texture);
         }
 
         private void FillPolygonInternal(in Polygon8 polygon, in Color color, in float zLayer = 0)
@@ -162,18 +165,16 @@ namespace Barebone.Game.Graphics
                 pB = pC;
             }
 
-            FillTrianglesInternal(vertices, zLayer);
+            FillTrianglesInternal(vertices, _texture);
         }
 
         /// <summary>
         /// Sole and central drawing facade into the platform specific graphics system.
         /// </summary>
-        private void FillTrianglesInternal(Span<Vertex> vertices, float zLayer)
+        private void FillTrianglesInternal(ReadOnlySpan<Vertex> vertices, ITexture? texture)
         {
-            if (zLayer is < 0 or > 1) throw new ArgumentOutOfRangeException(nameof(zLayer), "zLayer should lay within [0,1]");
-
             _pg.SetTransform(_worldTransform, _activeCamera.WorldToScreenTransform);
-            _pg.FillTriangles(vertices, _texture, zLayer);
+            _pg.FillTriangles(vertices, texture, _z);
         }
 
         public Matrix3x2 CalculateTextureProjection(in ITexture texture, in Vector2 textureOrigin, in float texelsPerUnit)

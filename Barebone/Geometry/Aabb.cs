@@ -303,6 +303,12 @@ namespace Barebone.Geometry
             return new Aabb(center-halfSize, center + halfSize);
         }
 
+        public static Aabb FromSizeAroundCenter(in Vector2 center, in float size)
+        {
+            var halfSize = size * 0.5f;
+            return new Aabb(center.X - halfSize, center.Y - halfSize, center.X + halfSize, center.Y + halfSize);
+        }
+
         public static Aabb FromSizeAroundCenter(in Vector2 size)
         {
             var halfSize = size * 0.5f;

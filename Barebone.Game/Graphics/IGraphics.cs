@@ -9,9 +9,9 @@ namespace Barebone.Game.Graphics
     {
         void ClearScreen(in Color color);
 
-        void FillPolygon(in Polygon8 polygon, in Color? color = null, in float zLayer = 0);
-        void FillCircle(Vector2 center, float radius, in int segmentCount, in Color color, in float zLayer = 0);
-        void DrawText(Vector2 position, in string text, in Color color, in float scale = 1f, bool center = false, in float zLayer = 0);
+        void FillPolygon(in Polygon8 polygon, in Color? color = null);
+        void FillCircle(Vector2 center, float radius, in int segmentCount, in Color color);
+        void DrawText(Vector2 position, in string text, in Color color, in float scale = 1f, bool center = false);
 
         /// <summary>
         /// The following draw calls will only use vertex colors. No textures.
@@ -38,7 +38,7 @@ namespace Barebone.Game.Graphics
         /// Defaults to <see cref="Matrix3x2.Identity"/>; pass identity to clear. Persists across draw calls until changed again.
         /// On platforms with GPU rendering this matrix is uploaded as a shader uniform.
         /// </summary>
-        void SetWorldTransform(in Matrix3x2 world);
+        void SetWorldTransform(in Matrix3x2 world, in float z);
 
         /// <summary>
         /// Sets the world transform to zero translation, zero rotation and zero scaling. (= Identity matrix).

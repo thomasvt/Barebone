@@ -20,7 +20,7 @@ namespace BareBone.Random
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public int NextInt(int minValue, int maxValue)
         {
-            var range = maxValue - minValue;
+            var range = maxValue - minValue + 1;
             return (int)(_prng.Sample() * range) + minValue;
         }
 

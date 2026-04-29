@@ -245,6 +245,8 @@ namespace Barebone.Geometry
             }
             return new(new(l, b), new(r, t));
         }
+
+        
     }
 
     

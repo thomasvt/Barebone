@@ -93,7 +93,7 @@ namespace Barebone.Game.Monogame
             _currentCamera = cameraTransform;
         }
 
-        public void FillTriangles(in ReadOnlySpan<Vertex> vertices, ITexture? texture, in float zLayer)
+        public void FillTriangles(in ReadOnlySpan<Vertex> vertices, ITexture? texture, in float z)
         {
             if (vertices.Length == 0) return;
             if (vertices.Length % 3 != 0) throw new ArgumentException("FillTriangles expects a triangle list (vertices.Length % 3 == 0).");
@@ -120,7 +120,7 @@ namespace Barebone.Game.Monogame
             _batches.Add(new DrawBatch(
                 FirstTriangle: startTri,
                 TriangleCount: triCount,
-                World: ToMatrix4x4(combined, zLayer),
+                World: ToMatrix4x4(combined, z),
                 Texture: texture
             ));
         }
