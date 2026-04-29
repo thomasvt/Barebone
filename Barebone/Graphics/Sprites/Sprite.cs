@@ -2,7 +2,7 @@
 
 namespace Barebone.Graphics.Sprites
 {
-    public record Sprite(ITexture Texture, Aabb UvCoords, Aabb AabbPx, bool IsTextureOwner)
+    public record Sprite(ITexture Texture, Aabb UvCoords, Aabb AabbPx, bool IsTextureOwner) : IDisposable
     {
         public void Dispose()
         {

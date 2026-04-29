@@ -5,7 +5,7 @@ using Microsoft.Xna.Framework.Graphics;
 
 namespace Barebone.Monogame
 {
-    internal class XnaTextureLoader(GraphicsDevice graphicsDevice) : ITextureLoader
+    public class XnaTextureLoader(GraphicsDevice graphicsDevice) : ITextureLoader
     {
         public ITexture LoadTexture(string path)
         {

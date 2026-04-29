@@ -1,6 +1,5 @@
 ﻿using Barebone.Geometry;
 using Barebone.Graphics;
-using Barebone.Graphics.Gpu;
 using Microsoft.Xna.Framework.Graphics;
 
 namespace Barebone.Monogame
@@ -14,12 +13,12 @@ namespace Barebone.Monogame
 
         public Vector2I Size => new(Texture.Width, Texture.Height);
 
-        public void ReadPixels(in GpuColor[] pixelBuffer)
+        public void ReadPixels(in ColorRgba[] pixelBuffer)
         {
             Texture.GetData(pixelBuffer);
         }
 
-        public void WritePixels(in GpuColor[] pixelBuffer)
+        public void WritePixels(in ColorRgba[] pixelBuffer)
         {
             Texture.SetData(pixelBuffer);
         }

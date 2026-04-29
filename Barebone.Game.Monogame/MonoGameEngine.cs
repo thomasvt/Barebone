@@ -1,6 +1,7 @@
 using Barebone.Game.Graphics;
 using Barebone.Game.Input;
 using Barebone.Geometry;
+using Barebone.Monogame;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
@@ -20,6 +21,7 @@ namespace Barebone.Game.Monogame
     {
         private readonly Func<IGame> _gameFactory;
         private readonly GraphicsDeviceManager _gdm;
+        private XnaImmediateRenderer? _renderer;
         private MonoGameGraphics? _graphics;
         private Engine? _engine;
 
@@ -129,7 +131,10 @@ namespace Barebone.Game.Monogame
         {
             base.LoadContent();
 
-            _graphics = new MonoGameGraphics(GraphicsDevice);
+            _renderer = new XnaImmediateRenderer(GraphicsDevice, _gdm);
+            var textureLoader = new XnaTextureLoader(GraphicsDevice);
+            var effectLoader = new XnaEffectLoader(GraphicsDevice);
+            _graphics = new MonoGameGraphics(_renderer, textureLoader, effectLoader);
             _engine = new Engine(this);
             _engine.StartGame(_gameFactory);
         }
@@ -140,6 +145,8 @@ namespace Barebone.Game.Monogame
             _engine = null;
             _graphics?.Dispose();
             _graphics = null;
+            _renderer?.Dispose();
+            _renderer = null;
             base.UnloadContent();
         }
 

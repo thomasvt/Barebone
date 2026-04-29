@@ -1,4 +1,4 @@
-﻿using System.Drawing;
+using System.Drawing;
 using System.Numerics;
 using Barebone.Geometry;
 using Barebone.Graphics.Cameras;
@@ -39,10 +39,24 @@ namespace Barebone.Graphics
         /// Creates a special <see cref="ITexture"/> that you can set as RenderTarget on this Renderer. You must Dispose() this yourself.
         /// </summary>
         /// <param name="supportDepthBuffer">Also allow to render with Z-buffer to this sprite. This allocates more memory.</param>
-        Sprite CreateRenderTargetSprite(Vector2I size, bool supportDepthBuffer, int preferredMultiSampleCount = 0);
+        /// <param name="preserveContents">Keep the existing pixels when this RT is bound (e.g. for additive read-modify-write).
+        /// Default <c>false</c> = backend may discard previous contents on bind, which is faster.</param>
+        Sprite CreateRenderTargetSprite(Vector2I size, bool supportDepthBuffer, int preferredMultiSampleCount = 0, bool preserveContents = false);
 
         void SetRenderTarget(ITexture texture);
         void ResetRenderTargetToScreen();
         void EnableMultiSampling();
+
+        /// <summary>
+        /// Activates a custom <paramref name="effect"/> for subsequent <see cref="Draw"/> calls and switches the blend mode.
+        /// The custom effect owns its own parameter values; the renderer no longer touches World/Texture on the default effect.
+        /// Cleared by <see cref="ResetEffect"/>, <see cref="Begin"/>, or <see cref="End"/>.
+        /// </summary>
+        void SetEffect(IEffect effect, BlendMode blendMode);
+
+        /// <summary>
+        /// Reverts to the renderer's default effect and restores the blend mode that <see cref="Begin"/> established.
+        /// </summary>
+        void ResetEffect();
     }
 }

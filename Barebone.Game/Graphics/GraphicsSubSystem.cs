@@ -39,17 +39,17 @@ namespace Barebone.Game.Graphics
             _pg.ClearScreen(color);
         }
 
-        public void FillPolygon(in Polygon8 polygon, in Color? color = null, in int zLayer = 0)
+        public void FillPolygon(in Polygon8 polygon, in Color? color = null, in float zLayer = 0)
         {
             FillPolygonInternal(polygon, color ?? Color.White, zLayer);
         }
 
-        public void FillCircle(Vector2 center, float radius, in int segmentCount, in Color color, in int zLayer = 0)
+        public void FillCircle(Vector2 center, float radius, in int segmentCount, in Color color, in float zLayer = 0)
         {
             FillCircleInternal(center, radius, segmentCount, color, zLayer);
         }
 
-        public void DrawText(Vector2 position, in string text, in Color color, in float scale = 1f, bool center = false, in int zLayer = 0)
+        public void DrawText(Vector2 position, in string text, in Color color, in float scale = 1f, bool center = false, in float zLayer = 0)
         {
             _textTriangleBuffer.Clear();
             var colorF = ColorF.FromColor(color);
@@ -105,8 +105,9 @@ namespace Barebone.Game.Graphics
             };
         }
 
-        private void FillCircleInternal(in Vector2 center, in float radius, in int segmentCount, in Color color, in int zLayer = 0)
+        private void FillCircleInternal(in Vector2 center, in float radius, in int segmentCount, in Color color, in float zLayer = 0)
         {
+
             var colorF = ColorF.FromColor(color);
 
             Span<Vertex> vertices = stackalloc Vertex[segmentCount * 3];
@@ -135,11 +136,10 @@ namespace Barebone.Game.Graphics
                 a = b;
             }
 
-            _pg.SetTransform(_worldTransform, _activeCamera.WorldToScreenTransform);
-            _pg.FillTriangles(vertices, _texture, zLayer);
+            FillTrianglesInternal(vertices, zLayer);
         }
 
-        private void FillPolygonInternal(in Polygon8 polygon, in Color color, in int zLayer = 0)
+        private void FillPolygonInternal(in Polygon8 polygon, in Color color, in float zLayer = 0)
         {
             var colorF = ColorF.FromColor(color);
 
@@ -161,6 +161,16 @@ namespace Barebone.Game.Graphics
 
                 pB = pC;
             }
+
+            FillTrianglesInternal(vertices, zLayer);
+        }
+
+        /// <summary>
+        /// Sole and central drawing facade into the platform specific graphics system.
+        /// </summary>
+        private void FillTrianglesInternal(Span<Vertex> vertices, float zLayer)
+        {
+            if (zLayer is < 0 or > 1) throw new ArgumentOutOfRangeException(nameof(zLayer), "zLayer should lay within [0,1]");
 
             _pg.SetTransform(_worldTransform, _activeCamera.WorldToScreenTransform);
             _pg.FillTriangles(vertices, _texture, zLayer);
@@ -184,7 +194,6 @@ namespace Barebone.Game.Graphics
         {
             return new(_pg.BloomThreshold, _pg.BloomSoftKnee, _pg.BloomBrightIntensity, _pg.BloomUpsampleStrength, _pg.BloomFinalIntensity);
         }
-
 
         public void SetViewportSize(Vector2I viewportSize)
         {

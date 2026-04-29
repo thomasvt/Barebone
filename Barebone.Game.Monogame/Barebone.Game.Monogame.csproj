@@ -14,6 +14,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Barebone.Game\Barebone.Game.csproj" />
+    <ProjectReference Include="..\Barebone.Monogame\Barebone.Monogame.csproj" />
   </ItemGroup>
 
   <!-- Pre-compiled shader blobs (.mgfxo). Use build_shaders.cmd to compile them from .fx  -->

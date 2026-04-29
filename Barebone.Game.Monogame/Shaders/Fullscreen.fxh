@@ -1,5 +1,8 @@
 // Shared fullscreen-triangle vertex shader for post-process passes.
-// Uses MonoGame's built-in VertexPositionTexture (Vector3 + Vector2) so DrawUserPrimitives works directly.
+// Vertex layout matches VertexPositionColorTexture (= Barebone.Graphics.Gpu.GpuTexTriangle byte layout)
+// so the post-process triangles flow through XnaImmediateRenderer's standard Draw(GpuTexTriangle) path.
+// Color is unused by the post-process pixel shaders but is present in the vertex declaration; declaring it
+// here keeps the input layout consistent with the buffer.
 // We feed in 3 vertices that draw a triangle covering NDC [-1..1] with UV in [0..1] inside the visible region.
 
 #if OPENGL
@@ -14,6 +17,7 @@
 struct PostVSInput
 {
     float3 Position : POSITION0;
+    float4 Color    : COLOR0;       // unused, but matches VertexPositionColorTexture / GpuTexTriangle
     float2 UV       : TEXCOORD0;
 };
 
