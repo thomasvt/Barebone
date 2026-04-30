@@ -53,7 +53,7 @@ namespace Barebone.Game.Physics
             B2Api.b2World_SetGravity(_b2WorldId, gravity);
         }
 
-        private BodyId CreateBody(in BodyType bodyType, in Vector2 position, in Vector2? velocity, in float angle, in bool lockRotation)
+        private BodyId CreateBody(in BodyType bodyType, in Vector2 position, in float angle, in Vector2? velocity, in bool lockRotation)
         {
             var def = B2Api.b2DefaultBodyDef();
             def.type = bodyType switch
@@ -67,7 +67,7 @@ namespace Barebone.Game.Physics
             def.linearVelocity = velocity ?? Vector2.Zero;
             def.motionLocks.angularZ = lockRotation;
             def.rotation = b2Rot.FromAngle(angle);
-
+            
             var bodyId = new BodyId(++_nextBodyId);
             var b2BodyId = B2Api.b2CreateBody(_b2WorldId, def);
             _b2BodyIdsByBodyId.Add(bodyId, b2BodyId);
@@ -75,14 +75,14 @@ namespace Barebone.Game.Physics
             return bodyId;
         }
 
-        public BodyId CreateDynamicBody(in Vector2 position, in Vector2? velocity, in float angle, in bool lockRotation)
+        public BodyId CreateDynamicBody(in Vector2 position, in float angle, in Vector2? velocity, in bool lockRotation)
         {
-            return CreateBody(BodyType.Dynamic, position, velocity, angle, lockRotation);
+            return CreateBody(BodyType.Dynamic, position, angle, velocity, lockRotation);
         }
 
         public BodyId CreateStaticBody(in Vector2? position = null, in float angle = 0)
         {
-            return CreateBody(BodyType.Static, position ?? Vector2.Zero, Vector2.Zero, angle, false);
+            return CreateBody(BodyType.Static, position ?? Vector2.Zero, angle, Vector2.Zero, false);
         }
 
         public ShapeId AttachCircle(in BodyId bodyId, in Vector2? center, in float radius, in float friction)

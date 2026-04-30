@@ -20,16 +20,16 @@
         private void OnComponentRemoving(Component c)
         {
             (c as IDisposable)?.Dispose();
-            c.Parent = null;
+            c.ParentInternal = null;
         }
 
         private void OnComponentAdded(Component c)
         {
-            c.Parent = Parent;
+            c.ParentInternal = Parent;
             c.OnAdded();
         }
 
-        public Component Parent { get; }
+        public Actor Parent { get; }
 
         public T1 Add<T1>(T1 component) where T1: Component
         {
@@ -73,7 +73,7 @@
                 entity.Draw();
         }
 
-        public T? Find<T>() where T : Component
+        public T? GetFirst<T>() where T : Component
         {
             foreach (var c in _components.AsReadOnlySpan())
                 if (c is T t) return t;

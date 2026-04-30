@@ -11,8 +11,8 @@ namespace Barebone.Game.Physics
         /// <summary>
         /// Makes this Actor participate in the physics simulation of the game.
         /// </summary>
-        BodyId CreateDynamicBody(in Vector2 position, in Vector2? velocity = null, in float angle = 0f, in bool lockRotation = false);
-        BodyId CreateStaticBody(in Vector2? position = null, in float angle = 0f);
+        BodyId CreateDynamicBody(in Vector2 position, in float angle, in Vector2? velocity = null, in bool lockRotation = false);
+        BodyId CreateStaticBody(in Vector2? position = null, in float angle = 0);
         /// <summary>
         /// Destroys the given body and its attached shapes.
         /// </summary>

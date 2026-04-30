@@ -1,10 +1,8 @@
-﻿using System.Collections;
-
-namespace Barebone.Game
+﻿namespace Barebone.Game
 {
     public interface IComponentCollection
     {
-        Component Parent { get; }
+        Actor Parent { get; }
         T1 Add<T1>(T1 component) where T1: Component;
 
         /// <summary>
@@ -27,7 +25,7 @@ namespace Barebone.Game
         /// </summary>
         void DrawAll();
 
-        T? Find<T>() where T : Component;
+        T? GetFirst<T>() where T : Component;
         ReadOnlySpan<Component> AsSpan();
     }
 }

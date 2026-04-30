@@ -27,7 +27,7 @@ namespace Barebone.Game
             _children.DrawAll();
             base.Draw();
         }
-
+        
         public override void Update()
         {
             _children.UpdateAll();
@@ -39,20 +39,34 @@ namespace Barebone.Game
             _children.Dispose();
         }
 
-        public bool TryFindChild<T>([MaybeNullWhen(false)] out T child) where T : Component
+        public T AddChild<T>(T child) where T : Component
         {
-            child = GetChild<T>();
+            return Children.Add(child);
+        }
+
+        /// <summary>
+        /// Gets the first child of given type. Returns whether such a child was found or not.
+        /// </summary>
+        public bool TryGetChild<T>([MaybeNullWhen(false)] out T child) where T : Component
+        {
+            child = GetChildOrNull<T>();
             return child != null;
         }
 
-        public T? GetChild<T>() where T : Component
+        /// <summary>
+        /// Returns the first child of given type, or null if no such child exists.
+        /// </summary>
+        public T? GetChildOrNull<T>() where T : Component
         {
-            return Children.Find<T>();
+            return Children.GetFirst<T>();
         }
 
-        public T GetChildOrThrow<T>() where T : Component
+        /// <summary>
+        /// Returns the first child of given type, or throws if no such child exists.
+        /// </summary>
+        public T GetChild<T>() where T : Component
         {
-            return Children.Find<T>() ?? throw new Exception($"No child of type '{typeof(T).Name}' found.");
+            return Children.GetFirst<T>() ?? throw new Exception($"No child of type '{typeof(T).Name}' found.");
         }
     }
 }
