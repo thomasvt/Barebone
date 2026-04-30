@@ -12,9 +12,9 @@ namespace Barebone.Game.Debugging
             if (BB.Input.JustPressed(KeyboardKey.OemMinus)) { DecreaseGameSpeed(); WriteDebugScreen(); }
             if (BB.Input.JustPressed(KeyboardKey.Enter)) { WriteDebugScreen(); Debugger.Break(); }
 
-            if (engine.UpdateTime > 0.010f)
+            if (engine.UpdateTime > 0.015f)
                 WriteLine($"Frame {BB.Clock.FrameNumber}: UPDATE IS SLOW: {engine.UpdateTime*1000:0.0}ms");
-            if (engine.DrawTime > 0.010f)
+            if (engine.DrawTime > 0.015f)
                 WriteLine($"DRAW IS SLOW: {engine.DrawTime * 1000:0.0}ms");
         }
         
