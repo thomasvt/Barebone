@@ -1,6 +1,7 @@
 using System.Drawing;
 using System.Numerics;
 using Barebone.Geometry;
+using BareBone.Geometry.Triangulation;
 using Barebone.Graphics;
 
 namespace Barebone.Game.Graphics
@@ -66,5 +67,13 @@ namespace Barebone.Game.Graphics
 
         void SetBloom(in BloomConfig config);
         BloomConfig GetBloom();
+        void FillPolygon(in ReadOnlySpan<Vector2> polygon, in Color? color = null);
+
+        /// <summary>
+        /// Fast alternative to FillPolygon if you guarantee the polygon is convex.
+        /// </summary>
+        void FillPolygonConvex(in Polygon8 polygon, in Color? color = null);
+
+        void FillTriangles(ReadOnlySpan<Vector2> corners, Span<IndexTriangle> indexTriangles, Color? color);
     }
 }

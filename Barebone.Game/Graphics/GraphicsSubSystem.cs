@@ -1,6 +1,8 @@
 using System.Drawing;
 using System.Numerics;
 using Barebone.Geometry;
+using Barebone.Geometry.Triangulation;
+using BareBone.Geometry.Triangulation;
 using Barebone.Graphics;
 using Barebone.Graphics.Text;
 using Barebone.Messaging;
@@ -9,6 +11,11 @@ namespace Barebone.Game.Graphics
 {
     internal class GraphicsSubSystem : IGraphics, IDisposable
     {
+        // TODO Optimizations:
+        // * Combine draw calls with same texture and transforms into a single call
+        // * Support Indexed drawing so we can skip the copy work in FillTriangles and send IndexTriangle[] directly (or copy it in bulk).
+        // * More possibilities are to be found probably, used AI for the bloom code and it made this a bit messy
+
         private readonly IPlatformGraphics _pg;
         private readonly IMessageBus _messageBus;
         private ITexture? _texture;
@@ -42,7 +49,55 @@ namespace Barebone.Game.Graphics
 
         public void FillPolygon(in Polygon8 polygon, in Color? color = null)
         {
-            FillPolygonInternal(polygon, color ?? Color.White);
+            Span<IndexTriangle> triangles = stackalloc IndexTriangle[Triangulator.GetTriangleCount(polygon.Count)];
+            Triangulator.Triangulate(polygon.AsReadOnlySpan(), triangles);
+            
+            var corners = polygon.AsReadOnlySpan();
+
+            FillTriangles(corners, triangles, color);
+        }
+
+        public void FillPolygon(in ReadOnlySpan<Vector2> polygon, in Color? color = null)
+        {
+            Span<IndexTriangle> triangles = stackalloc IndexTriangle[Triangulator.GetTriangleCount(polygon.Length)];
+            Triangulator.Triangulate(polygon, triangles);
+            FillTriangles(polygon, triangles, color);
+        }
+
+        /// <summary>
+        /// Fast alternative to FillPolygon if you guarantee the polygon is convex.
+        /// </summary>
+        public void FillPolygonConvex(in Polygon8 polygon, in Color? color = null)
+        {
+            Span<IndexTriangle> triangles = stackalloc IndexTriangle[TriangulatorConvex.GetTriangleCount(polygon.Count)];
+            TriangulatorConvex.Triangulate(polygon.Count, triangles);
+
+            var corners = polygon.AsReadOnlySpan();
+
+            FillTriangles(corners, triangles, color);
+        }
+
+        public void FillTriangles(ReadOnlySpan<Vector2> corners, Span<IndexTriangle> indexTriangles, Color? color)
+        {
+            var colorF = ColorF.FromColor(color ?? Color.White);
+            Span<Vertex> vertices = stackalloc Vertex[indexTriangles.Length * 3];
+
+            var i = 0;
+
+            var modelToUv = _worldTransform * _uvTransform;
+
+            foreach (var triangle in indexTriangles)
+            {
+                var a = corners[triangle.A];
+                var b = corners[triangle.B];
+                var c = corners[triangle.C];
+
+                vertices[i++] = new() { Color = colorF, Position = a, UV = Vector2.Transform(a, modelToUv) };
+                vertices[i++] = new() { Color = colorF, Position = b, UV = Vector2.Transform(b, modelToUv) };
+                vertices[i++] = new() { Color = colorF, Position = c, UV = Vector2.Transform(c, modelToUv) };
+            }
+
+            FillTrianglesInternal(vertices, _texture);
         }
 
         public void FillCircle(Vector2 center, float radius, in int segmentCount, in Color color)
@@ -62,7 +117,6 @@ namespace Barebone.Game.Graphics
             _defaultFont.AppendString(true, _textTriangleBuffer, text, colorF, position, scale);
 
             FillTrianglesInternal(_textTriangleBuffer.AsReadOnlySpan(), _defaultFont.Texture);
-            
         }
 
         public void SetCamera(in ICamera camera)
@@ -110,7 +164,6 @@ namespace Barebone.Game.Graphics
 
         private void FillCircleInternal(in Vector2 center, in float radius, in int segmentCount, in Color color, in float zLayer = 0)
         {
-
             var colorF = ColorF.FromColor(color);
 
             Span<Vertex> vertices = stackalloc Vertex[segmentCount * 3];
@@ -137,32 +190,6 @@ namespace Barebone.Game.Graphics
                 vertices[i++] = new() { Color = colorF, Position = b,      UV = Vector2.Transform(b,      modelToUv) };
 
                 a = b;
-            }
-
-            FillTrianglesInternal(vertices, _texture);
-        }
-
-        private void FillPolygonInternal(in Polygon8 polygon, in Color color, in float zLayer = 0)
-        {
-            var colorF = ColorF.FromColor(color);
-
-            var pA = polygon[0];
-            Span<Vertex> vertices = stackalloc Vertex[(polygon.Count - 2) * 3];
-
-            var i = 0;
-            var pB = polygon[1];
-
-            var modelToUv = _worldTransform * _uvTransform;
-
-            for (var c = 2; c < polygon.Count; c++)
-            {
-                var pC = polygon[c]; // Polygon indexer supports wrap-around
-
-                vertices[i++] = new() { Color = colorF, Position = pA, UV = Vector2.Transform(pA, modelToUv) };
-                vertices[i++] = new() { Color = colorF, Position = pB, UV = Vector2.Transform(pB, modelToUv) };
-                vertices[i++] = new() { Color = colorF, Position = pC, UV = Vector2.Transform(pC, modelToUv) };
-
-                pB = pC;
             }
 
             FillTrianglesInternal(vertices, _texture);

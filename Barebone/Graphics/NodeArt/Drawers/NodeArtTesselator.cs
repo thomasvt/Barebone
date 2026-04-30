@@ -10,7 +10,6 @@ namespace Barebone.Graphics.NodeArt.Drawers
 {
     public class NodeArtTesselator
     {
-        private readonly Triangulator _triangulator = new();
         private readonly BBList<Vector2> _polygonBuffer = new();
 
         /// <summary>
@@ -45,11 +44,17 @@ namespace Barebone.Graphics.NodeArt.Drawers
             //}
         }
 
-        private void FillPolygon(in BBList<GpuTexTriangle> triangleBuffer, in BBList<Vector2> corners, in GpuColor color)
+        private static void FillPolygon(in BBList<GpuTexTriangle> triangleBuffer, in BBList<Vector2> corners, in GpuColor color)
         {
             var cornerSpan = corners.AsReadOnlySpan();
-            foreach (var triangle in _triangulator.Triangulate(_polygonBuffer.AsArraySegment()))
+            if (cornerSpan.Length < 3)
+                return;
+
+            Span<IndexTriangle> tris = stackalloc IndexTriangle[Triangulator.GetTriangleCount(cornerSpan.Length)];
+            var count = Triangulator.Triangulate(cornerSpan, tris);
+            for (var i = 0; i < count; i++)
             {
+                var triangle = tris[i];
                 var a = new GpuTexVertex(new Vector3(cornerSpan[triangle.A], 0), color, Vector2.Zero);
                 var b = new GpuTexVertex(new Vector3(cornerSpan[triangle.B], 0), color, Vector2.Zero);
                 var c = new GpuTexVertex(new Vector3(cornerSpan[triangle.C], 0), color, Vector2.Zero);

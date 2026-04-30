@@ -2,9 +2,11 @@
 using System.Numerics;
 using Barebone.Geometry;
 using Barebone.Geometry.Triangulation;
+using BareBone.Geometry.Triangulation;
 using BareBone.Graphics;
 using Barebone.Graphics.Gpu;
 using Barebone.Pools;
+using Triangle2 = Barebone.Geometry.Triangle2;
 
 namespace Barebone.Graphics;
 
@@ -118,11 +120,20 @@ public abstract class MeshBase<TMesh, TTriangle, TVertex> : Poolable
     {
         if (polygon.Count < 3) throw new Exception("Polygons must have at least 3 corners.");
 
-        Span<Triangle2> buffer = stackalloc Triangle2[TriangulatorConvex.Shared.GetTriangleCount(polygon.Count)];
-        TriangulatorConvex.Shared.Triangulate(polygon.AsReadOnlySpan(), buffer);
-        foreach (var triangle in buffer)
+        Span<IndexTriangle> buffer = stackalloc IndexTriangle[TriangulatorConvex.GetTriangleCount(polygon.Count)];
+        TriangulatorConvex.Triangulate(polygon.Count, buffer);
+        var corners = polygon.AsReadOnlySpan();
+        foreach (var t in buffer)
         {
-            FillTriangle(triangle.ToTriangle3(z), color);
+            var a2 = corners[t.A];
+            var b2 = corners[t.B];
+            var c2 = corners[t.C];
+
+            var a = new Vector3(a2, z);
+            var b = new Vector3(b2, z);
+            var c = new Vector3(c2, z);
+
+            FillTriangle(a, b, c, color);
         }
         return (TMesh)this;
     }

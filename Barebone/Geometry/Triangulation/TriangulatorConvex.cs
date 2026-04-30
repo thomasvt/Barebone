@@ -1,4 +1,4 @@
-﻿using System.Numerics;
+﻿using BareBone.Geometry.Triangulation;
 
 namespace Barebone.Geometry.Triangulation
 {
@@ -7,16 +7,16 @@ namespace Barebone.Geometry.Triangulation
         /// <summary>
         /// Use GetTriangleCount() first to know the size of the span. 
         /// </summary>
-        public static void Triangulate(ReadOnlySpan<Vector2> corners, Span<Triangle2> triangleBuffer)
+        public static void Triangulate(int cornerCount, Span<IndexTriangle> triangleBuffer)
         {
             triangleBuffer.Clear();
 
-            var a = corners[0];
-            var b = corners[1];
-            for (var i = 0; i < corners.Length - 2; i++)
+            var a = 0;
+            var b = 1;
+            for (var i = 0; i < cornerCount - 2; i++)
             {
-                var c = corners[i + 2];
-                triangleBuffer[i] = new Triangle2(a, b, c);
+                var c = i + 2;
+                triangleBuffer[i] = new IndexTriangle(a, b, c);
                 b = c;
             }
         }
