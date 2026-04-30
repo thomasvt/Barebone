@@ -2,13 +2,18 @@
 {
     public class GaiaOption
     {
-        private readonly GaiaConsideration[] _considerations;
+        public readonly GaiaConsideration[] Considerations;
         public readonly GaiaAction Action;
+
+        public GaiaOption(int rank, GaiaConsideration[] considerations, GaiaAction action)
+        : this(rank, action.GetType().Name, considerations, action)
+        {
+        }
 
         public GaiaOption(int rank, string name, GaiaConsideration[] considerations, GaiaAction action)
         {
             if (considerations.Length == 0) throw new Exception("An AIOption must have at least 1 AIConsideration.");
-            _considerations = considerations;
+            Considerations = considerations;
             Action = action;
             Rank = rank;
             Name = name;
@@ -19,7 +24,7 @@
             var isFirst = true;
             var addendsSum = 0f;
             var multiplierProduct = 0f;
-            foreach (var consideration in _considerations)
+            foreach (var consideration in Considerations)
             {
                 consideration.CalculateWeight();
 

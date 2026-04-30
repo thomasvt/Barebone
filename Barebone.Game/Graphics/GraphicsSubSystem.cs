@@ -39,7 +39,7 @@ namespace Barebone.Game.Graphics
                 Zoom = 1,
                 Position = Vector2.Zero
             };
-            SetBloom(BloomConfig.None);
+            SetBloomSettings(BloomSettings.None);
         }
 
         public void ClearScreen(in Color color)
@@ -49,8 +49,8 @@ namespace Barebone.Game.Graphics
 
         public void FillPolygon(in Polygon8 polygon, in Color? color = null)
         {
-            Span<IndexTriangle> triangles = stackalloc IndexTriangle[Triangulator.GetTriangleCount(polygon.Count)];
-            Triangulator.Triangulate(polygon.AsReadOnlySpan(), triangles);
+            Span<IndexTriangle> triangles = stackalloc IndexTriangle[TriangulatorConvex.GetTriangleCount(polygon.Count)];
+            TriangulatorConvex.Triangulate(polygon.Count, triangles);
             
             var corners = polygon.AsReadOnlySpan();
 
@@ -60,7 +60,7 @@ namespace Barebone.Game.Graphics
         public void FillPolygon(in ReadOnlySpan<Vector2> polygon, in Color? color = null)
         {
             Span<IndexTriangle> triangles = stackalloc IndexTriangle[Triangulator.GetTriangleCount(polygon.Length)];
-            Triangulator.Triangulate(polygon, triangles);
+            Triangulator.Shared.Triangulate(polygon, triangles);
             FillTriangles(polygon, triangles, color);
         }
 
@@ -209,16 +209,16 @@ namespace Barebone.Game.Graphics
             return Matrix3x2.CreateTranslation(-textureOrigin) * Matrix3x2.CreateScale(texelsPerUnit / texture.Size);
         }
 
-        public void SetBloom(in BloomConfig config)
+        public void SetBloomSettings(in BloomSettings settings)
         {
-            _pg.BloomThreshold = config.BloomThreshold;
-            _pg.BloomBrightIntensity = config.BloomBrightIntensity;
-            _pg.BloomFinalIntensity = config.BloomFinalIntensity;
-            _pg.BloomSoftKnee = config.BloomSoftKnee;
-            _pg.BloomUpsampleStrength = config.BloomUpsampleStrength;
+            _pg.BloomThreshold = settings.BloomThreshold;
+            _pg.BloomBrightIntensity = settings.BloomBrightIntensity;
+            _pg.BloomFinalIntensity = settings.BloomFinalIntensity;
+            _pg.BloomSoftKnee = settings.BloomSoftKnee;
+            _pg.BloomUpsampleStrength = settings.BloomUpsampleStrength;
         }
 
-        public BloomConfig GetBloom()
+        public BloomSettings GetBloomSettings()
         {
             return new(_pg.BloomThreshold, _pg.BloomSoftKnee, _pg.BloomBrightIntensity, _pg.BloomUpsampleStrength, _pg.BloomFinalIntensity);
         }

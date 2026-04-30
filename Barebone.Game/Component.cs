@@ -51,7 +51,7 @@ namespace Barebone.Game
         {
             return Parent switch
             {
-                Actor a => a.FindChild<T>(),
+                Actor a => a.GetChild<T>(),
                 _ => null
             };
         }

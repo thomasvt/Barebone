@@ -8,6 +8,5 @@
         protected internal virtual bool IsDone => true;
         public bool Interruptable { get; } = interruptable;
 
-        public static GaiaAction Noop = new NoopAction();
     }
 }

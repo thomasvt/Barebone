@@ -41,16 +41,16 @@ namespace Barebone.Game
 
         public bool TryFindChild<T>([MaybeNullWhen(false)] out T child) where T : Component
         {
-            child = FindChild<T>();
+            child = GetChild<T>();
             return child != null;
         }
 
-        public T? FindChild<T>() where T : Component
+        public T? GetChild<T>() where T : Component
         {
             return Children.Find<T>();
         }
 
-        public T FindChildOrThrow<T>() where T : Component
+        public T GetChildOrThrow<T>() where T : Component
         {
             return Children.Find<T>() ?? throw new Exception($"No child of type '{typeof(T).Name}' found.");
         }

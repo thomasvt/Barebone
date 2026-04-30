@@ -3,50 +3,44 @@
     public class DualUtilityReasoner : IGaiaReasoner
     {
         private readonly List<GaiaOption> _candidates = new();
-        private readonly GaiaOption[] _options;
+        public readonly GaiaOption[] Options;
 
         public DualUtilityReasoner(GaiaOption[] options)
         {
             if (options.Length == 0) throw new Exception("Reasoner must have at least 1 option.");
-            _options = options;
+            Options = options;
         }
 
         private GaiaOption? _currentOption = null;
         public void Update()
         {
-            if (_currentOption == null || _currentOption.Action.Interruptable)
+            if (_currentOption == null || _currentOption.Action.Interruptable || _currentOption.Action.IsDone)
             {
                 var option = ChooseBestOption();
-                if (option != _currentOption)
+                if (option != _currentOption || _currentOption is { Action.IsDone: true })
                 {
-                    LeaveCurrentOption();
-
-                    _currentOption = option;
-
-                    option?.Action.OnEnter();
-                    if (Debug && option != null)
-                        Console.WriteLine("ENTER " + option.Name);
+                    SwitchTo(option);
                 }
             }
 
-            if (_currentOption != null)
-            {
-                if (_currentOption.Action.IsDone)
-                    LeaveCurrentOption();
-                else
-                    _currentOption?.Action.Update();
-            }
+            _currentOption?.Action.Update();
         }
 
-        private void LeaveCurrentOption()
+        private void SwitchTo(in GaiaOption? option)
         {
-            if (_currentOption == null) return;
+            if (_currentOption != null)
+            {
+                _currentOption.Action.OnLeave();
+                if (Debug) Console.WriteLine("LEFT " + _currentOption.Name);
+            }
 
-            if (Debug)
-                Console.WriteLine("LEAVE " + _currentOption.Name);
+            _currentOption = option;
 
-            _currentOption?.Action.OnLeave();
-            _currentOption = null;
+            if (_currentOption != null)
+            {
+                if (Debug) Console.WriteLine("ENTER " + _currentOption.Name);
+                _currentOption.Action.OnEnter();
+            }
         }
 
         private GaiaOption? ChooseBestOption()
@@ -63,7 +57,7 @@
             _candidates.Clear();
             var highestRank = int.MinValue;
             var highestScore = float.MinValue;
-            foreach (var option in _options)
+            foreach (var option in Options)
             {
                 if (option.Rank >= highestRank)
                 {

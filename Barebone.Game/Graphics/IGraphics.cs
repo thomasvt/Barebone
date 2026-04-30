@@ -65,8 +65,8 @@ namespace Barebone.Game.Graphics
         /// <param name="texelsPerUnit">How many texture texels fit in 1 world unit.</param>
         Matrix3x2 CalculateTextureProjection(in ITexture texture, in Vector2 textureOrigin, in float texelsPerUnit);
 
-        void SetBloom(in BloomConfig config);
-        BloomConfig GetBloom();
+        void SetBloomSettings(in BloomSettings settings);
+        BloomSettings GetBloomSettings();
         void FillPolygon(in ReadOnlySpan<Vector2> polygon, in Color? color = null);
 
         /// <summary>

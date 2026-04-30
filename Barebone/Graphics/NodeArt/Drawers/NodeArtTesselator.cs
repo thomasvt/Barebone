@@ -51,10 +51,9 @@ namespace Barebone.Graphics.NodeArt.Drawers
                 return;
 
             Span<IndexTriangle> tris = stackalloc IndexTriangle[Triangulator.GetTriangleCount(cornerSpan.Length)];
-            var count = Triangulator.Triangulate(cornerSpan, tris);
-            for (var i = 0; i < count; i++)
+            Triangulator.Shared.Triangulate(cornerSpan, tris);
+            foreach (var triangle in tris)
             {
-                var triangle = tris[i];
                 var a = new GpuTexVertex(new Vector3(cornerSpan[triangle.A], 0), color, Vector2.Zero);
                 var b = new GpuTexVertex(new Vector3(cornerSpan[triangle.B], 0), color, Vector2.Zero);
                 var c = new GpuTexVertex(new Vector3(cornerSpan[triangle.C], 0), color, Vector2.Zero);

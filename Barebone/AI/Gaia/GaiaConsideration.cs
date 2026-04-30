@@ -24,7 +24,7 @@ namespace Barebone.AI.Gaia
 
         protected abstract Weights CalculateWeights();
 
-        public GaiaConsideration Invert()
+        public GaiaConsideration Inverse()
         {
             _inverted = true;
             return this;

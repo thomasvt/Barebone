@@ -1,6 +1,6 @@
 ﻿namespace Barebone.Game.Graphics
 {
-    public struct BloomConfig(float treshold, float softKnee, float brightIntensity, float upsampleStrength, float finalIntensity)
+    public struct BloomSettings(float treshold, float softKnee, float brightIntensity, float upsampleStrength, float finalIntensity)
     {
         /// <summary>
         /// Blooms only when Max(R, G, B) > Treshold.
@@ -32,11 +32,11 @@
         // Dreamy / fog-of-light — threshold 0.4, knee 0.7, upsample 1.5, final 0.6
         // Sharp neon highlights only — threshold 0.95, knee 0.1, upsample 0.7, final 0.7
 
-        public static BloomConfig Realistic = new(0.85f, 0.5f, 1, 1, 0.45f);
-        public static BloomConfig RealisticIntense = new(0.85f, 0.5f, 1, 1, 0.6f);
-        public static BloomConfig Retro = new(0.6f, 0.2f, 1f, 1.3f, 0.8f);
-        public static BloomConfig Foggy = new(0.4f, 0.7f, 1, 1.5f, 0.6f);
-        public static BloomConfig SharpNeon = new(0.95f, 0.1f, 1, 0.7f, 0.7f);
-        public static BloomConfig None = new(0.0f, 0f, 0, 0f, 0f);
+        public static BloomSettings Realistic = new(0.85f, 0.5f, 1, 1, 0.45f);
+        public static BloomSettings RealisticIntense = new(0.85f, 0.5f, 1, 1, 0.6f);
+        public static BloomSettings Retro = new(0.6f, 0.2f, 1f, 1.3f, 0.8f);
+        public static BloomSettings Foggy = new(0.4f, 0.7f, 1, 1.5f, 0.6f);
+        public static BloomSettings SharpNeon = new(0.95f, 0.1f, 1, 0.7f, 0.7f);
+        public static BloomSettings None = new(0.0f, 0f, 0, 0f, 0f);
     }
 }

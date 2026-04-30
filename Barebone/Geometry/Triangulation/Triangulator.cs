@@ -1,207 +1,236 @@
 ﻿using System.Numerics;
-using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
 
 namespace BareBone.Geometry.Triangulation
 {
-    [StructLayout(LayoutKind.Sequential)]
-    public record struct IndexTriangle(int A, int B, int C);
+    // this is the old triangulator. It works, but allocates many small PointNodes on heap each use. 
+    // Tried to make TriangulatorNoAlloc but it's buggy.
+
+    internal class PointNode(int index, int vertexIndex)
+    {
+        public readonly int Index = index;
+        public readonly int VertexIndex = vertexIndex;
+        public PointNode? Next, Previous;
+
+        public override string ToString()
+        {
+            return $"{Index}";
+        }
+    }
+
+    internal class LinearListPolygon
+    {
+        public readonly PointNode PointListRoot;
+
+        public LinearListPolygon(PointNode pointListRoot)
+        {
+            PointListRoot = pointListRoot;
+            var count = 1;
+            pointListRoot = PointListRoot.Next!;
+            while (pointListRoot != PointListRoot)
+            {
+                count++;
+                pointListRoot = pointListRoot.Next!;
+            }
+
+            Count = count;
+        }
+
+        /// <summary>
+        /// Builds a linearlist polygon for a polygon where each index matches 1 on 1 with a corner and no intermediate index array is therefore needed.
+        /// </summary>
+        public static LinearListPolygon From1To1Polygon(int cornerCount)
+        {
+            var root = new PointNode(0, 0);
+            var current = root;
+            for (var i = 1; i < cornerCount; i++)
+            {
+                current.Next = new PointNode(i, i)
+                {
+                    Previous = current
+                };
+                current = current.Next;
+            }
+
+            current.Next = root;
+            root.Previous = current;
+
+            return new LinearListPolygon(root);
+        }
+
+        /// <summary>
+        /// Builds a linearlist polygon from the cornerindices of a polygon.
+        /// </summary>
+        public static LinearListPolygon FromIndexPolygon(ReadOnlySpan<int> indices)
+        {
+            var root = new PointNode(0, indices[0]);
+            var current = root;
+            for (var i = 1; i < indices.Length; i++)
+            {
+                current.Next = new PointNode(i, indices[i])
+                {
+                    Previous = current
+                };
+                current = current.Next;
+            }
+
+            current.Next = root;
+            root.Previous = current;
+
+            return new LinearListPolygon(root);
+        }
+
+        public int Count { get; }
+    }
 
     /// <summary>
-    /// Stateless ear-clipping triangulator for convex or concave polygons. No heap allocations.
+    /// Triangulator for convex and concave triangles. 
     /// </summary>
-    public static class Triangulator
+    public class Triangulator
     {
-        /// <summary>
-        /// A simple polygon with N corners always produces exactly N - 2 triangles.
-        /// </summary>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static int GetTriangleCount(in int cornerCount) => cornerCount - 2;
+        private readonly List<PointNode> _inflexList = new();
+        private readonly List<PointNode> _reflexList = new();
 
         /// <summary>
-        /// Triangulates a clockwise polygon. The polygon is allowed to be concave. Fills <paramref name="resultBuffer"/>
-        /// with index triangles referring directly into <paramref name="corners"/>. Returns the number of triangles written.
-        /// Use <see cref="GetTriangleCount"/> to size <paramref name="resultBuffer"/>.
+        /// Single instance for reusing the internally allocated buffers in many triangulations. Not thread safe.
+        /// </summary>
+        public static Triangulator Shared = new();
+
+        /// <summary>
+        /// Trianglulates a clockwise polygon. The polygon is allowed to be concave. Fills your resultIndexBuffer with a triangle-list of indices into your corners list.
         /// </summary>
         /// <remarks>
         /// Based on https://www.geometrictools.com/Documentation/TriangulationByEarClipping.pdf but extended with more features.
         /// </remarks>
-        public static int Triangulate(ReadOnlySpan<Vector2> corners, Span<IndexTriangle> resultBuffer)
+        public void Triangulate(ReadOnlySpan<Vector2> corners, Span<IndexTriangle> triangleBuffer)
         {
-            if (corners.Length < 3)
-                throw new Exception("Can only triangulate polygons with at least 3 points.");
-
-            Span<PointNode> nodes = stackalloc PointNode[corners.Length];
-            for (var i = 0; i < corners.Length; i++)
-            {
-                nodes[i] = new PointNode
-                {
-                    VertexIndex = i,
-                    Previous = (i - 1 + corners.Length) % corners.Length,
-                    Next = (i + 1) % corners.Length
-                };
-            }
-
-            return TriangulateCore(corners, nodes, resultBuffer);
+            Triangulate(corners, LinearListPolygon.From1To1Polygon(corners.Length), triangleBuffer);
         }
 
         /// <summary>
-        /// Triangulates a clockwise index-based polygon. The polygon is allowed to be concave. Fills <paramref name="resultBuffer"/>
-        /// with index triangles whose values are taken from <paramref name="indices"/> (i.e. they refer into <paramref name="corners"/>).
+        /// Trianglulates a clockwise index-based polygon. The polygon is allowed to be concave. Fills your resultIndexBuffer with a triangle-list of indices taken from your 'indices'.
         /// </summary>
-        public static int Triangulate(ReadOnlySpan<Vector2> corners, ReadOnlySpan<int> indices, Span<IndexTriangle> resultBuffer)
+        public void Triangulate(ReadOnlySpan<Vector2> corners, ReadOnlySpan<int> indices, Span<IndexTriangle> triangleBuffer)
         {
-            if (indices.Length < 3)
-                throw new Exception("Can only triangulate polygons with at least 3 points.");
-
-            Span<PointNode> nodes = stackalloc PointNode[indices.Length];
-            for (var i = 0; i < indices.Length; i++)
-            {
-                nodes[i] = new PointNode
-                {
-                    VertexIndex = indices[i],
-                    Previous = (i - 1 + indices.Length) % indices.Length,
-                    Next = (i + 1) % indices.Length
-                };
-            }
-
-            return TriangulateCore(corners, nodes, resultBuffer);
+            Triangulate(corners, LinearListPolygon.FromIndexPolygon(indices), triangleBuffer);
         }
 
-        private static int TriangulateCore(ReadOnlySpan<Vector2> corners, Span<PointNode> nodes, Span<IndexTriangle> resultBuffer)
+        public static int GetTriangleCount(int cornerCount)
         {
-            Span<int> reflexList = stackalloc int[nodes.Length];
-            var reflexCount = 0;
-            Span<int> ears = stackalloc int[nodes.Length];
-            var earCount = 0;
+            return cornerCount - 2;
+        }
 
-            // Identify the reflex corners. Everything else is convex (or straight) and a candidate ear.
-            for (var i = 0; i < nodes.Length; i++)
+        /// <summary>
+        /// Trianglulates a clockwise polygon. The polygon is allowed to be concave.
+        /// </summary>
+        /// <remarks>
+        /// Based on https://www.geometrictools.com/Documentation/TriangulationByEarClipping.pdf but extended with more features.
+        /// </remarks>
+        private void Triangulate(ReadOnlySpan<Vector2> corners, LinearListPolygon linearPolygon, Span<IndexTriangle> triangleBuffer)
+        {
+            if (corners.Length < 3)
+                throw new Exception($"Can only triangulate polygons with at least 3 points.");
+
+            var idx = 0;
+
+            _inflexList.EnsureCapacity(corners.Length);
+            _reflexList.EnsureCapacity(corners.Length);
+            PopulateConvexAndReflexLists(corners, linearPolygon, _inflexList, _reflexList);
+
+            // find all initial ears
+            var ears = new List<PointNode>(_inflexList.Count);
+            foreach (var inflexPoint in _inflexList)
             {
-                if (IsReflex(corners, nodes, i))
-                    reflexList[reflexCount++] = i;
+                if (IsUnpenetratedEar(corners, inflexPoint, _reflexList))
+                    ears.Add(inflexPoint);
             }
 
-            // Find all initial ears among the convex corners.
-            for (var i = 0; i < nodes.Length; i++)
-            {
-                if (!IsReflex(corners, nodes, i)
-                    && IsUnpenetratedEar(corners, nodes, i, reflexList[..reflexCount]))
-                {
-                    ears[earCount++] = i;
-                }
-            }
-
-            // Cut off ears one by one, updating the neighbours each time, until the polygon is fully triangulated.
-            var triangleCount = 0;
-            while (earCount > 0)
+            // cut off all ears and update their neighbour corners to check for new ears while more than 3 corners are left
+            while (ears.Any())
             {
                 var current = ears[0];
-                var prev = nodes[current].Previous;
-                var next = nodes[current].Next;
 
-                resultBuffer[triangleCount++] = new IndexTriangle(
-                    nodes[prev].VertexIndex,
-                    nodes[current].VertexIndex,
-                    nodes[next].VertexIndex);
+                triangleBuffer[idx++] = new IndexTriangle(current.Previous!.VertexIndex, current.VertexIndex, current.Next!.VertexIndex);
 
-                if (nodes[next].Next == prev)
+                if (current.Next.Next!.Next == current)
                     break; // this was the last triangle
 
-                // Detach the ear vertex from the linked list.
-                nodes[prev].Next = next;
-                nodes[next].Previous = prev;
-                RemoveAt(ears, ref earCount, 0);
+                // delete the ear vertex:
+                current.Previous.Next = current.Next;
+                current.Next.Previous = current.Previous;
+                _inflexList.Remove(current);
+                ears.RemoveAt(0);
 
-                // Reevaluate reflex/convex/ear properties of the neighbours, which have changed now the ear is cut off.
-                ReevaluateNeighbour(corners, nodes, prev, reflexList, ref reflexCount, ears, ref earCount);
-                ReevaluateNeighbour(corners, nodes, next, reflexList, ref reflexCount, ears, ref earCount);
+                // reevaluate reflex/convex properties of the neighbours, which have changed now the ear is cut off.
+                ReevaluateNeighbour(corners, current.Previous, _reflexList, _inflexList, ears);
+                ReevaluateNeighbour(corners, current.Next, _reflexList, _inflexList, ears);
             }
-
-            return triangleCount;
         }
 
-        private static void ReevaluateNeighbour(ReadOnlySpan<Vector2> corners, Span<PointNode> nodes, int neighbourIdx,
-            Span<int> reflexList, ref int reflexCount, Span<int> ears, ref int earCount)
+        private static void ReevaluateNeighbour(ReadOnlySpan<Vector2> vertices, PointNode neighbour, List<PointNode> reflexList, List<PointNode> convexList, List<PointNode> ears)
         {
-            if (IsReflex(corners, nodes, neighbourIdx))
+            if (Corner2.GetCornerType(vertices[neighbour.Previous!.VertexIndex], vertices[neighbour.VertexIndex],
+                    vertices[neighbour.Next!.VertexIndex]) == CornerType.Reflex)
                 return;
 
-            // If the neighbour was reflex, promote it to convex by removing it from the reflex list.
-            var reflexIdx = IndexOf(reflexList[..reflexCount], neighbourIdx);
-            if (reflexIdx >= 0)
-                RemoveAt(reflexList, ref reflexCount, reflexIdx);
-
-            if (IsUnpenetratedEar(corners, nodes, neighbourIdx, reflexList[..reflexCount]))
+            if (reflexList.Contains(neighbour))
             {
-                if (IndexOf(ears[..earCount], neighbourIdx) < 0)
-                    ears[earCount++] = neighbourIdx; // promote to ear
+                // promote to convex list
+                reflexList.Remove(neighbour);
+                convexList.Add(neighbour);
+            }
+
+            if (IsUnpenetratedEar(vertices, neighbour, reflexList))
+            {
+                if (!ears.Contains(neighbour))
+                {
+                    // promote to ear
+                    ears.Add(neighbour);
+                }
             }
             else
             {
-                var earIdx = IndexOf(ears[..earCount], neighbourIdx);
-                if (earIdx >= 0)
-                    RemoveAt(ears, ref earCount, earIdx); // demote from ear
+                // demote to or leave it as non-ear
+                ears.Remove(neighbour); // ... if exists
             }
         }
 
-        private static bool IsReflex(ReadOnlySpan<Vector2> corners, ReadOnlySpan<PointNode> nodes, int nodeIdx)
-        {
-            var node = nodes[nodeIdx];
-            return Corner2.GetCornerType(
-                corners[nodes[node.Previous].VertexIndex],
-                corners[node.VertexIndex],
-                corners[nodes[node.Next].VertexIndex]) == CornerType.Reflex;
-        }
-
         /// <summary>
-        /// Checks if the ear-triangle at <paramref name="pointIdx"/> is penetrated by any reflex corner of the polygon.
+        /// Checks if this ear triangle is penetrated by one of the reflex corner of the polygon.
         /// </summary>
-        private static bool IsUnpenetratedEar(ReadOnlySpan<Vector2> corners, ReadOnlySpan<PointNode> nodes, int pointIdx, ReadOnlySpan<int> reflexList)
+        private static bool IsUnpenetratedEar(ReadOnlySpan<Vector2> vertices, PointNode point, List<PointNode> reflexVertices)
         {
-            var point = nodes[pointIdx];
-            for (var i = 0; i < reflexList.Length; i++)
+            foreach (var reflexVertex in reflexVertices)
             {
-                var reflexNodeIdx = reflexList[i];
-                if (reflexNodeIdx == point.Next || reflexNodeIdx == point.Previous)
-                    continue; // neighbour corners don't count for ear testing.
-                if (Triangle2.Contains(
-                        corners[nodes[point.Previous].VertexIndex],
-                        corners[point.VertexIndex],
-                        corners[nodes[point.Next].VertexIndex],
-                        corners[nodes[reflexNodeIdx].VertexIndex]))
+                if (reflexVertex == point.Next || reflexVertex == point.Previous)
+                    continue; // neighbour corners don't count for Ear testing.
+                if (Triangle2.Contains(vertices[point.Previous!.VertexIndex], vertices[point.VertexIndex], vertices[point.Next!.VertexIndex], vertices[reflexVertex.VertexIndex]))
                     return false;
             }
 
             return true;
         }
 
-        private static int IndexOf(ReadOnlySpan<int> span, int value)
-        {
-            for (var i = 0; i < span.Length; i++)
-            {
-                if (span[i] == value)
-                    return i;
-            }
-            return -1;
-        }
-
-        private static void RemoveAt(Span<int> span, ref int count, int index)
-        {
-            for (var i = index; i < count - 1; i++)
-                span[i] = span[i + 1];
-            count--;
-        }
-
         /// <summary>
-        /// A node in the doubly linked list of polygon corners. Uses indices into the working buffer instead of references,
-        /// so the entire list can live in a single <c>stackalloc</c>'d span.
+        /// removes points that have an angle of 0 or 180 degrees, and separates the remaining points in a convex and reflex list.
         /// </summary>
-        private struct PointNode
+        private static void PopulateConvexAndReflexLists(ReadOnlySpan<Vector2> vertices, LinearListPolygon polygon, List<PointNode> inflexList, List<PointNode> reflexList)
         {
-            public int VertexIndex;
-            public int Next;
-            public int Previous;
+            inflexList.Clear();
+            reflexList.Clear();
+
+            var current = polygon.PointListRoot;
+            while (true)
+            {
+                if (Corner2.GetCornerType(vertices[current.Previous!.VertexIndex], vertices[current.VertexIndex], vertices[current.Next!.VertexIndex]) == CornerType.Reflex)
+                    reflexList.Add(current);
+                else
+                    inflexList.Add(current);
+
+                if (current.Next == polygon.PointListRoot)
+                    break;
+                current = current.Next;
+            }
         }
+
     }
 }
