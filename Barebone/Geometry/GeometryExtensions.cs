@@ -216,6 +216,15 @@ public static class GeometryExtensions
 #endif
             return norm;
         }
+
+        /// <summary>
+        /// Normalises the vector but also outputs its Length., or returns Vector2.Zero if the vector has no length. And also outputs its Length.
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public Vector2 Normalize()
+        {
+            return Vector2.Normalize(vector);
+        }
     }
     
 
