@@ -1,5 +1,6 @@
 ﻿using System.Numerics;
 using System.Runtime.CompilerServices;
+using YamlDotNet.Core.Tokens;
 
 namespace Barebone.Geometry;
 
@@ -265,33 +266,21 @@ public static class GeometryExtensions
         }
 
         /// <summary>
-        /// Returns the signed difference between two angles in radians within (-180, 180). It always returns the shortest path.
+        /// Returns the shortest signed difference between two angles in radians within (-π, π].
         /// </summary>
         public float GetShortestAngleTo(float toAngle)
         {
-            angle = NormalizeAngle(angle);
-            toAngle = NormalizeAngle(toAngle);
-
-            var diff = toAngle - angle;
-            var diffAbs = MathF.Abs(diff);
-            if (diffAbs > MathF.PI)
-            {
-                // pick the other, shorter way around the circle:
-                diff = -MathF.Sign(diff) * (MathF.Tau - diff);
-            }
-
-            return diff;
+            return NormalizeAngle(toAngle - angle);
         }
 
         /// <summary>
-        /// Normalizes an angle in radians to [0, tau) (=2*pi)
+        /// Normalizes an angle in radians to (-π, π]
         /// </summary>
         public float NormalizeAngle()
         {
-            angle %= MathF.Tau;
-            if (angle < 0)
-                return angle + MathF.Tau;
-            return angle;
+            angle = (angle + MathF.PI) % MathF.Tau;
+            if (angle < 0) angle += MathF.Tau;
+            return angle - MathF.PI;
         }
 
         public Vector2 AngleToVector2(float length = 1f)

@@ -160,7 +160,7 @@ namespace Barebone.Game.Monogame
                 cullCounterClockwise: false,
                 linearSampling: true);
 
-            foreach (var batch in _batches.AsReadOnlySpan())
+            foreach (var batch in _batches.AsArraySegment().OrderBy(b => b.World.Translation.Z))
             {
                 ReadOnlySpan<GpuTexTriangle> tris = _cpuTriangles.AsSpan(batch.FirstTriangle, batch.TriangleCount);
                 renderer.Draw(batch.World, tris, batch.Texture);
