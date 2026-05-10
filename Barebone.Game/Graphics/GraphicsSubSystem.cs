@@ -25,6 +25,7 @@ namespace Barebone.Game.Graphics
         private readonly Font _defaultFont;
         private readonly BBList<Vertex> _textTriangleBuffer = new();
         private ICamera _activeCamera;
+
         public Vector2I ViewportSize { get; private set; }
 
         public GraphicsSubSystem(IPlatformGraphics pg, IMessageBus messageBus, float windowHeight)
@@ -77,6 +78,17 @@ namespace Barebone.Game.Graphics
             FillTriangles(corners, triangles, color);
         }
 
+        public void LinePolygon(in Polygon8 polygon, in float lineWidth, in Color? color = null)
+        {
+            var corners = polygon.AsReadOnlySpan();
+            var a = corners[^1];
+            foreach (var b in corners)
+            {
+                Line(a, b, lineWidth, color);
+                a = b;
+            }
+        }
+
         public void FillTriangles(ReadOnlySpan<Vector2> corners, Span<IndexTriangle> indexTriangles, Color? color)
         {
             var colorF = ColorF.FromColor(color ?? Color.White);
@@ -98,6 +110,21 @@ namespace Barebone.Game.Graphics
             }
 
             FillTrianglesInternal(vertices, _texture);
+        }
+
+        public void Line(in Vector2 a, in Vector2 b, in float lineWidth, in Color? color = null, in LineCap lineCap = LineCap.Butt)
+        {
+            FillPolygonConvex(Polygon8.Line(a, b, lineWidth, lineCap), color);
+        }
+
+        public void FillRectangle(in Aabb aabb, Color? color = null)
+        {
+            FillPolygonConvex(Polygon8.Rectangle(aabb), color);
+        }
+
+        public void LineRectangle(in Aabb aabb, float lineWidth, Color? color = null)
+        {
+            LinePolygon(Polygon8.Rectangle(aabb), lineWidth, color);
         }
 
         public void FillCircle(Vector2 center, float radius, in int segmentCount, in Color color)

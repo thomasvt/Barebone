@@ -58,5 +58,20 @@ namespace Barebone.Geometry
                 default: throw new ArgumentOutOfRangeException(nameof(lineCap), lineCap, null);
             }
         }
+
+        public static Polygon8 RegularPolygon(int edgeCount, float radius, float angle = 0f)
+        {
+            var angleStep = Angles._360 / edgeCount;
+            var polygon = new Polygon8
+            {
+                Count = edgeCount
+            };
+            for (var i = 0; i < edgeCount; i++)
+            {
+                polygon[i] = angle.AngleToVector2(radius);
+                angle += angleStep;
+            }
+            return polygon;
+        }
     }
 }

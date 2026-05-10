@@ -5,6 +5,8 @@ namespace Barebone.Game.Debugging
 {
     internal class DebugSubSystem(Engine engine) : IDebug
     {
+        private readonly Dictionary<string, int> _variables = new();
+
         public void Update()
         {
             if (BB.Input.JustPressed(KeyboardKey.OemTilde)) WriteDebugScreen();
@@ -30,6 +32,24 @@ namespace Barebone.Game.Debugging
         }
 
         public float GameSpeed => engine.Speed;
+        public void Set(string name, int value)
+        {
+            _variables[name] = value;
+        }
+
+        public int? Get(string name)
+        {
+            if (!_variables.TryGetValue(name, out var value))
+                return null;
+            return value;
+        }
+
+        public int Inc(string name, int amount = 1)
+        {
+            if (!_variables.TryAdd(name, amount))
+                _variables[name] += amount;
+            return _variables[name];
+        }
 
         private void WriteDebugScreen()
         {
