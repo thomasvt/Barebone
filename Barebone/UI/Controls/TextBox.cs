@@ -21,7 +21,7 @@ namespace Barebone.UI.Controls
         private readonly BBList<Vertex> _textTriangles = new();
         private readonly TextEditor<Vector2I> _textEditor;
         private float _caretBlinkStart;
-        private Font _font;
+        private Font _font = null!;
 
         private Vector2I _selectBegin;
         private Vector2I _selectEnd;

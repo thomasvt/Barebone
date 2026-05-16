@@ -1,5 +1,4 @@
 ﻿using System.Drawing;
-using System.Numerics;
 using Barebone.Geometry;
 using Barebone.Graphics;
 using Barebone.Graphics.Text;
@@ -9,13 +8,14 @@ namespace Barebone.UI.Controls
     public class TextBlock : UIControl
     {
         private readonly BBList<Vertex> _textTriangles = new();
-        private Font _font;
+        private Font _font = null!;
 
         public TextBlock(UserInterface ui) : base(ui)
         {
             Font = ui.DefaultFont;
             TextColor = ui.DefaultTextColor;
             IsHitTestEnabled = false;
+            Text = "";
         }
 
         protected override void Draw()
@@ -37,14 +37,16 @@ namespace Barebone.UI.Controls
             {
                 HorizontalAlignment.Left => 0,
                 HorizontalAlignment.Right => Viewport.Size.X - textSize.X,
-                HorizontalAlignment.Center => (Viewport.Size.X - textSize.X) / 2
+                HorizontalAlignment.Center => (Viewport.Size.X - textSize.X) / 2,
+                _ => throw new ArgumentOutOfRangeException()
             };
 
             var textOffsetY = VerticalAlignment switch
             {
                 VerticalAlignment.Top => 0,
                 VerticalAlignment.Bottom => Viewport.Size.Y - textSize.Y,
-                VerticalAlignment.Center => (Viewport.Size.Y - textSize.Y) / 2
+                VerticalAlignment.Center => (Viewport.Size.Y - textSize.Y) / 2,
+                _ => throw new ArgumentOutOfRangeException()
             };
 
             var topLeft = Viewport.MinCorner + new Vector2I((int)textOffsetX, (int)textOffsetY);

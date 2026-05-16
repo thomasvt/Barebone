@@ -12,12 +12,8 @@ namespace Barebone.Game.Monogame
 {
     /// <summary>
     /// MonoGame implementation of <see cref="IPlatform"/>.
-    /// Inherits <see cref="XnaGame"/> so MonoGame's loop drives everything (window pump, input pump,
-    /// fixed-timestep Update, Draw, Present). The abstract <see cref="Engine"/> is constructed when
-    /// the GraphicsDevice is ready (LoadContent), and we feed it frames through Engine.TickUpdate /
-    /// Engine.TickDraw from MonoGame's Update/Draw overrides.
     /// </summary>
-    public class MonoGameEngine : XnaGame, IPlatform
+    public class MonoGamePlatform : XnaGame, IPlatform
     {
         private readonly Func<IGame> _gameFactory;
         private readonly GraphicsDeviceManager _gdm;
@@ -29,7 +25,7 @@ namespace Barebone.Game.Monogame
         private KeyboardState _keyboardState, _keyboardStatePrevious;
         private MouseState _mouseState, _mouseStatePrevious;
 
-        public MonoGameEngine(Func<IGame> gameFactory, string windowTitle, Vector2I windowSize)
+        public MonoGamePlatform(Func<IGame> gameFactory, string windowTitle, Vector2I windowSize)
         {
             _gameFactory = gameFactory;
             _gdm = new GraphicsDeviceManager(this)
@@ -53,30 +49,25 @@ namespace Barebone.Game.Monogame
         /// </summary>
         public static void Run(in Func<IGame> gameFactory, in string windowTitle, in Vector2I windowSize)
         {
-            using var engine = new MonoGameEngine(gameFactory, windowTitle, windowSize);
-            engine.Run();
+            using var platform = new MonoGamePlatform(gameFactory, windowTitle, windowSize);
+            platform.Run();
         }
 
-        // ====================================================================================
-        // IPlatform
-        // ====================================================================================
         public Vector2I GetWindowSize()
         {
             var pp = GraphicsDevice.PresentationParameters;
             return new Vector2I(pp.BackBufferWidth, pp.BackBufferHeight);
         }
 
-        public IPlatformGraphics Graphics => _graphics
-            ?? throw new InvalidOperationException("Graphics not yet initialised; LoadContent has not run.");
-
-        public bool IsQuitRequested { get; private set; }
-
-        public void Present()
+        public void Quit()
         {
-            // No-op: MonoGame presents the swapchain itself after the Draw override returns.
+            Exit();
         }
 
-        public void ProcessEvents(InputSubSystem input)
+        public IPlatformGraphics Graphics => _graphics
+                                             ?? throw new InvalidOperationException("Graphics not yet initialised; LoadContent has not run.");
+
+        public void ProcessPlatformEvents(InputSubSystem input)
         {
             if (!IsActive) return;
 
@@ -111,14 +102,12 @@ namespace Barebone.Game.Monogame
 
             var pressedNow = _keyboardState.GetPressedKeys();
             var pressedBefore = _keyboardStatePrevious.GetPressedKeys();
+
             foreach (var k in pressedNow)
-            {
                 if (!_keyboardStatePrevious.IsKeyDown(k)) input.KeyboardDown((KeyboardKey)(int)k);
-            }
+
             foreach (var k in pressedBefore)
-            {
                 if (!_keyboardState.IsKeyDown(k)) input.KeyboardUp((KeyboardKey)(int)k);
-            }
         }
 
         private static void EmitMouseTransition(InputSubSystem input, MouseButton button, ButtonState previous, ButtonState now, Vector2 pos)
@@ -135,8 +124,7 @@ namespace Barebone.Game.Monogame
             var textureLoader = new XnaTextureLoader(GraphicsDevice);
             var effectLoader = new XnaEffectLoader(GraphicsDevice);
             _graphics = new MonoGameGraphics(_renderer, textureLoader, effectLoader);
-            _engine = new Engine(this);
-            _engine.StartGame(_gameFactory);
+            _engine = new Engine(_gameFactory, this);
         }
 
         protected override void UnloadContent()
@@ -155,12 +143,6 @@ namespace Barebone.Game.Monogame
             if (_engine == null) return;
 
             _engine.Update((float)gameTime.ElapsedGameTime.TotalSeconds);
-
-            if (_engine.IsQuitRequested)
-            {
-                IsQuitRequested = true;
-                Exit();
-            }
         }
 
         protected override void Draw(GameTime gameTime)

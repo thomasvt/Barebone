@@ -79,7 +79,7 @@ namespace BareBone.Random
             return new Seed(hash);
         }
 
-        public Seed Combine(int value)
+        public Seed Child(int value)
         {
             uint hc1 = (uint)value;
 
@@ -92,7 +92,7 @@ namespace BareBone.Random
             return new Seed(hash);
         }
 
-        public Seed Combine(int value1, int value2)
+        public Seed Child(int value1, int value2)
         {
             uint hc1 = (uint)value1;
             uint hc2 = (uint)value2;

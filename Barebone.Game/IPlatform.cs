@@ -6,9 +6,12 @@ namespace Barebone.Game
 {
     public interface IPlatform : IDisposable
     {
-        void ProcessEvents(InputSubSystem input);
-        bool IsQuitRequested { get; }
-        void Present();
+        void ProcessPlatformEvents(InputSubSystem input);
+
+        /// <summary>
+        /// Stops the game's process.
+        /// </summary>
+        void Quit();
 
         IPlatformGraphics Graphics { get; }
         Vector2I GetWindowSize();

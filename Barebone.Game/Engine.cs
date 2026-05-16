@@ -7,108 +7,44 @@ using Barebone.Messaging;
 
 namespace Barebone.Game
 {
+    /// <summary>
+    /// Middle layers of the game: offers high level API to top layer (the game) and converts into subsystem activity (bottom  layer).
+    /// </summary>
     public class Engine : IDisposable
     {
         private readonly IPlatform _platform;
         private readonly GraphicsSubSystem _graphics;
         private readonly InputSubSystem _input;
         private readonly PhysicsSubSystem _physics;
-        private readonly Clock _clock;
+        private readonly Clock _appClock;
         private readonly DebugSubSystem _debug;
 
-        // Used by external loop drivers (e.g. MonoGameEngine) when the platform itself owns the
-        // render loop and feeds us frames via TickUpdate/TickDraw instead of calling Run().
-        private IGame? _game;
-        private double _gameTime;
+        private readonly IGame _game;
 
-        public Engine(IPlatform platform)
+        public Engine(Func<IGame> gameFactory, IPlatform platform)
         {
             _platform = platform;
             var messageBus = new MessageBus();
             _graphics = new GraphicsSubSystem(platform.Graphics, messageBus, platform.GetWindowSize().Y);
             _input = new InputSubSystem();
             _physics = new PhysicsSubSystem();
-            _clock = new Clock();
+            _appClock = new Clock();
 
 #if DEBUG
             _debug = new DebugSubSystem(this);
 #endif
-            BB.Init(_clock, _graphics, _input, _debug, _physics, messageBus);
-        }
+            BB.Init(_appClock, _graphics, _input, _debug, _physics, messageBus, platform);
 
-        public void Run(Func<IGame> gameFactory)
-        {
-            const double fixedDeltaT = 1 / 60.0;
-            var virtualTimeAccu = 0.0;
-
-            var timer = Stopwatch.StartNew();
-            var realTimePreviousFrame = -fixedDeltaT; // start with a normal deltaT for the first frame
-            var gameTime = 0.0;
-
-            var game = gameFactory.Invoke();
-
-            while (!_platform.IsQuitRequested && !BB.QuitRequested)
-            {
-                var realTime = timer.Elapsed.TotalSeconds;
-                var realTimeElapsed = realTime - realTimePreviousFrame;
-                var virtualTimeElapsed = realTimeElapsed * Speed;
-                virtualTimeAccu += virtualTimeElapsed;
-
-                _platform.ProcessEvents(_input);
-
-                _graphics.SetViewportSize(_platform.GetWindowSize()); // window may have changed after ProcessEvents.
-
-                while (virtualTimeAccu >= fixedDeltaT)
-                {
-                    gameTime += fixedDeltaT;
-                    _clock.BeginFrame((float)gameTime, (float)fixedDeltaT);
-                    
-                    var swUpdate = Stopwatch.StartNew();
-                    game.Update();
-                    UpdateTime = swUpdate.Elapsed.TotalSeconds;
-#if DEBUG
-                    _debug.Update();
-#endif
-
-                    _input.EndFrame();
-                    if (UpdateTime > fixedDeltaT && virtualTimeAccu > fixedDeltaT * 3)
-                        virtualTimeAccu = 0f; // if performance is problematic, we swallow update-frames to not escallate iteration-count of this inner while loop..
-                    else
-                        virtualTimeAccu -= fixedDeltaT;
-                }
-
-                var swDraw = Stopwatch.StartNew();
-                
-                game.Draw();
-                DrawTime = swDraw.Elapsed.TotalSeconds;
-
-                _platform.Present();
-                realTimePreviousFrame = realTime;
-            }
-        }
-
-        // ===========================================================================================
-        // External-loop entry points.
-        // For platforms that drive the render loop themselves (MonoGame's Game.Update/Draw model).
-        // The host calls StartGame() once after the engine is constructed, then TickUpdate + TickDraw
-        // each frame. Fixed-timestep behaviour, if desired, must be ensured by the host (MonoGame
-        // does this with IsFixedTimeStep + TargetElapsedTime).
-        // ===========================================================================================
-        public void StartGame(Func<IGame> gameFactory)
-        {
             _game = gameFactory.Invoke();
-            _gameTime = 0;
         }
 
-        public void Update(float deltaT)
+        public void Update(float appDeltaT)
         {
-            if (_game == null) throw new InvalidOperationException("StartGame() must be called first.");
-
-            _platform.ProcessEvents(_input);
+            _platform.ProcessPlatformEvents(_input);
             _graphics.SetViewportSize(_platform.GetWindowSize());
 
-            _gameTime += deltaT * Speed;
-            _clock.BeginFrame((float)_gameTime, deltaT * Speed);
+            var gameDeltaT = appDeltaT * Speed;
+            _appClock.BeginFrame(gameDeltaT);
 
             var sw = Stopwatch.StartNew();
             _game.Update();
@@ -131,7 +67,7 @@ namespace Barebone.Game
         /// True when either the platform or game logic asked to quit. External loop drivers should
         /// poll this each frame and exit their loop accordingly.
         /// </summary>
-        public bool IsQuitRequested => _platform.IsQuitRequested || BB.QuitRequested;
+        // public bool IsQuitRequested => _platform.IsQuitRequested || BB.QuitRequested;
 
         public float Speed { get; set; } = 1f;
         public double UpdateTime { get; set; }
