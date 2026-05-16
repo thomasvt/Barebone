@@ -12,7 +12,6 @@ namespace Barebone.Game.Graphics
     internal class GraphicsSubSystem : IGraphics, IDisposable
     {
         // TODO Optimizations:
-        // * Combine draw calls with same texture and transforms into a single call
         // * Support Indexed drawing so we can skip the copy work in FillTriangles and send IndexTriangle[] directly (or copy it in bulk).
         // * More possibilities are to be found probably, used AI for the bloom code and it made this a bit messy
 
@@ -257,6 +256,7 @@ namespace Barebone.Game.Graphics
         }
 
         public ICamera Camera => _activeCamera;
+
         public Matrix3x2 WorldTransform => _worldTransform;
 
         public void Dispose()

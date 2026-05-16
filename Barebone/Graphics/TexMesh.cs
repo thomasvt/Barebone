@@ -1,10 +1,7 @@
-﻿using System.Drawing;
-using Barebone.Graphics.Gpu;
+﻿using Barebone.Graphics.Gpu;
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using Barebone.Geometry;
-using Barebone.Graphics.Text;
-using Barebone.UI.Text;
 
 namespace Barebone.Graphics
 {

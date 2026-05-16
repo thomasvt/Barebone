@@ -10,9 +10,7 @@ namespace Barebone.Game
         internal Actor? ParentInternal { get; set; }
         public Actor Parent => ParentInternal ?? throw new Exception($"Component {this} has no parent (yet).");
 
-        public virtual void OnAdded()
-        {
-        }
+        public virtual void OnAdded() { }
 
         public virtual void Update()
         {}
