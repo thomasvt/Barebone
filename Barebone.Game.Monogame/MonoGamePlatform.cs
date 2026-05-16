@@ -140,9 +140,7 @@ namespace Barebone.Game.Monogame
 
         protected override void Update(GameTime gameTime)
         {
-            if (_engine == null) return;
-
-            _engine.Update((float)gameTime.ElapsedGameTime.TotalSeconds);
+            _engine?.Update((float)gameTime.ElapsedGameTime.TotalSeconds);
         }
 
         protected override void Draw(GameTime gameTime)

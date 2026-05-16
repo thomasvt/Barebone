@@ -25,9 +25,9 @@ namespace Barebone.Graphics.Cameras
         /// <summary>
         /// Configure the camera to have Y+ up, Z+ towards the user, X+ to the right, looking at (0,0,0) at a given `distanceOnZ`.
         /// </summary>
-        public void LookAtXYPlane(float distanceOnZ, float nearPlane, float farPlane)
+        public void LookAtXYPlane(Vector2 position, float distanceOnZ, float nearPlane, float farPlane)
         {
-            Position = new(0, 0, distanceOnZ);
+            Position = new(position, distanceOnZ);
             NearPlane = nearPlane;
             FarPlane = farPlane;
             LookTo = new(0, 0, -1);

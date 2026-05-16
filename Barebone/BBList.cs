@@ -22,6 +22,24 @@ namespace Barebone
         public T First => Count > 0 ? _items[0] : throw new Exception("BBList is empty.");
         public T Last => Count > 0 ? _items[^1] : throw new Exception("BBList is empty.");
 
+        public TSpecific? GetFirstOrDefault<TSpecific>() where TSpecific : T
+        {
+            foreach (var child in AsReadOnlySpan())
+            {
+                if (child is TSpecific u) return u;
+            }
+            return default;
+        }
+
+        public TSpecific GetFirst<TSpecific>() where TSpecific : T
+        {
+            foreach (var child in AsReadOnlySpan())
+            {
+                if (child is TSpecific u) return u;
+            }
+            throw new Exception($"The collection contains no item of type {typeof(TSpecific).Name}.");
+        }
+
         public int Capacity
         {
             get => _items.Length;
@@ -243,7 +261,7 @@ namespace Barebone
         }
 
         /// <summary>
-        /// Remove of an item without changing the order of remaining items.
+        /// Remove an item without changing the order of remaining items.
         /// </summary>
         public bool Remove(T item, bool returnIfPoolable = false)
         {
@@ -252,6 +270,23 @@ namespace Barebone
 
             if (returnIfPoolable)
                 (item as IPoolable)?.Return();
+
+            if (Count > idx + 1)
+                Array.Copy(_items, idx + 1, _items, idx, Count - idx - 1);
+
+            Count--;
+            return true;
+        }
+
+        /// <summary>
+        /// Remove the item at given index without changing the order of remaining items.
+        /// </summary>
+        public bool RemoveAt(int idx, bool returnIfPoolable = false)
+        {
+            if (idx <= -1) return false;
+
+            if (returnIfPoolable)
+                (_items[idx] as IPoolable)?.Return();
 
             if (Count > idx + 1)
                 Array.Copy(_items, idx + 1, _items, idx, Count - idx - 1);
