@@ -26,6 +26,7 @@ namespace Barebone.Graphics
         Mesh FillEllipseInZ(in Vector2 center, in Vector2 radius, in int segmentCount, in float z, in Color color);
         Mesh StrokeRegularPolyInZ(in Vector2 center, in float radius, in float strokeWidth, in int segmentCount, in float z, in Color color, in float angleOffset = 0f);
         Mesh LineInZ(in Vector2 a, in Vector2 b, in float halfWidth, in float z, in Color color);
-        void DrawSprite(in Vector2 position, in Sprite sprite, in float z, Color? tint = null);
+        void DrawSprite(in Sprite sprite, in Vector2 position, in float z, Color? tint = null);
+        void DrawSprite(in Sprite sprite, in Matrix3x2 transform, in float z, Color? tint = null);
     }
 }

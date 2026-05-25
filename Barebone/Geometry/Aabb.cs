@@ -429,5 +429,10 @@ namespace Barebone.Geometry
             top = new(new(Left, y), new(Right, Top));
             return true;
         }
+
+        public static Aabb FromSize(Vector2 size)
+        {
+            return new(Vector2.Zero, size);
+        }
     }
 }

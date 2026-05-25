@@ -164,7 +164,7 @@ namespace Barebone.Graphics
             return this;
         }
 
-        public void DrawSprite(in Vector2 position, in Sprite sprite, in float z, Color? tint = null)
+        public void DrawSprite(in Sprite sprite, in Vector2 position, in float z, Color? tint = null)
         {
             var gpuTint = tint?.ToGpuColor() ?? GpuColor.White;
 
@@ -177,6 +177,23 @@ namespace Barebone.Graphics
             var b = new GpuTexVertex(aabbWorld.TopLeft.ToVector3(z), gpuTint, uv.TopLeft);
             var c = new GpuTexVertex(aabbWorld.TopRight.ToVector3(z), gpuTint, uv.TopRight);
             var d = new GpuTexVertex(aabbWorld.BottomRight.ToVector3(z), gpuTint, uv.BottomRight);
+
+            subMesh.AddQuad(a, b, c, d);
+        }
+
+        public void DrawSprite(in Sprite sprite, in Matrix3x2 transform, in float z, Color? tint = null)
+        {
+            var gpuTint = tint?.ToGpuColor() ?? GpuColor.White;
+
+            var subMesh = GetSubMeshFor(sprite.Texture);
+
+            var aabbWorld = Polygon8.FromAabb(sprite.AabbPx).Transform(transform).AsReadOnlySpan();
+            var uv = sprite.UvCoords;
+
+            var a = new GpuTexVertex(aabbWorld[0].ToVector3(z), gpuTint, uv.BottomLeft);
+            var b = new GpuTexVertex(aabbWorld[1].ToVector3(z), gpuTint, uv.TopLeft);
+            var c = new GpuTexVertex(aabbWorld[2].ToVector3(z), gpuTint, uv.TopRight);
+            var d = new GpuTexVertex(aabbWorld[3].ToVector3(z), gpuTint, uv.BottomRight);
 
             subMesh.AddQuad(a, b, c, d);
         }

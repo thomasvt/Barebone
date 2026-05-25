@@ -5,7 +5,7 @@ namespace Barebone.Graphics
     public interface ITexture
     {
         Vector2I Size { get; }
-        void ReadPixels(in ColorRgba[] pixelBuffer);
-        void WritePixels(in ColorRgba[] pixelBuffer);
+        void ReadPixels(in Color8[] pixelBuffer);
+        void WritePixels(in Color8[] pixelBuffer);
     }
 }

@@ -13,12 +13,12 @@ namespace Barebone.Monogame
 
         public Vector2I Size => new(Texture.Width, Texture.Height);
 
-        public void ReadPixels(in ColorRgba[] pixelBuffer)
+        public void ReadPixels(in Color8[] pixelBuffer)
         {
             Texture.GetData(pixelBuffer);
         }
 
-        public void WritePixels(in ColorRgba[] pixelBuffer)
+        public void WritePixels(in Color8[] pixelBuffer)
         {
             Texture.SetData(pixelBuffer);
         }

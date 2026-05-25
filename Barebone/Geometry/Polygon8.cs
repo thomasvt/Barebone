@@ -246,7 +246,11 @@ namespace Barebone.Geometry
             return new(new(l, b), new(r, t));
         }
 
-        
+
+        public static Polygon8 FromAabb(Aabb aabb)
+        {
+            return new(aabb.BottomLeft, aabb.TopLeft, aabb.TopRight, aabb.BottomRight);
+        }
     }
 
     
