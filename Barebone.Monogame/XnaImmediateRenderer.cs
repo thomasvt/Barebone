@@ -21,6 +21,16 @@ namespace Barebone.Monogame
             LightingEnabled = false
         };
 
+        // Used for textured draws so transparent texels are discarded (clip) instead of writing depth.
+        // ReferenceAlpha 0 + Greater = keep alpha > 0, discard fully-transparent texels. With the depth
+        // buffer enabled this makes stacked transparent sprite layers resolve per-pixel by depth.
+        private readonly AlphaTestEffect _alphaTestEffect = new(graphicsDevice)
+        {
+            VertexColorEnabled = true,
+            AlphaFunction = CompareFunction.Greater,
+            ReferenceAlpha = 0,
+        };
+
         private readonly RasterizerState _rasterizerStateScissorNoCull = new() { CullMode = CullMode.None, ScissorTestEnable = true };
         private readonly RasterizerState _rasterizerStateScissorCull = new() { CullMode = CullMode.CullCounterClockwiseFace, ScissorTestEnable = true };
 
@@ -77,9 +87,13 @@ namespace Barebone.Monogame
             graphicsDevice.RasterizerState = cullCounterClockwise ? RasterizerState.CullCounterClockwise : RasterizerState.CullNone;
             graphicsDevice.SamplerStates[0] = linearSampling ? SamplerState.LinearClamp : SamplerState.PointClamp;
 
-            _effect.View = _camera.GetViewTransform().ToXna();
             var viewport = new Viewport(graphicsDevice.Viewport.Width, graphicsDevice.Viewport.Height);
-            _effect.Projection = _camera.GetProjectionTransform(viewport).ToXna();
+            var view = _camera.GetViewTransform().ToXna();
+            var projection = _camera.GetProjectionTransform(viewport).ToXna();
+            _effect.View = view;
+            _effect.Projection = projection;
+            _alphaTestEffect.View = view;
+            _alphaTestEffect.Projection = projection;
         }
 
         public void SetEffect(IEffect effect, BlendMode blendMode)
@@ -186,12 +200,19 @@ namespace Barebone.Monogame
             {
                 activeEffect = _currentEffect.Effect;
             }
+            else if (texture is XnaTexture xnaTexture)
+            {
+                // Textured: alpha-test so transparent texels don't write depth.
+                _alphaTestEffect.World = worldTransform.ToXna();
+                _alphaTestEffect.Texture = xnaTexture.Texture;
+                activeEffect = _alphaTestEffect;
+            }
             else
             {
-                var xnaTexture = (XnaTexture?)texture;
+                // Untextured (solid-colour triangles): no per-texel transparency, so no clip needed.
                 _effect.World = worldTransform.ToXna();
-                _effect.Texture = xnaTexture?.Texture;
-                _effect.TextureEnabled = xnaTexture != null;
+                _effect.Texture = null;
+                _effect.TextureEnabled = false;
                 activeEffect = _effect;
             }
             activeEffect.CurrentTechnique.Passes[0].Apply(); // don't use First() to prevent iterator allocation
@@ -219,10 +240,9 @@ namespace Barebone.Monogame
             }
             else
             {
-                _effect.World = worldTransform.ToXna();
-                _effect.Texture = xnaTexture.Texture;
-                _effect.TextureEnabled = true;
-                activeEffect = _effect;
+                _alphaTestEffect.World = worldTransform.ToXna();
+                _alphaTestEffect.Texture = xnaTexture.Texture;
+                activeEffect = _alphaTestEffect;
             }
             activeEffect.CurrentTechnique.Passes[0].Apply(); // don't use First() to prevent iterator allocation
 
@@ -330,6 +350,7 @@ namespace Barebone.Monogame
 
         public void Dispose()
         {
+            _alphaTestEffect.Dispose();
             _effect.Dispose();
         }
     }

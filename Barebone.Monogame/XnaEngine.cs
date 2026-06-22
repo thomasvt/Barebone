@@ -14,10 +14,12 @@ namespace Barebone.Monogame
         public bool AllowWindowResizing;
         public bool IsMouseVisible;
         public bool AllowHardwareModeSwitch;
+        public double UpdateInterval = 1/60.0;
     }
 
     /// <summary>
-    /// Root system for running a <see cref="IGame"/> on Monogame.
+    /// Root system for running a <see cref="IGame"/> on Monogame but with discrete update intervals and VSync rendering with interpolation support for smooth animations.
+    /// (https://gafferongames.com/post/fix_your_timestep/)
     /// </summary>
     public class XnaEngine : Game, IPlatform
     {
@@ -27,6 +29,10 @@ namespace Barebone.Monogame
         private readonly XnaInput _input;
         private XnaImmediateRenderer? _renderer;
         private XnaTextureLoader _textureLoader = null!;
+
+        private double _time;
+        private double _updateInterval;
+        private double _updateAccu = 0;
 
         public XnaEngine(Func<IPlatform, IGame> gameFactory, Settings? settings = null)
         {
@@ -40,9 +46,11 @@ namespace Barebone.Monogame
                 SynchronizeWithVerticalRetrace = true
             };
 
+            _updateInterval = settings?.UpdateInterval ?? 1/60.0;
+
             Window.Title = settings?.WindowTitle ?? "Barebone";
             IsMouseVisible = settings?.IsMouseVisible ?? true;
-            // TargetElapsedTime = TimeSpan.FromSeconds(1 / 60.0);
+            // TargetElapsedTime = TimeSpan.FromSeconds(1 / 120.0);
             IsFixedTimeStep = false; // fixed updates gives jittery movement visuals due to misaligned update and render times. Interpollation fixes this but it's non-trivial. Unnecessary for simple games.
             Window.AllowUserResizing = settings?.AllowWindowResizing ?? false;
             Window.ClientSizeChanged += WindowOnClientSizeChanged;
@@ -81,14 +89,25 @@ namespace Barebone.Monogame
         protected override void Update(GameTime gameTime)
         {
             Input.Update();
-            var dt = (float)gameTime.ElapsedGameTime.TotalSeconds;
-            dt = MathF.Min(dt, 0.05f); // prevent explosion by clamping dt to 20Hz.
-            _game!.Update((float)gameTime.TotalGameTime.TotalSeconds, dt);
+            var dt = gameTime.ElapsedGameTime.TotalSeconds;
+            
+            dt = Math.Min(dt, 0.25); // prevent explosion by clamping dt to 4Hz.
+            _updateAccu += dt;
+
+            // invoke Update() for as many discrete timesteps that fit into the time that has passed.
+            while (_updateAccu >= _updateInterval)
+            {
+                _time += _updateInterval;
+                _game!.Update((float)_time, (float)_updateInterval);
+                _updateAccu -= _updateInterval;
+            }
         }
 
         protected override void Draw(GameTime gameTime)
         {
-            _game!.Draw((float)gameTime.TotalGameTime.TotalSeconds, (float)gameTime.ElapsedGameTime.TotalSeconds);
+            var dt = (float)gameTime.ElapsedGameTime.TotalSeconds;
+            var remainderFraction = _updateAccu / _updateInterval;
+            _game!.Draw((float)remainderFraction, dt, (float)gameTime.ElapsedGameTime.TotalSeconds);
         }
 
         public IInput Input => _input;

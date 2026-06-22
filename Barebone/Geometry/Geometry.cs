@@ -29,9 +29,24 @@ namespace Barebone.Geometry
         /// Returns +1 if p lies to the right of ab, -1 if p lies to the left, 0 if p lies on ab.
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static int GetHalfPlane(Vector2 p, Vector2 a, Vector2 b)
+        public static int GetHalfPlane(in Vector2 p, in Vector2 a, in Vector2 b)
         {
             return MathF.Sign((p - a).Cross(b - a));
+        }
+
+        /// <summary>
+        /// Gets the perpendicular, signed distance from a (infinite) line ab to a point p. If positive, p is to the right halfplane separated by a -> b.
+        /// Negative if on the left halfplane.
+        /// </summary>
+        /// <param name="normal">Outputs the perpendicular normal of ab (pointing towards the halfplane).</param>
+        public static float GetDistanceToLine(in Vector2 p, in Vector2 a, in Vector2 b, out Vector2 normal)
+        {
+            var ab = b - a;
+            var tangent = Vector2.Normalize(ab);
+            normal = tangent.CrossRight();
+
+            var ap = p - a;
+            return Vector2.Dot(ap, normal);
         }
     }
 }

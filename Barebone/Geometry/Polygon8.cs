@@ -251,6 +251,35 @@ namespace Barebone.Geometry
         {
             return new(aabb.BottomLeft, aabb.TopLeft, aabb.TopRight, aabb.BottomRight);
         }
+
+        public static Polygon8 From(IReadOnlyList<Vector2> corners)
+        {
+            if (corners.Count < 3 || corners.Count > 8)
+                throw new Exception($"Cannot create Polygon8 from {corners.Count} corners.");
+
+            var p = new Polygon8
+            {
+                Count = corners.Count
+            };
+            for (var i = 0; i < corners.Count; i++)
+            {
+                p[i] = corners[i];
+            }
+            return p;
+        }
+
+        public bool Contains(Vector2 position)
+        {
+            var corners = AsReadOnlySpan();
+            var a = corners[^1];
+            foreach (var b in corners)
+            {
+                if (Geometry.GetHalfPlane(position, a, b) <= 0)
+                    return false;
+                a = b;
+            }
+            return true;
+        }
     }
 
     
