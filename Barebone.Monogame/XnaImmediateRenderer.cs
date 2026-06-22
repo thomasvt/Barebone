@@ -21,7 +21,7 @@ namespace Barebone.Monogame
             LightingEnabled = false
         };
 
-        // Used for textured draws so transparent texels are discarded (clip) instead of writing depth.
+        // Used for textured draws (sprites) so transparent texels are discarded (clip) instead of writing depth.
         // ReferenceAlpha 0 + Greater = keep alpha > 0, discard fully-transparent texels. With the depth
         // buffer enabled this makes stacked transparent sprite layers resolve per-pixel by depth.
         private readonly AlphaTestEffect _alphaTestEffect = new(graphicsDevice)
