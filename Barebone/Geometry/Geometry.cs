@@ -35,18 +35,14 @@ namespace Barebone.Geometry
         }
 
         /// <summary>
-        /// Gets the perpendicular, signed distance from a (infinite) line ab to a point p. If positive, p is to the right halfplane separated by a -> b.
-        /// Negative if on the left halfplane.
+        /// Gets the perpendicular, signed distance from a (infinite) line ab to a point p. If positive, p is to the left halfplane separated by a -> b.
         /// </summary>
         /// <param name="normal">Outputs the perpendicular normal of ab (pointing towards the halfplane).</param>
         public static float GetDistanceToLine(in Vector2 p, in Vector2 a, in Vector2 b, out Vector2 normal)
         {
-            var ab = b - a;
-            var tangent = Vector2.Normalize(ab);
-            normal = tangent.CrossRight();
-
-            var ap = p - a;
-            return Vector2.Dot(ap, normal);
+            var tangent = Vector2.Normalize(b - a);
+            normal = tangent.CrossLeft();
+            return Vector2.Dot(p - a, normal);
         }
     }
 }

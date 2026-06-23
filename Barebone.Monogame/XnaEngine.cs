@@ -88,15 +88,16 @@ namespace Barebone.Monogame
 
         protected override void Update(GameTime gameTime)
         {
-            Input.Update();
             var dt = gameTime.ElapsedGameTime.TotalSeconds;
-            
+
             dt = Math.Min(dt, 0.25); // prevent explosion by clamping dt to 4Hz.
             _updateAccu += dt;
 
             // invoke Update() for as many discrete timesteps that fit into the time that has passed.
             while (_updateAccu >= _updateInterval)
             {
+                // Sample input once per fixed step Update.
+                Input.Update();
                 _time += _updateInterval;
                 _game!.Update((float)_time, (float)_updateInterval);
                 _updateAccu -= _updateInterval;
